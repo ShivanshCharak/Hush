@@ -1,0 +1,33 @@
+{
+  "seed": 20261018,
+  "counts_by_split": {
+    "dev": {
+      "xss": 18,
+      "none": 180,
+      "priv_esc": 18,
+      "brute_force": 24,
+      "ambiguous": 36,
+      "scanner_recon": 18,
+      "sqli": 24,
+      "path_traversal": 18,
+      "credential_stuffing": 24
+    },
+    "test": {
+      "sqli": 16,
+      "none": 120,
+      "ambiguous": 24,
+      "brute_force": 16,
+      "credential_stuffing": 16,
+      "xss": 12,
+      "scanner_recon": 12,
+      "priv_esc": 12,
+      "path_traversal": 12
+    }
+  },
+  "real_attack_windows": 120,
+  "encoded_sqli_hard_windows": 15,
+  "low_slow_stuffing_hard_windows": 20,
+  "review_template": "/home/shivansh/Desktop/hush/data/annotations/second_annotator_template.jsonl",
+  "review_template_rows": 100,
+  "status": "provisional_until_second_annotator_review"
+}

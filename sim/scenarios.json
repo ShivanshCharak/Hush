@@ -1,0 +1,28 @@
+{
+  "seed": 20261018,
+  "stream_count": 5,
+  "events_per_stream": 10000,
+  "events_per_second": 5,
+  "window_size": 20,
+  "attack_kinds": [
+    "brute_force",
+    "credential_stuffing",
+    "sqli",
+    "xss",
+    "path_traversal",
+    "priv_esc",
+    "scanner_recon"
+  ],
+  "golden_counts": {
+    "none": 240,
+    "hard_benign": 60,
+    "brute_force": 40,
+    "credential_stuffing": 40,
+    "sqli": 40,
+    "xss": 30,
+    "path_traversal": 30,
+    "priv_esc": 30,
+    "scanner_recon": 30,
+    "ambiguous": 60
+  }
+}

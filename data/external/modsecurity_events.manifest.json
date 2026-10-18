@@ -1,0 +1,150 @@
+{
+  "source_dataset": "zenodo:17178461",
+  "source_record_url": "https://zenodo.org/records/17178461",
+  "source_paper_doi": "10.3390/data10110186",
+  "archive_path": "sim/capture/external/modsecurity-zenodo-17178461/owasp.zip",
+  "archive_sha256": "3c4c976f58cd2da61a543a237ede770529ceee59cdb09295a5998d420a8b30b8",
+  "source_files": 30,
+  "records_seen": 151011,
+  "events_written": 151011,
+  "source_paper_reported_requests": 147205,
+  "record_count_difference_from_paper": 3806,
+  "count_reconciliation": {
+    "status": "source_paper_mismatch_unresolved",
+    "archive_count_used": 151011,
+    "transaction_ids_are_unique": true,
+    "policy": "Keep every parseable archive transaction; do not discard records to force agreement with the paper total."
+  },
+  "parse_failures": 0,
+  "unique_record_marker_ids": 151003,
+  "duplicate_record_marker_ids": 8,
+  "rows_with_duplicate_record_marker_ids": 8,
+  "unique_modsecurity_transaction_ids": 151011,
+  "duplicate_modsecurity_transaction_ids": 0,
+  "rows_with_duplicate_modsecurity_transaction_ids": 0,
+  "output_path": "data/external/modsecurity_events.jsonl",
+  "output_sha256": "3917de4404f2298a00e316db5260e482c7c842ad3526d2e7581c98a59eaf1b84",
+  "errors_path": "data/external/modsecurity_events.errors.jsonl",
+  "counts_by_session": {
+    "27-Jul-2025": {
+      "records_seen": 3020,
+      "events_written": 3020
+    },
+    "28-Jul-2025": {
+      "records_seen": 7100,
+      "events_written": 7100
+    },
+    "29-Jul-2025": {
+      "records_seen": 3036,
+      "events_written": 3036
+    },
+    "30-Jul-2025": {
+      "records_seen": 2991,
+      "events_written": 2991
+    },
+    "31-Jul-2025": {
+      "records_seen": 4163,
+      "events_written": 4163
+    },
+    "01-Aug-2025": {
+      "records_seen": 5909,
+      "events_written": 5909
+    },
+    "02-Aug-2025": {
+      "records_seen": 6034,
+      "events_written": 6034
+    },
+    "03-Aug-2025": {
+      "records_seen": 4874,
+      "events_written": 4874
+    },
+    "04-Aug-2025": {
+      "records_seen": 8752,
+      "events_written": 8752
+    },
+    "05-Aug-2025": {
+      "records_seen": 5487,
+      "events_written": 5487
+    },
+    "06-Aug-2025": {
+      "records_seen": 3685,
+      "events_written": 3685
+    },
+    "07-Aug-2025": {
+      "records_seen": 2093,
+      "events_written": 2093
+    },
+    "08-Aug-2025": {
+      "records_seen": 2684,
+      "events_written": 2684
+    },
+    "09-Aug-2025": {
+      "records_seen": 3419,
+      "events_written": 3419
+    },
+    "10-Aug-2025": {
+      "records_seen": 7752,
+      "events_written": 7752
+    },
+    "11-Aug-2025": {
+      "records_seen": 3358,
+      "events_written": 3358
+    },
+    "12-Aug-2025": {
+      "records_seen": 2586,
+      "events_written": 2586
+    },
+    "13-Aug-2025": {
+      "records_seen": 5081,
+      "events_written": 5081
+    },
+    "14-Aug-2025": {
+      "records_seen": 12384,
+      "events_written": 12384
+    },
+    "15-Aug-2025": {
+      "records_seen": 15597,
+      "events_written": 15597
+    },
+    "16-Aug-2025": {
+      "records_seen": 9276,
+      "events_written": 9276
+    },
+    "17-Aug-2025": {
+      "records_seen": 4567,
+      "events_written": 4567
+    },
+    "18-Aug-2025": {
+      "records_seen": 3463,
+      "events_written": 3463
+    },
+    "19-Aug-2025": {
+      "records_seen": 4054,
+      "events_written": 4054
+    },
+    "20-Aug-2025": {
+      "records_seen": 2914,
+      "events_written": 2914
+    },
+    "21-Aug-2025": {
+      "records_seen": 2893,
+      "events_written": 2893
+    },
+    "22-Aug-2025": {
+      "records_seen": 2751,
+      "events_written": 2751
+    },
+    "23-Aug-2025": {
+      "records_seen": 3801,
+      "events_written": 3801
+    },
+    "24-Aug-2025": {
+      "records_seen": 3425,
+      "events_written": 3425
+    },
+    "25-Aug-2025": {
+      "records_seen": 3862,
+      "events_written": 3862
+    }
+  }
+}

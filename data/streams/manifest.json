@@ -1,0 +1,606 @@
+{
+  "seed": 20261018,
+  "events_per_second": 5,
+  "events_per_stream": 10000,
+  "dev_streams": [
+    "stream_01",
+    "stream_02",
+    "stream_03"
+  ],
+  "held_out_streams": [
+    "stream_04",
+    "stream_05"
+  ],
+  "streams": {
+    "stream_01": {
+      "path": "data/streams/stream_01.jsonl",
+      "sha256": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "events": 10000,
+      "role": "dev",
+      "episodes": [
+        {
+          "episode_id": "stream_01-hard-benign-01",
+          "start_idx": 500,
+          "end_idx": 520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "typo_then_success"
+        },
+        {
+          "episode_id": "stream_01-attack-01",
+          "start_idx": 1000,
+          "end_idx": 1020,
+          "kind": "brute_force",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-attack-02",
+          "start_idx": 2000,
+          "end_idx": 2020,
+          "kind": "credential_stuffing",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-attack-03",
+          "start_idx": 3000,
+          "end_idx": 3020,
+          "kind": "sqli",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-attack-04",
+          "start_idx": 4000,
+          "end_idx": 4020,
+          "kind": "xss",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-hard-benign-02",
+          "start_idx": 4500,
+          "end_idx": 4520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "load_test"
+        },
+        {
+          "episode_id": "stream_01-attack-05",
+          "start_idx": 5000,
+          "end_idx": 5020,
+          "kind": "path_traversal",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-attack-06",
+          "start_idx": 6000,
+          "end_idx": 6020,
+          "kind": "priv_esc",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-attack-07",
+          "start_idx": 7000,
+          "end_idx": 7020,
+          "kind": "scanner_recon",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-attack-08",
+          "start_idx": 8000,
+          "end_idx": 8020,
+          "kind": "brute_force",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_01-hard-benign-03",
+          "start_idx": 8500,
+          "end_idx": 8520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "health_check"
+        }
+      ]
+    },
+    "stream_02": {
+      "path": "data/streams/stream_02.jsonl",
+      "sha256": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "events": 10000,
+      "role": "dev",
+      "episodes": [
+        {
+          "episode_id": "stream_02-hard-benign-01",
+          "start_idx": 500,
+          "end_idx": 520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "search_terms"
+        },
+        {
+          "episode_id": "stream_02-attack-01",
+          "start_idx": 1000,
+          "end_idx": 1020,
+          "kind": "xss",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-attack-02",
+          "start_idx": 2000,
+          "end_idx": 2020,
+          "kind": "path_traversal",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-attack-03",
+          "start_idx": 3000,
+          "end_idx": 3020,
+          "kind": "priv_esc",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-attack-04",
+          "start_idx": 4000,
+          "end_idx": 4020,
+          "kind": "scanner_recon",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-hard-benign-02",
+          "start_idx": 4500,
+          "end_idx": 4520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "authorized_scanner"
+        },
+        {
+          "episode_id": "stream_02-attack-05",
+          "start_idx": 5000,
+          "end_idx": 5020,
+          "kind": "brute_force",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-attack-06",
+          "start_idx": 6000,
+          "end_idx": 6020,
+          "kind": "credential_stuffing",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-attack-07",
+          "start_idx": 7000,
+          "end_idx": 7020,
+          "kind": "sqli",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-attack-08",
+          "start_idx": 8000,
+          "end_idx": 8020,
+          "kind": "xss",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_02-hard-benign-03",
+          "start_idx": 8500,
+          "end_idx": 8520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "typo_then_success"
+        }
+      ]
+    },
+    "stream_03": {
+      "path": "data/streams/stream_03.jsonl",
+      "sha256": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "events": 10000,
+      "role": "dev",
+      "episodes": [
+        {
+          "episode_id": "stream_03-hard-benign-01",
+          "start_idx": 500,
+          "end_idx": 520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "load_test"
+        },
+        {
+          "episode_id": "stream_03-attack-01",
+          "start_idx": 1000,
+          "end_idx": 1020,
+          "kind": "scanner_recon",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-attack-02",
+          "start_idx": 2000,
+          "end_idx": 2020,
+          "kind": "brute_force",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-attack-03",
+          "start_idx": 3000,
+          "end_idx": 3040,
+          "kind": "credential_stuffing",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": false,
+          "variant": "low_slow"
+        },
+        {
+          "episode_id": "stream_03-attack-04",
+          "start_idx": 4000,
+          "end_idx": 4020,
+          "kind": "sqli",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-hard-benign-02",
+          "start_idx": 4500,
+          "end_idx": 4520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "health_check"
+        },
+        {
+          "episode_id": "stream_03-attack-05",
+          "start_idx": 5000,
+          "end_idx": 5020,
+          "kind": "xss",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-attack-06",
+          "start_idx": 6000,
+          "end_idx": 6020,
+          "kind": "path_traversal",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-attack-07",
+          "start_idx": 7000,
+          "end_idx": 7020,
+          "kind": "priv_esc",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-attack-08",
+          "start_idx": 8000,
+          "end_idx": 8020,
+          "kind": "scanner_recon",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_03-hard-benign-03",
+          "start_idx": 8500,
+          "end_idx": 8520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "search_terms"
+        }
+      ]
+    },
+    "stream_04": {
+      "path": "data/streams/stream_04.jsonl",
+      "sha256": "8444ee0e6b906034d0ff70ee4ce7f3fc03eea02d41083cbceb10993bb6a1cf76",
+      "events": 10000,
+      "role": "held_out",
+      "episodes": [
+        {
+          "episode_id": "stream_04-hard-benign-01",
+          "start_idx": 500,
+          "end_idx": 520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "authorized_scanner"
+        },
+        {
+          "episode_id": "stream_04-attack-01",
+          "start_idx": 1000,
+          "end_idx": 1020,
+          "kind": "sqli",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-attack-02",
+          "start_idx": 2000,
+          "end_idx": 2020,
+          "kind": "xss",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-attack-03",
+          "start_idx": 3000,
+          "end_idx": 3020,
+          "kind": "path_traversal",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-attack-04",
+          "start_idx": 4000,
+          "end_idx": 4020,
+          "kind": "priv_esc",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-hard-benign-02",
+          "start_idx": 4500,
+          "end_idx": 4520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "typo_then_success"
+        },
+        {
+          "episode_id": "stream_04-attack-05",
+          "start_idx": 5000,
+          "end_idx": 5020,
+          "kind": "scanner_recon",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-attack-06",
+          "start_idx": 6000,
+          "end_idx": 6020,
+          "kind": "brute_force",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-attack-07",
+          "start_idx": 7000,
+          "end_idx": 7040,
+          "kind": "credential_stuffing",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": false,
+          "variant": "low_slow"
+        },
+        {
+          "episode_id": "stream_04-attack-08",
+          "start_idx": 8000,
+          "end_idx": 8020,
+          "kind": "sqli",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_04-hard-benign-03",
+          "start_idx": 8500,
+          "end_idx": 8520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "load_test"
+        }
+      ]
+    },
+    "stream_05": {
+      "path": "data/streams/stream_05.jsonl",
+      "sha256": "2e9baba1c95d474e62faf5857e8ea616eb183dc2119f996224dba5416383884a",
+      "events": 10000,
+      "role": "held_out",
+      "episodes": [
+        {
+          "episode_id": "stream_05-hard-benign-01",
+          "start_idx": 500,
+          "end_idx": 520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "health_check"
+        },
+        {
+          "episode_id": "stream_05-attack-01",
+          "start_idx": 1000,
+          "end_idx": 1020,
+          "kind": "priv_esc",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-attack-02",
+          "start_idx": 2000,
+          "end_idx": 2020,
+          "kind": "scanner_recon",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-attack-03",
+          "start_idx": 3000,
+          "end_idx": 3020,
+          "kind": "brute_force",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-attack-04",
+          "start_idx": 4000,
+          "end_idx": 4020,
+          "kind": "credential_stuffing",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-hard-benign-02",
+          "start_idx": 4500,
+          "end_idx": 4520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "search_terms"
+        },
+        {
+          "episode_id": "stream_05-attack-05",
+          "start_idx": 5000,
+          "end_idx": 5020,
+          "kind": "sqli",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-attack-06",
+          "start_idx": 6000,
+          "end_idx": 6020,
+          "kind": "xss",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-attack-07",
+          "start_idx": 7000,
+          "end_idx": 7020,
+          "kind": "path_traversal",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-attack-08",
+          "start_idx": 8000,
+          "end_idx": 8020,
+          "kind": "priv_esc",
+          "source": "scripted",
+          "hard": false,
+          "hard_benign": false,
+          "variant": "standard"
+        },
+        {
+          "episode_id": "stream_05-hard-benign-03",
+          "start_idx": 8500,
+          "end_idx": 8520,
+          "kind": "none",
+          "source": "scripted",
+          "hard": true,
+          "hard_benign": true,
+          "variant": "authorized_scanner"
+        }
+      ]
+    }
+  }
+}
