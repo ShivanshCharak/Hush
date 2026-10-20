@@ -21,6 +21,8 @@ class AlertGate:
         if not decision.get("speak"):
             return {"emit": False, "reason": "decision_silent", "budget_count": len(self._recent)}
         confidence = decision.get("confidence")
+        if confidence is None and self.confidence_threshold > 0:
+            return {"emit": False, "reason": "confidence_unavailable", "budget_count": len(self._recent)}
         if confidence is not None and float(confidence) < self.confidence_threshold:
             return {"emit": False, "reason": "below_confidence_threshold", "budget_count": len(self._recent)}
         kind = str(decision.get("kind", "none"))

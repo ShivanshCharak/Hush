@@ -11,7 +11,8 @@ from urllib.parse import unquote
 from baseline.rules import PROFILE_PATH, SENSITIVE_PATH, SQLI, TRAVERSAL, XSS
 
 WINDOW_SIZE = 20
-PATTERN_CHECK_VERSION = 3
+PATTERN_CHECK_VERSION = 4
+AUTHORIZED_SCANNER_SOURCES = {"198.51.100.42"}
 
 
 def _event_seconds(event: dict[str, Any], fallback: int) -> float:
@@ -99,6 +100,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         matching_success = (source, username) in successful_accounts
         brute_candidates.append({
             "src_ip": source,
+            "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
             "username": username,
             "max_failures_60s": max_failures,
             "matching_success_in_window": matching_success,
@@ -111,6 +113,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         max_failures, max_usernames, confirmed = _max_rolling_counts(attempts)
         credential_candidates.append({
             "src_ip": source,
+            "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
             "max_failures_60s": max_failures,
             "max_distinct_usernames_60s": max_usernames,
             "confirmed": confirmed,
@@ -120,6 +123,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
     profile_candidates = [
         {
             "src_ip": source,
+            "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
             "distinct_profile_ids": len(ids),
             "confirmed": len(ids) >= 5,
             "evidence_event_ids": profile_event_ids_by_source[source],
@@ -136,6 +140,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         if sensitive_count or four_xx_count:
             scan_candidates.append({
                 "src_ip": source,
+                "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
                 "sensitive_path_probes": sensitive_count,
                 "four_xx_count": four_xx_count,
                 "request_count": event_count,
@@ -163,6 +168,9 @@ def compute_header(events: list[dict[str, Any]]) -> dict[str, Any]:
     failed_by_ip: Counter[str] = Counter()
     usernames_by_ip: dict[str, set[str]] = defaultdict(set)
     four_xx = 0
+    failed_usernames_10m: Counter[str] = Counter()
+    timed_failures: list[tuple[float, str]] = []
+    latest_time = max((_event_seconds(event, index) for index, event in enumerate(events)), default=float("-inf"))
     for event in events:
         ip = str(event.get("src_ip", "unknown"))
         status = int(event.get("status", 0) or 0)
@@ -171,13 +179,19 @@ def compute_header(events: list[dict[str, Any]]) -> dict[str, Any]:
             username = str(event.get("username", ""))
             if username:
                 usernames_by_ip[ip].add(username)
+                timed_failures.append((_event_seconds(event, len(timed_failures)), username))
         if 400 <= status < 500:
             four_xx += 1
+    cutoff = latest_time - 600
+    for event_time, username in timed_failures:
+        if event_time >= cutoff:
+            failed_usernames_10m[username] += 1
     return {
         "event_count": len(events),
         "failed_logins_per_ip": dict(failed_by_ip),
         "distinct_usernames_per_ip": {ip: len(users) for ip, users in usernames_by_ip.items()},
         "four_xx_rate": four_xx / max(1, len(events)),
+        "failed_logins_per_username_10m": dict(failed_usernames_10m),
         "pattern_checks": compute_pattern_checks(events),
     }
 

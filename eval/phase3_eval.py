@@ -34,7 +34,7 @@ class CountingExplainer:
 def explanation_checks(sample_trace, sample_events):
     emitted=[row for row in sample_trace if row["gate_emit"]]
     calls=CountingExplainer()
-    parity_trace=process(sample_events, explainer=calls)
+    parity_trace=process(sample_events, explainer=calls, use_model=False)
     parity_emitted=sum(row["gate_emit"] for row in parity_trace)
     first_five=emitted[:5]
     failing_client=FailingBedrockClient()
@@ -56,7 +56,7 @@ def evaluate():
     entity_mentions=grounded_mentions=0
     first_stream_events=None; first_stream_trace=None; all_alert_samples=[]
     for sid in manifest["dev_streams"]:
-        info=manifest["streams"][sid]; events=read_jsonl(ROOT/info["path"]); trace=process(events)
+        info=manifest["streams"][sid]; events=read_jsonl(ROOT/info["path"]); trace=process(events,use_model=False)
         if first_stream_events is None: first_stream_events,first_stream_trace=events,trace
         attacks=[e for e in info["episodes"] if not e.get("hard_benign")]
         benign=[e for e in info["episodes"] if e.get("hard_benign")]
@@ -112,7 +112,7 @@ if __name__=="__main__":
     manifest=json.loads((ROOT/"data/streams/manifest.json").read_text())
     review=[]
     for sid in manifest["dev_streams"]:
-        events=read_jsonl(ROOT/manifest["streams"][sid]["path"]); trace=process(events)
+        events=read_jsonl(ROOT/manifest["streams"][sid]["path"]); trace=process(events,use_model=False)
         for row in (x for x in trace if x["gate_emit"]):
             window=[e for e in events if int(row["event_start"])<=int(e["event_id"])<=int(row["event_end"])]
             review.append({"alert_id":row["alert_id"],"stream":sid,"kind":row["kind"],"summary":row["explanation"]["summary"],"suggested_action":row["explanation"]["suggested_action"],"evidence_ids":row["evidence_ids"],"events":[{"event_id":e.get("event_id"),"src_ip":e.get("src_ip"),"username":e.get("username"),"path":e.get("path"),"query":e.get("query"),"status":e.get("status"),"result":e.get("result"),"is_cited":int(e["event_id"]) in set(row["evidence_ids"])} for e in window],"score_correct_kind":None,"score_evidence_use":None,"score_actionability":None,"notes":""})

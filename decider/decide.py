@@ -14,12 +14,12 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from decider.prompt import build_messages, confirmed_kinds, model_view
+from decider.prompt import CONFIRM_SCHEMA_MODE, build_messages, confirmed_kinds, model_view
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = json.loads((Path(__file__).with_name("schema.json")).read_text(encoding="utf-8"))
 KINDS = set(SCHEMA["properties"]["kind"]["enum"])
-MODEL_CONTEXT_TOKENS = 8192
+MODEL_CONTEXT_TOKENS = 4096
 
 
 class InferenceError(RuntimeError):
@@ -44,30 +44,60 @@ def validate_decision(value: Any, events: list[dict[str, Any]]) -> dict[str, Any
     return value
 
 
-def schema_for_window(window: dict[str, Any]) -> dict[str, Any]:
-    """Constrain kinds and evidence citations to confirmed patterns in this window."""
+def schema_for_window(window: dict[str, Any], confirm_schema: bool | None = None) -> dict[str, Any]:
+    """Ask for a candidate confirmation; retain discovery schema with no candidate."""
+    candidates = confirmed_kinds(window)
+    confirm_schema = CONFIRM_SCHEMA_MODE if confirm_schema is None else confirm_schema
+    valid_ids = sorted(int(event["event_id"]) for event in window["events"] if "event_id" in event)
+    if candidates and confirm_schema:
+        candidate_ids = set()
+        checks = window.get("header", {}).get("pattern_checks", {})
+        for field in ("brute_force_candidates", "credential_stuffing_candidates", "priv_esc_candidates", "scanner_recon_candidates"):
+            for candidate in checks.get(field, []):
+                if candidate.get("confirmed"):
+                    candidate_ids.update(int(event_id) for event_id in candidate.get("evidence_event_ids", []))
+        for ids in checks.get("payload_signature_event_ids", {}).values():
+            candidate_ids.update(int(event_id) for event_id in ids)
+        evidence_ids = sorted(candidate_ids & set(valid_ids)) or valid_ids
+        return {
+            "type": "object", "additionalProperties": False,
+            "required": ["confirm", "evidence_ids", "explanation_hint"],
+            "properties": {
+                "confirm": {"type": "boolean"},
+                "evidence_ids": {"type": "array", "items": {"type": "integer", "enum": evidence_ids}, "uniqueItems": True, "maxItems": 1},
+                "explanation_hint": {"type": "string", "maxLength": 120},
+            },
+        }
     schema = deepcopy(SCHEMA)
-    checks = window["header"].get("pattern_checks", {})
-    allowed_kinds = confirmed_kinds(window)
-    evidence_by_kind: dict[str, set[int]] = {}
+    schema["required"] = ["speak", "kind", "evidence_ids", "explanation_hint"]
+    schema["properties"]["explanation_hint"] = {"type": "string", "maxLength": 120}
+    schema["properties"]["kind"]["enum"] = sorted(candidates | {"none"}) if candidates else sorted(KINDS)
+    schema["properties"]["evidence_ids"]["items"]["enum"] = valid_ids
+    return schema
+
+
+def candidate_kind_for_evidence(window: dict[str, Any], evidence_ids: list[int]) -> str | None:
+    """Choose the rules-derived kind matched by a cited candidate evidence ID."""
+    checks = window.get("header", {}).get("pattern_checks", {})
+    matched: set[str] = set()
     for field, kind in (
         ("brute_force_candidates", "brute_force"),
         ("credential_stuffing_candidates", "credential_stuffing"),
         ("priv_esc_candidates", "priv_esc"),
         ("scanner_recon_candidates", "scanner_recon"),
     ):
-        evidence_by_kind[kind] = {
-            int(event_id)
-            for candidate in checks.get(field, [])
-            if candidate.get("confirmed")
-            for event_id in candidate.get("evidence_event_ids", [])
-        }
-    for kind, event_ids in checks.get("payload_signature_event_ids", {}).items():
-        evidence_by_kind[kind] = {int(event_id) for event_id in event_ids}
-    schema["properties"]["kind"]["enum"] = ["none", *sorted(allowed_kinds)]
-    valid_ids = sorted(set().union(*(evidence_by_kind.get(kind, set()) for kind in allowed_kinds)))
-    schema["properties"]["evidence_ids"]["items"]["enum"] = valid_ids
-    return schema
+        for candidate in checks.get(field, []):
+            if candidate.get("confirmed") and set(evidence_ids) & {int(x) for x in candidate.get("evidence_event_ids", [])}:
+                matched.add(kind)
+    for kind, ids in checks.get("payload_signature_event_ids", {}).items():
+        if set(evidence_ids) & {int(x) for x in ids}:
+            matched.add(kind)
+    # Payload signatures are the most specific candidate when several rules
+    # happen to cite the same request event.
+    for kind in ("sqli", "xss", "path_traversal", "priv_esc", "credential_stuffing", "brute_force", "scanner_recon"):
+        if kind in matched:
+            return kind
+    return None
 
 
 def confidence_from_logprobs(logprobs: Any) -> float | None:
@@ -84,15 +114,23 @@ def confidence_from_logprobs(logprobs: Any) -> float | None:
         alternatives = item.get("top_logprobs")
         if not isinstance(alternatives, list):
             continue
-        scores: dict[str, float] = {}
+        scores: dict[str, list[float]] = {"true": [], "false": []}
+        seen_tokens: set[str] = set()
         for candidate in [item, *alternatives]:
             if not isinstance(candidate, dict) or not isinstance(candidate.get("logprob"), (int, float)):
                 continue
-            candidate_token = str(candidate.get("token", "")).strip().strip(" \t\r\n\"").strip(",:} ").lower()
+            raw_token = str(candidate.get("token", ""))
+            if raw_token in seen_tokens:
+                continue
+            seen_tokens.add(raw_token)
+            candidate_token = raw_token.strip().strip(" \t\r\n\"").strip(",:} ").lower()
             if candidate_token in {"true", "false"}:
-                scores[candidate_token] = float(candidate["logprob"])
-        if {"true", "false"} <= scores.keys():
-            log_odds = scores["true"] - scores["false"]
+                scores[candidate_token].append(float(candidate["logprob"]))
+        if scores["true"] and scores["false"]:
+            def logsumexp(values: list[float]) -> float:
+                maximum = max(values)
+                return maximum + math.log(sum(math.exp(value - maximum) for value in values))
+            log_odds = logsumexp(scores["true"]) - logsumexp(scores["false"])
             if log_odds >= 0:
                 return 1.0 / (1.0 + math.exp(-log_odds))
             exp_log_odds = math.exp(log_odds)
@@ -125,47 +163,16 @@ class OllamaDecider:
 
     def decide(self, window: dict[str, Any]) -> dict[str, Any]:
         inference_window, local_to_source_id = model_view(window)
-        allowed_kinds = confirmed_kinds(inference_window)
-        if not allowed_kinds:
-            return {
-                "speak": False,
-                "kind": "none",
-                "evidence_ids": [],
-                "schema_repairs": [],
-                "confidence": 0.0,
-                "latency_ms": 0.0,
-                "model": self.model,
-                "model_called": False,
-                "raw_model_output": None,
-                "speak_token_logprobs": None,
-                "prompt_eval_count": None,
-                "prompt_eval_duration_ns": None,
-                "model_context_tokens": MODEL_CONTEXT_TOKENS,
-                "skip_reason": "no confirmed pattern candidates",
-            }
-        checks = inference_window["header"]["pattern_checks"]
-        evidence_by_kind: dict[str, set[int]] = {}
-        for field, kind in (
-            ("brute_force_candidates", "brute_force"),
-            ("credential_stuffing_candidates", "credential_stuffing"),
-            ("priv_esc_candidates", "priv_esc"),
-            ("scanner_recon_candidates", "scanner_recon"),
-        ):
-            evidence_by_kind[kind] = {
-                int(event_id)
-                for candidate in checks.get(field, [])
-                for event_id in candidate.get("evidence_event_ids", [])
-            }
-        evidence_by_kind.update({kind: {int(event_id) for event_id in ids} for kind, ids in checks.get("payload_signature_event_ids", {}).items()})
         request_body = {
             "model": self.model,
+            "keep_alive": "30m",
             "messages": build_messages(window),
             "format": schema_for_window(inference_window),
             "stream": False,
             "think": False,
             "logprobs": True,
             "top_logprobs": 5,
-            "options": {"temperature": 0, "num_predict": 256, "num_ctx": MODEL_CONTEXT_TOKENS},
+            "options": {"temperature": 0, "num_predict": 96, "num_ctx": MODEL_CONTEXT_TOKENS},
         }
         request = Request(
             f"{self.base_url}/api/chat",
@@ -197,24 +204,43 @@ class OllamaDecider:
             parsed = None
             schema_repairs.append("malformed JSON; failed closed to silence")
 
-        if not isinstance(parsed, dict) or type(parsed.get("speak")) is not bool:
+        explanation_hint = ""
+        if CONFIRM_SCHEMA_MODE and confirmed_kinds(inference_window):
+            if not isinstance(parsed, dict) or set(parsed) != {"confirm", "evidence_ids", "explanation_hint"} or type(parsed.get("confirm")) is not bool:
+                validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                schema_repairs.append("invalid candidate confirmation; failed closed to silence")
+            else:
+                explanation_hint = str(parsed.get("explanation_hint", ""))[:120]
+                evidence = parsed.get("evidence_ids")
+                valid_ids = {int(event["event_id"]) for event in inference_window["events"] if "event_id" in event}
+                if not isinstance(evidence, list) or any(type(item) is not int for item in evidence) or len(set(evidence)) != len(evidence) or not set(evidence) <= valid_ids or len(evidence) > 1:
+                    validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                    schema_repairs.append("invalid candidate evidence IDs; failed closed to silence")
+                elif not parsed["confirm"]:
+                    validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                else:
+                    kind = candidate_kind_for_evidence(inference_window, evidence)
+                    if not evidence or kind is None:
+                        validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                        schema_repairs.append("confirmation lacks evidence tied to a rules candidate; failed closed")
+                    else:
+                        validated = {"speak": True, "kind": kind, "evidence_ids": evidence}
+        elif not isinstance(parsed, dict) or type(parsed.get("speak")) is not bool:
             validated = {"speak": False, "kind": "none", "evidence_ids": []}
             if not schema_repairs:
                 schema_repairs.append("missing/invalid speak field; failed closed to silence")
         elif parsed["speak"] is False:
+            explanation_hint = str(parsed.get("explanation_hint", ""))[:120]
             validated = {"speak": False, "kind": "none", "evidence_ids": []}
-            if set(parsed) != {"speak", "kind", "evidence_ids"} or parsed.get("kind") != "none" or parsed.get("evidence_ids") != []:
+            if set(parsed) != {"speak", "kind", "evidence_ids", "explanation_hint"} or parsed.get("kind") != "none" or parsed.get("evidence_ids") != []:
                 schema_repairs.append("canonicalized silent decision to kind=none and empty evidence")
         else:
+            explanation_hint = str(parsed.get("explanation_hint", ""))[:120]
             candidate = {key: parsed.get(key) for key in ("speak", "kind", "evidence_ids")}
-            if set(parsed) != {"speak", "kind", "evidence_ids"}:
+            if set(parsed) != {"speak", "kind", "evidence_ids", "explanation_hint"}:
                 schema_repairs.append("removed missing/extra fields from alert decision")
             try:
                 validated = validate_decision(candidate, inference_window["events"])
-                if validated["kind"] not in allowed_kinds:
-                    raise ValueError("alert kind is not backed by a confirmed pattern")
-                if not set(validated["evidence_ids"]) <= evidence_by_kind.get(validated["kind"], set()):
-                    raise ValueError("evidence ID is not backed by the selected kind's confirmed pattern")
             except ValueError as exc:
                 validated = {"speak": False, "kind": "none", "evidence_ids": []}
                 schema_repairs.append(f"invalid alert decision ({exc}); failed closed to silence")
@@ -229,6 +255,10 @@ class OllamaDecider:
             "raw_model_output": content if isinstance(content, str) else None,
             "prompt_eval_count": body.get("prompt_eval_count"),
             "prompt_eval_duration_ns": body.get("prompt_eval_duration"),
+            "eval_count": body.get("eval_count"),
+            "eval_duration_ns": body.get("eval_duration"),
+            "load_duration_ns": body.get("load_duration"),
             "speak_token_logprobs": speak_token_logprobs(body.get("logprobs")),
+            "explanation_hint": explanation_hint,
             "model_context_tokens": MODEL_CONTEXT_TOKENS,
         }

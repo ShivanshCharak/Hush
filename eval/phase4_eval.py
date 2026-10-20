@@ -58,7 +58,7 @@ def demo_preflight() -> dict:
     traces = []
     for _ in range(3):
         events = make_timeline()
-        trace = process(events)
+        trace = process(events, use_model=False)
         emitted = [row for row in trace if row["gate_emit"]]
         run_summaries.append({"events": len(events), "alerts": [row["kind"] for row in emitted],
                               "first_segment_silent": not any(row["gate_emit"] and int(row["event_start"]) < 150 for row in trace)})
@@ -77,7 +77,7 @@ def paced_rehearsals() -> dict:
     reports = []
     signatures = []
     for index in range(3):
-        result = run_demo(make_timeline(), events_path, trace_path, speed=1.0)
+        result = run_demo(make_timeline(), events_path, trace_path, speed=1.0, use_model=False)
         trace = [json.loads(line) for line in trace_path.read_text(encoding="utf-8").splitlines() if line.strip()]
         order = [row["kind"] for row in trace if row["gate_emit"]]
         first_segment_silent = not any(row["gate_emit"] and int(row["event_start"]) < 150 for row in trace)

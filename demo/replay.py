@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import queue
 import sys
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -64,28 +66,50 @@ def make_timeline() -> list[dict]:
     return timeline
 
 
-def run(events: list[dict], events_path: Path, trace_path: Path, *, speed: float = 1.0) -> dict:
+def run(events: list[dict], events_path: Path, trace_path: Path, *, speed: float = 1.0, use_model: bool = True) -> dict:
     if speed <= 0:
         raise ValueError("speed must be greater than zero")
     events_path.parent.mkdir(parents=True, exist_ok=True)
     trace_path.parent.mkdir(parents=True, exist_ok=True)
     gate = AlertGate()
-    emitted = 0
+    emitted = [0]
     start = time.monotonic()
     with events_path.open("w", encoding="utf-8") as event_file, trace_path.open("w", encoding="utf-8") as trace_file:
+        work: queue.Queue[list[dict] | None] = queue.Queue()
+        failures: list[BaseException] = []
+
+        def decide_windows() -> None:
+            while True:
+                batch = work.get()
+                try:
+                    if batch is None:
+                        return
+                    trace = process(batch, gate=gate, use_model=use_model)
+                    for row in trace:
+                        trace_file.write(json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n")
+                        emitted[0] += int(bool(row["gate_emit"]))
+                    trace_file.flush()
+                except BaseException as exc:
+                    failures.append(exc)
+                finally:
+                    work.task_done()
+
+        worker = threading.Thread(target=decide_windows, name="window-decider", daemon=True)
+        worker.start()
         for index, event in enumerate(events):
             event_file.write(json.dumps(event, separators=(",", ":"), ensure_ascii=False) + "\n")
             event_file.flush()
             if (index + 1) % 20 == 0:
-                trace = process(events[index-19:index+1], gate=gate)
-                for row in trace:
-                    trace_file.write(json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n")
-                    emitted += int(bool(row["gate_emit"]))
-                trace_file.flush()
+                work.put(events[index-19:index+1])
             if index + 1 < len(events):
                 time.sleep(0.2 / speed)
+        work.put(None)
+        work.join()
+        worker.join()
+        if failures:
+            raise RuntimeError("window decision failed") from failures[0]
     elapsed = time.monotonic() - start
-    return {"events": len(events), "windows": len(events)//20, "emitted_alerts": emitted,
+    return {"events": len(events), "windows": len(events)//20, "emitted_alerts": emitted[0],
             "runtime_seconds": round(elapsed, 3), "speed_multiplier": speed,
             "events_path": str(events_path), "trace_path": str(trace_path)}
 
@@ -95,8 +119,9 @@ def main() -> None:
     parser.add_argument("--events", type=Path, default=ROOT / "dashboard/data/demo-events.jsonl")
     parser.add_argument("--trace", type=Path, default=ROOT / "dashboard/data/demo-trace.jsonl")
     parser.add_argument("--speed", type=float, default=1.0, help="1.0 is real-time; 20 replays at 20x")
+    parser.add_argument("--rules", action="store_true", help="use the rules baseline instead of the model")
     args = parser.parse_args()
-    report = run(make_timeline(), args.events, args.trace, speed=args.speed)
+    report = run(make_timeline(), args.events, args.trace, speed=args.speed, use_model=not args.rules)
     print(json.dumps(report, indent=2))
 
 

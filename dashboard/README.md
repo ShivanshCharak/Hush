@@ -11,6 +11,8 @@ python pipeline/run.py data/streams/stream_01.jsonl --trace dashboard/data/strea
 python dashboard/api/ingest.py data/streams/stream_01.jsonl dashboard/data/stream_01_trace.jsonl
 ```
 
+The pipeline keeps every raw event in `events.jsonl`, then uses the prefilter to decide whether a 20-event window needs Ollama inference. It writes a trace row for each window, including windows skipped by the prefilter. Use `--rules` to generate the rules-baseline comparison trace.
+
 For a static snapshot, start the API with:
 
 ```bash
@@ -29,7 +31,7 @@ Open `http://localhost:3000`. Set `DASHBOARD_API_ORIGIN` if the API uses a diffe
 
 ## View the real ModSecurity archive
 
-The dashboard's archive view uses the converted public ModSecurity requests from `data/external/modsecurity_events.jsonl`, stored in a local DuckDB snapshot. Its detector trace is generated locally by this project; it is not a source-provided label, and the source archive is not a live feed.
+The dashboard's archive view uses the converted public ModSecurity requests from `data/external/modsecurity_events.jsonl`, stored in a local DuckDB snapshot. Its detector trace is generated locally by this project; it is not a source-provided label, and the source archive is not a live feed. The frontend replays the database from the beginning: it fetches 500 rows, then fetches the next 500 every 3.5 seconds. During replay and live tail, the graph stays on a fixed rolling three-minute window, with the newest timestamp at the right; old points move off the left as time advances. Alert cards are limited to recent alerts in that same window. Pause/resume controls replay, which completes when it reaches the last event.
 
 ```bash
 python pipeline/run.py data/external/modsecurity_events.jsonl --trace dashboard/data/modsecurity-trace.jsonl
@@ -37,7 +39,7 @@ python dashboard/api/ingest.py data/external/modsecurity_events.jsonl dashboard/
 HUSH_DASHBOARD_DB="$PWD/dashboard/data/modsecurity.duckdb" python -m uvicorn dashboard.api.routes:app --host 127.0.0.1 --port 8000
 ```
 
-Start Next.js in another terminal as above. The UI identifies this as an imported archive snapshot and shows its event count; the Live tail control remains disabled until append-only event and trace paths are configured.
+Start Next.js in another terminal as above. The UI identifies this as a database replay and shows replay progress. This playback is simulated pacing over stored historical rows—not new events arriving from the source. For actual new events, configure the JSONL file tail described below.
 
 ## Live demo replay
 
@@ -51,7 +53,7 @@ python dashboard/api/ingest.py dashboard/data/demo-events.jsonl dashboard/data/d
 HUSH_EVENTS_PATH="$PWD/dashboard/data/demo-events.jsonl" HUSH_TRACE_PATH="$PWD/dashboard/data/demo-trace.jsonl" python -m uvicorn dashboard.api.routes:app --host 127.0.0.1 --port 8000
 ```
 
-In another terminal run `python demo/replay.py`. It writes 900 events over 180 seconds and appends a decision row after each 20-event window. Use `--speed 20` for a faster rehearsal; the evaluator checks deterministic trace output separately from wall-clock timing. Start the Next.js app as above and enable **Live tail**. Use a fresh, empty database for each replay because event IDs restart at zero.
+In another terminal run `python demo/replay.py`. It writes 900 events over 180 seconds while a separate worker processes each 20-event window and appends the decision row afterward. This lets raw requests reach DuckDB and the UI before slow model verdicts arrive. Use `--speed 20` for a faster rehearsal or `--rules` for the deterministic rules baseline. Start the Next.js app as above and enable **Live tail**. Use a fresh, empty database for each replay because event IDs restart at zero.
 
 Run `python eval/phase4_eval.py` for a dev-only injection, canary, truth-separation, and deterministic demo preflight report. Pass `--model` to measure the currently configured Ollama model instead of the rules baseline. The default baseline evaluation replays three deterministic traces; paced 180-second rehearsals still need to be run separately. Do not use this command against the locked test set.
 
@@ -60,7 +62,7 @@ Run `python eval/phase4_eval.py` for a dev-only injection, canary, truth-separat
 - URL-backed key-value filters, clickable event values, severity histogram, spike bands, alert markers, keyset pagination, and a virtualized request table.
 - Event detail with raw JSON, surrounding events, detector verdict, gate reason, confidence, and explanation.
 - Alert cards link back to their source range and highlight cited evidence rows.
-- SSE live tail reads event and trace JSONL appends when `HUSH_EVENTS_PATH` and `HUSH_TRACE_PATH` are set before FastAPI starts.
+- SSE live tail reads event and trace JSONL appends when `HUSH_EVENTS_PATH` and `HUSH_TRACE_PATH` are set before FastAPI starts. It refreshes existing rows when a late trace arrives, so verdicts and explanations attach after the request is already visible.
 - Ground-truth episodes are served only by the dashboard's explicit opt-in dev-stream endpoint and are disabled in live mode by default.
 
 The ingester builds an initial snapshot. When `HUSH_EVENTS_PATH` and `HUSH_TRACE_PATH` point to append-only JSONL files at API startup, a background watcher adds complete new lines to DuckDB; the SSE endpoint publishes newly indexed events. This is the actual streaming mode, distinct from browsing an archived dataset. Use a new database for each replay because the demo restarts event IDs at zero.
