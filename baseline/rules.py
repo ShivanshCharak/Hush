@@ -83,6 +83,8 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
     failed_by_ip: Counter[str] = Counter()
     usernames_by_ip: dict[str, set[str]] = defaultdict(set)
     failed_usernames: dict[str, Counter[str]] = defaultdict(Counter)
+    failures_by_username_10m: Counter[str] = Counter()
+    failure_ids_by_username_10m: dict[str, list[int]] = defaultdict(list)
     succeeded_usernames: dict[str, set[str]] = defaultdict(set)
     four_xx_by_ip: Counter[str] = Counter()
     request_by_ip: Counter[str] = Counter()
@@ -92,7 +94,17 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
     profile_ids: dict[str, set[str]] = defaultdict(set)
     scanners_by_ip: Counter[str] = Counter()
 
-    for event in events:
+    timed_failures: list[tuple[float, str, int]] = []
+    latest_time = float("-inf")
+    for index, event in enumerate(events):
+        try:
+            parsed_time = datetime.fromisoformat(str(event.get("timestamp", "")).replace("Z", "+00:00"))
+            if parsed_time.tzinfo is None:
+                parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+            event_time = parsed_time.timestamp()
+        except ValueError:
+            event_time = float(index)
+        latest_time = max(latest_time, event_time)
         ip = str(event.get("src_ip", "unknown"))
         event_id = int(event.get("event_id", -1))
         request_by_ip[ip] += 1
@@ -108,6 +120,7 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
                 if username:
                     usernames_by_ip[ip].add(username)
                     failed_usernames[ip][username] += 1
+                    timed_failures.append((event_time, username, event_id))
             elif event.get("result") == "success" and username:
                 succeeded_usernames[ip].add(username)
 
@@ -127,12 +140,25 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
         if re.search(r"nmap|nikto|masscan|sqlmap|gobuster|dirbuster", agent, re.I):
             scanners_by_ip[ip] += 1
 
+    cutoff = latest_time - 600 if latest_time != float("-inf") else float("-inf")
+    for event_time, username, event_id in timed_failures:
+        if event_time >= cutoff:
+            failures_by_username_10m[username] += 1
+            failure_ids_by_username_10m[username].append(event_id)
+
     scores: dict[str, tuple[int, list[int], str]] = {}
     for kind, ids in signature_hits.items():
         if ids:
             scores[kind] = (100, ids[:8], "request payload matches an attack signature")
 
     failures_60s, usernames_60s = _auth_counts_per_60s(events)
+    for username, failures in failures_by_username_10m.items():
+        if failures >= 5:
+            scores["brute_force"] = (
+                68 + min(failures, 20),
+                failure_ids_by_username_10m[username][:8],
+                f"{failures} failed logins for one username across sources in 10 minutes",
+            )
     for ip, failures in failures_60s.items():
         unique_users = len(usernames_60s.get(ip, set()))
         if unique_users >= 4 and failures >= 4:
@@ -170,7 +196,7 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
             scores["scanner_recon"] = (60 + len(ids), ids, "automated probes target sensitive or unrelated endpoints")
 
     if not scores:
-        return {"speak": False, "kind": "none", "evidence_ids": [], "confidence": 0.0, "reason": "no rule crossed its threshold", "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip)}
+        return {"speak": False, "kind": "none", "evidence_ids": [], "confidence": 0.0, "reason": "no rule crossed its threshold", "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip, failures_by_username_10m)}
 
     kind, (score, evidence_ids, reason) = max(scores.items(), key=lambda item: (item[1][0], item[0]))
     return {
@@ -179,7 +205,7 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
         "evidence_ids": evidence_ids,
         "confidence": min(0.99, score / 110),
         "reason": reason,
-        "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip),
+        "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip, failures_by_username_10m),
     }
 
 
@@ -189,12 +215,14 @@ def _features(
     usernames_by_ip: dict[str, set[str]],
     four_xx_by_ip: Counter[str],
     request_by_ip: Counter[str],
+    failures_by_username_10m: Counter[str] | None = None,
 ) -> dict[str, Any]:
     return {
         "failed_logins_per_ip": dict(failed_by_ip),
         "distinct_usernames_per_ip": {ip: len(names) for ip, names in usernames_by_ip.items()},
         "four_xx_rate": sum(four_xx_by_ip.values()) / max(1, len(events)),
         "events": len(events),
+        "failed_logins_per_username_10m": dict(failures_by_username_10m or {}),
     }
 
 
