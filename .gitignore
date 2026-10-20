@@ -1,0 +1,26 @@
+# Python environments and bytecode
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Next.js dependencies and build output
+dashboard/web/node_modules/
+dashboard/web/.next/
+dashboard/web/tsconfig.tsbuildinfo
+
+# DuckDB write-ahead logs
+*.duckdb.wal
+
+# Local evaluation output
+eval/runs/
+
+# Local dashboard data and generated database
+dashboard/data/
+
+# Locally compiled demo binary
+/trial
+
+# Large downloaded/generated datasets (keep locally; regenerate or download as documented)
+data/external/modsecurity_events.jsonl
+sim/capture/external/cicids2017/raw/*.csv

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["speak", "kind", "evidence_ids"],
+  "properties": {
+    "speak": {"type": "boolean"},
+    "kind": {
+      "type": "string",
+      "enum": ["brute_force", "credential_stuffing", "sqli", "xss", "path_traversal", "priv_esc", "scanner_recon", "none"]
+    },
+    "evidence_ids": {"type": "array", "items": {"type": "integer"}, "uniqueItems": true, "maxItems": 1}
+  }
+}

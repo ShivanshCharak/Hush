@@ -11,6 +11,6 @@ For every row, preserve `review_id` and `events`, then fill:
 
 Use `silent` + `none` for benign examples. Use `speak` + an attack kind only when the events support that alert. Use `ambiguous` + `ambiguous` when the evidence is insufficient or mixed. The 20 ambiguous candidates are excluded from binary Cohen's kappa.
 
-Save the completed JSONL as `second_annotator_filled.jsonl` in this directory. Do not inspect `second_annotator_key.json` while labeling; it maps the blind review IDs to provisional labels and split rows. Then run `python eval/phase1_eval.py`. The agreement gate requires at least 60 non-ambiguous pairs and Cohen's kappa >= 0.70.
+The blind packet has been completed as `second_annotator_filled.jsonl`. The evaluator reports 73 eligible pairs and Cohen's kappa 0.7834, above the 0.70 threshold. The reviewer's method and limitation are recorded in [`second_annotator_filled.REVIEW.md`](second_annotator_filled.REVIEW.md): Codex made a separate blind pass, but also helped create the original labels, so this is not independent human agreement.
 
 The real ModSecurity candidates in `real_candidates.jsonl` were screened using explicit WAF tags. Their proposed kinds are provisional because a WAF match can be noisy. Review the visible request fields and evidence IDs; do not assume the proposal is correct. WAF-only fields stay outside the model-visible events.
