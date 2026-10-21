@@ -58,16 +58,24 @@ const gpu=await page.evaluate(()=>{const canvas=document.createElement("canvas")
 const completenessText=await page.locator("section").filter({has:page.getByRole("heading",{name:"Event stream"})}).innerText();
 const initialMountedRows=await page.locator("tbody tr").count();
 const scrollHandle=await page.locator("tbody").evaluateHandle(el=>el.parentElement?.parentElement);
+const cdp=await page.context().newCDPSession(page);
+const traceEvents=[];
+cdp.on("Tracing.dataCollected",event=>traceEvents.push(...event.value));
+const traceComplete=new Promise(resolve=>cdp.once("Tracing.tracingComplete",resolve));
+await cdp.send("Tracing.start",{categories:"devtools.timeline,blink.user_timing,disabled-by-default-devtools.timeline.frame",transferMode:"ReportEvents"});
 const frameSamples=await page.evaluate(async el=>new Promise(resolve=>{
   const samples=[];const start=performance.now();const max=Math.max(1,el.scrollHeight-el.clientHeight);el.scrollTop=0;
   function frame(now){samples.push(now);const progress=Math.min((now-start)/2500,1);el.scrollTop=max*progress;if(progress<1)requestAnimationFrame(frame);else resolve(samples);}
   requestAnimationFrame(frame);
 }),scrollHandle);
+await cdp.send("Tracing.end");
+await traceComplete;
 const intervals=frameSamples.slice(1).map((now,i)=>now-frameSamples[i]);
 const avgFps=intervals.length?1000/(intervals.reduce((a,b)=>a+b,0)/intervals.length):null;
 const sortedIntervals=[...intervals].sort((a,b)=>a-b);
 const p95FrameMs=sortedIntervals.length?sortedIntervals[Math.min(sortedIntervals.length-1,Math.ceil(sortedIntervals.length*.95)-1)]:null;
 const finalMountedRows=await page.locator("tbody tr").count();
+const traceSummary={event_count:traceEvents.length,by_name:traceEvents.reduce((counts,event)=>{counts[event.name]=(counts[event.name]||0)+1;return counts},{}),long_tasks:traceEvents.filter(event=>(event.name==="RunTask"||event.name==="Task")&&event.dur>=8000).map(event=>({name:event.name,duration_ms:event.dur/1000,ts:event.ts})).sort((a,b)=>b.duration_ms-a.duration_ms).slice(0,10),largest_layout_paint:traceEvents.filter(event=>["Layout","UpdateLayoutTree","Paint","CompositeLayers"].includes(event.name)&&typeof event.dur==="number").map(event=>({name:event.name,duration_ms:event.dur/1000})).sort((a,b)=>b.duration_ms-a.duration_ms).slice(0,10)};
 await page.evaluate(()=>{performance.clearMarks("dashboard:filter-handler-start");performance.clearMarks("dashboard:filter-handler-end");performance.clearMarks("dashboard:filter-render-complete")});
 const filterStarted=Date.now();
 await page.getByRole("textbox",{name:"Filter events"}).fill("kind=sqli");
@@ -106,6 +114,10 @@ const report={created_at:new Date().toISOString(),scope:"synthetic dev-derived 5
   scroll:{duration_ms:2500,average_fps:avgFps,p95_frame_interval_ms:p95FrameMs,frames:frameSamples.length,dom_rows_after_scroll:finalMountedRows},
   filter:{filter:"kind=sqli",matching_rows:20,total_repaint_ms:filterRepaintMs,handler_network_render:filterProfile,fixture_server_ms:filterFixtureServerMs,click_to_results_minus_fixture_handler_ms:filterClientRepaintMs,server_note:"Playwright intercept fixture handler; API count and browser resource timings are reported separately"},alert_card_linkage:linkage,config_snapshot:metadata};
 const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/, "Z");
+const tracePath=path.join(ROOT,"eval/runs",`dashboard-scroll-trace-${stamp}.json`);
+fs.writeFileSync(tracePath,JSON.stringify({created_at:report.created_at,browser:report.browser,scroll:report.scroll,trace_summary:traceSummary,trace_events:traceEvents},null,2)+"\n");
+report.scroll.trace_artifact=path.relative(ROOT,tracePath);
+report.scroll.trace_summary=traceSummary;
 const out=path.join(ROOT,"eval/runs",`dashboard-playwright-${stamp}.json`);
 fs.writeFileSync(out,JSON.stringify(report,null,2)+"\n");
 console.log(JSON.stringify({artifact:path.relative(ROOT,out),browser:report.browser,table_completeness:report.table_completeness,scroll:report.scroll,filter:report.filter,alert_card_linkage:linkage},null,2));

@@ -1,4 +1,4 @@
-.PHONY: rules-dev study-phase2 phase1 phase2 phase3 phase4 ablation eval-check-locked eval
+.PHONY: rules-dev study-phase2 phase1 phase2 phase3 phase4 ablation eval-check-locked prelock-check eval
 
 ABLATION_MODE ?= --dry-run
 
@@ -27,6 +27,9 @@ ablation:
 
 eval-check-locked:
 	python eval/check_locked_run.py
+
+prelock-check:
+	python eval/prelock_guard.py
 
 eval:
 	$(MAKE) eval-check-locked
