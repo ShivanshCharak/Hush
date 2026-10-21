@@ -1,0 +1,109 @@
+{
+  "created_at": "2026-10-21T06:06:50.159Z",
+  "scope": "synthetic dev-derived 50,000-row browser fixture; no locked/held-out data",
+  "browser": {
+    "name": "Google Chrome",
+    "headless": false,
+    "gpu_enabled": true,
+    "gpu": {
+      "webgl": true,
+      "vendor": "Google Inc. (AMD)",
+      "renderer": "ANGLE (AMD, AMD Radeon Graphics (radeonsi renoir ACO), OpenGL 4.6)"
+    }
+  },
+  "row_count": 50000,
+  "table_completeness": {
+    "requested_rows": 50000,
+    "visible_loaded_count": true,
+    "initial_virtual_rows": 20,
+    "post_scroll_virtual_rows": 19
+  },
+  "tti": {
+    "method": "Playwright navigation timings plus 5-second quiet-window proxy after network idle",
+    "domInteractiveMs": 256.5,
+    "domContentLoadedMs": 256.59999999962747,
+    "loadEventEndMs": 319.5,
+    "firstContentfulPaintMs": 284,
+    "longTaskCount": 4,
+    "lastLongTaskEndMs": 1457,
+    "quietWindowTtiProxyMs": 6457,
+    "wall_to_network_idle_and_quiet_ms": 11381
+  },
+  "scroll": {
+    "duration_ms": 2500,
+    "average_fps": 42.62877442273535,
+    "p95_frame_interval_ms": 50,
+    "frames": 109,
+    "dom_rows_after_scroll": 19
+  },
+  "filter": {
+    "filter": "kind=sqli",
+    "matching_rows": 20,
+    "total_repaint_ms": 1655,
+    "handler_network_render": {
+      "handler_ms": 3.099999999627471,
+      "network_ms": 291,
+      "render_ms": 62.200000000186265,
+      "click_to_results_ms": 608.0999999996275,
+      "api_requests": [
+        "/api/events?limit=200&filter=kind%3Dsqli",
+        "/api/histogram?buckets=120&filter=kind%3Dsqli"
+      ]
+    },
+    "fixture_server_ms": 3.3445249999986117,
+    "click_to_results_minus_fixture_handler_ms": 1651.6554750000014,
+    "server_note": "Playwright intercept fixture handler; API count and browser resource timings are reported separately"
+  },
+  "alert_card_linkage": {
+    "detailVisible": true,
+    "selectedEvidenceRowPresent": true,
+    "selectedEvidenceRowHighlighted": true
+  },
+  "config_snapshot": {
+    "code_commit_sha": "ffba95cea239d4fd197e653026303d7bdb4fb317",
+    "tracked_worktree_clean": true,
+    "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
+    "prompt_format_version": 17,
+    "pattern_check_version": 5,
+    "model": null,
+    "model_digest_sha256": null,
+    "model_digest_status": "not_applicable_to_rules_bedrock_pipeline",
+    "thresholds": {
+      "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+      "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "cross_ip_brute_force_window_seconds": 3600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "allowlist_sha256": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805",
+    "normalizer_settings": {
+      "url_decode_passes_max": 3,
+      "html_entity_decode": true,
+      "unicode_escape_decode": true,
+      "sql_comment_stripping": true,
+      "whitespace_collapse": true
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v1-dev.json": "b0a4106dd05150ee708bfe7e16e656f4cce46efb0cd930ed0319055c2740a403",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "eval/runs/evasion-v3-dev.json": "94bb184fde4d413a4b3222dbc1db77b749b0c89d4c72a6b9540cd1cc4c094f53",
+      "eval/runs/evasion-v4-dev.json": "4a60e0dce3456dd680fadc51a2ce1b9eca05d8e1d6f0b635de67bffcca7e3877",
+      "eval/runs/evasion-v4-clean-dev.json": "341e4baacf79db482f56fc5f7d97d7a5969eb24a3c326fba7191524952c2c3df",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    }
+  }
+}
