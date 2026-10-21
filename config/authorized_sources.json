@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "source": "198.51.100.42",
+      "scopes": ["scanner_recon"],
+      "expires_at": "2026-12-31T23:59:59Z",
+      "reason": "approved internal scanner"
+    }
+  ]
+}

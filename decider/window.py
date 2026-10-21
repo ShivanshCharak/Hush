@@ -9,12 +9,10 @@ from typing import Any
 from urllib.parse import unquote
 
 from baseline.rules import PROFILE_PATH, SENSITIVE_PATH, SQLI, TRAVERSAL, XSS
+from baseline.authorization import authorized_source
 
 WINDOW_SIZE = 20
 PATTERN_CHECK_VERSION = 4
-AUTHORIZED_SCANNER_SOURCES = {"198.51.100.42"}
-
-
 def _event_seconds(event: dict[str, Any], fallback: int) -> float:
     try:
         timestamp = datetime.fromisoformat(str(event.get("timestamp", "")).replace("Z", "+00:00"))
@@ -100,7 +98,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         matching_success = (source, username) in successful_accounts
         brute_candidates.append({
             "src_ip": source,
-            "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
+            "authorized_source": authorized_source(source, "authentication"),
             "username": username,
             "max_failures_60s": max_failures,
             "matching_success_in_window": matching_success,
@@ -113,7 +111,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         max_failures, max_usernames, confirmed = _max_rolling_counts(attempts)
         credential_candidates.append({
             "src_ip": source,
-            "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
+            "authorized_source": authorized_source(source, "authentication"),
             "max_failures_60s": max_failures,
             "max_distinct_usernames_60s": max_usernames,
             "confirmed": confirmed,
@@ -123,7 +121,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
     profile_candidates = [
         {
             "src_ip": source,
-            "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
+            "authorized_source": authorized_source(source, "profile_scan"),
             "distinct_profile_ids": len(ids),
             "confirmed": len(ids) >= 5,
             "evidence_event_ids": profile_event_ids_by_source[source],
@@ -140,7 +138,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         if sensitive_count or four_xx_count:
             scan_candidates.append({
                 "src_ip": source,
-                "authorized_source": source in AUTHORIZED_SCANNER_SOURCES,
+                "authorized_source": authorized_source(source, "scanner_recon"),
                 "sensitive_path_probes": sensitive_count,
                 "four_xx_count": four_xx_count,
                 "request_count": event_count,

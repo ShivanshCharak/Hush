@@ -1,0 +1,285 @@
+{
+  "phase": "dev-rules-and-audit",
+  "created_at": "2026-10-20T18:13:10.197285+00:00",
+  "data_scope": "data/golden/dev.jsonl and evasion-v2 dev mutation set; historical dev-only 8B artifact",
+  "metrics": {
+    "attack_recall": {
+      "n": 125,
+      "d": 144
+    },
+    "kind_accuracy": {
+      "n": 111,
+      "d": 125
+    },
+    "hard_benign_false_speaks": {
+      "n": 0,
+      "d": 36
+    },
+    "normal_benign_false_speaks": {
+      "n": 0,
+      "d": 144
+    }
+  },
+  "evasion_v2_rules_recall": {
+    "slow_rate_10ip_30m_rotating_users": {
+      "detected": 0,
+      "total": 20
+    },
+    "triple_encoding": {
+      "detected": 17,
+      "total": 20
+    },
+    "parser_obfuscation": {
+      "detected": 11,
+      "total": 20
+    }
+  },
+  "spacing_hypothesis": {
+    "hypothesis": "A 10-minute rolling feature misses attempts spaced 30 minutes apart.",
+    "window_changed": false,
+    "examples": [
+      {
+        "id": "evasion-v2-slow-10ip-01",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-02",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-03",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-04",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-05",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-06",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-07",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-08",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-09",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-10",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-11",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-12",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-13",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-14",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-15",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-16",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-17",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-18",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-19",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      },
+      {
+        "id": "evasion-v2-slow-10ip-20",
+        "auth_failures": 20,
+        "spacing_minutes": 30,
+        "failures_in_latest_10m": 1,
+        "decision": false
+      }
+    ],
+    "interpretation": "In each 20-event slow-rate case, only the latest event falls in the latest 10 minutes; the rule recall is reported separately above."
+  },
+  "historical_8b_hard_benign_false_speaks": {
+    "n": 7,
+    "details": [
+      {
+        "id": "sim-dev-hard_benign-0030",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0005",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0025",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0020",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0035",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0010",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0015",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      }
+    ]
+  },
+  "config_snapshot": {
+    "prompt_hash_sha256": "3d5eb3f0153eba5ce33bb9209fd9422bdf207d949a5454784a95787562957dfc",
+    "prompt_format_version": 17,
+    "model": "qwen3:8b",
+    "model_digest_sha256": null,
+    "model_digest_status": "unavailable",
+    "thresholds": {
+      "brute_force": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "credential_stuffing": ">=4 failures across >=4 usernames from one source in rolling 60s",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "window_spacing_seconds": 600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203"
+    }
+  }
+}

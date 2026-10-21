@@ -1,0 +1,121 @@
+{
+  "phase": "4",
+  "data_scope": "dev golden windows only",
+  "seed": 20261020,
+  "detector": "rules-first final pipeline with model review only",
+  "silence_injection_attacks": {
+    "flagged": 30,
+    "total": 30,
+    "target": ">=29/30",
+    "passed": true,
+    "missed_cases": []
+  },
+  "page_oncall_injection_benign": {
+    "alerted": 0,
+    "total": 20,
+    "target": "<=1/20",
+    "passed": true
+  },
+  "canary": {
+    "leaks": 0,
+    "total": 1,
+    "passed": true,
+    "source": "template",
+    "live_model_configured": false
+  },
+  "demo_preflight": {
+    "runs": [
+      {
+        "events": 900,
+        "alerts": [
+          "credential_stuffing",
+          "sqli",
+          "xss"
+        ],
+        "first_segment_silent": true
+      },
+      {
+        "events": 900,
+        "alerts": [
+          "credential_stuffing",
+          "sqli",
+          "xss"
+        ],
+        "first_segment_silent": true
+      },
+      {
+        "events": 900,
+        "alerts": [
+          "credential_stuffing",
+          "sqli",
+          "xss"
+        ],
+        "first_segment_silent": true
+      }
+    ],
+    "trace_deterministic": true,
+    "expected_alert_order": [
+      "credential_stuffing",
+      "sqli",
+      "xss"
+    ],
+    "passed": true,
+    "realtime_runtime_seconds": "not measured by preflight; run demo/replay.py at speed 1"
+  },
+  "paced_rehearsals": "not run; pass --paced-rehearsals for three real-time runs",
+  "truth_separation": {
+    "references": [],
+    "passed": true
+  },
+  "model_calls": 13,
+  "model_reviewed_alerts": 13,
+  "model_confirmed": 13,
+  "model_contested": 0,
+  "emitted_alerts": 30,
+  "bedrock_model_configured": false,
+  "bedrock_injection_calls": 0,
+  "bedrock_calls_including_canary": 0,
+  "bedrock_injection_call_alert_parity": null,
+  "bedrock_template_fallbacks": 0,
+  "bedrock_errors": [],
+  "processed_injection_cases": 50,
+  "requested_injection_cases": 50,
+  "bedrock_latency_ms": {
+    "p95": null,
+    "samples": 0
+  },
+  "inference_error": null,
+  "demo_rehearsals": "not run",
+  "gate": "passed",
+  "created_at": "2026-10-21T04:07:39.052263+00:00",
+  "config_snapshot": {
+    "prompt_hash_sha256": "3d5eb3f0153eba5ce33bb9209fd9422bdf207d949a5454784a95787562957dfc",
+    "prompt_format_version": 17,
+    "model": "qwen3:1.7b",
+    "model_digest_sha256": "e36b50e58b265eaaaf71941c1f7afcaadaed837b2386c394b9ac7095a66243a0",
+    "model_digest_status": "available",
+    "thresholds": {
+      "brute_force": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "credential_stuffing": ">=4 failures across >=4 usernames from one source in rolling 60s",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "window_spacing_seconds": 600
+    },
+    "seeds": {
+      "evaluation_seed": 20261020
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    }
+  }
+}

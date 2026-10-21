@@ -19,6 +19,7 @@ from baseline.rules import predict as predict_rules
 from decider.decide import InferenceError, OllamaDecider, confidence_from_logprobs
 from decider.prompt import CONFIRM_SCHEMA_MODE, FEWSHOT_ENABLED, FEW_SHOT_EXAMPLES, PROMPT_FORMAT_VERSION, confirmed_kinds
 from decider.window import PATTERN_CHECK_VERSION, make_window
+from eval.run_metadata import snapshot
 
 RUNS = ROOT / "eval/runs"
 FEWSHOT_IDS = {item["id"] for item in FEW_SHOT_EXAMPLES}
@@ -143,6 +144,7 @@ def main():
     ordered = [preds[r["id"]] for r in rows if r["id"] in preds]
     if err or len(ordered) != len(rows):
         result = {"status":"incomplete", "error":err or "interrupted", "model":args.model, "completed":len(ordered),"requested":len(rows),"checkpoint":str(partial)}
+        result["config_snapshot"] = snapshot(model=args.model)
         path.write_text(json.dumps(result,indent=2)+"\n")
         print(json.dumps(result))
         return 2
@@ -196,6 +198,7 @@ def main():
       "timing_ms":{k:{"p50":quantile(v,.5),"p95":quantile(v,.95),"n":len(v)} for k,v in timing_fields.items()},
       "window_predictions":[{"id":r["id"],"label":r["label"],"expected_kind":r.get("kind"),"hard":bool(r.get("hard")),"has_confirmed_candidate":bool(candidate_score(r)),"speak":bool(p.get("speak")),"kind":p.get("kind"),"confidence":p.get("confidence"),"model_called":bool(p.get("model_called",True))} for r,p in zip(rows,ordered)],
       "per_call":[{"id":r["id"],"prompt_tokens":p.get("prompt_eval_count"),"prompt_eval_ms":(p.get("prompt_eval_duration_ns") or 0)/1e6,"eval_tokens":p.get("eval_count"),"eval_ms":(p.get("eval_duration_ns") or 0)/1e6,"load_ms":(p.get("load_duration_ns") or 0)/1e6,"total_ms":p.get("latency_ms",p["client_total_ms"])} for r,p in zip(rows,ordered)]}
+    result["config_snapshot"] = snapshot(model=args.model)
     path.write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
     partial.unlink(missing_ok=True)
     print(json.dumps({"artifact":str(path.relative_to(ROOT)),"status":"complete","model":args.model,"rows":len(rows),"overall":overall,"by_candidate":grouped,"auc":result["auroc"],"timing":result["timing_ms"]},indent=2))

@@ -22,6 +22,7 @@ from decider.decide import InferenceError, MODEL_CONTEXT_TOKENS, OllamaDecider, 
 from decider.prefilter import keep_event
 from decider.prompt import PROMPT_FORMAT_VERSION, SYSTEM_PROMPT
 from decider.window import PATTERN_CHECK_VERSION, make_window
+from eval.run_metadata import snapshot
 
 CHECKPOINT_PATH = ROOT / "eval/runs/.phase2_checkpoint.json"
 
@@ -377,6 +378,7 @@ def main() -> int:
             "No test windows or held-out streams were read.",
             "The dev data contains 29 hard attack windows; the Phase 2 specification expects 21. Results retain the observed denominator and flag the mismatch.",
         ],
+        "config_snapshot": snapshot(model=args.model or "qwen3:1.7b"),
     }
     runs_dir = ROOT / "eval/runs"
     runs_dir.mkdir(parents=True, exist_ok=True)

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from urllib.parse import unquote
 import re
 from typing import Any
+from baseline.authorization import authorized_source
 
 ATTACK_KINDS = (
     "brute_force",
@@ -83,9 +84,8 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
     failed_by_ip: Counter[str] = Counter()
     usernames_by_ip: dict[str, set[str]] = defaultdict(set)
     failed_usernames: dict[str, Counter[str]] = defaultdict(Counter)
-    failures_by_username_10m: Counter[str] = Counter()
-    failure_ids_by_username_10m: dict[str, list[int]] = defaultdict(list)
-    succeeded_usernames: dict[str, set[str]] = defaultdict(set)
+    failures_by_account_60s: dict[tuple[str, str], list[tuple[float, int]]] = defaultdict(list)
+    succeeded_accounts: set[tuple[str, str]] = set()
     four_xx_by_ip: Counter[str] = Counter()
     request_by_ip: Counter[str] = Counter()
     paths_by_ip: dict[str, set[str]] = defaultdict(set)
@@ -94,7 +94,6 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
     profile_ids: dict[str, set[str]] = defaultdict(set)
     scanners_by_ip: Counter[str] = Counter()
 
-    timed_failures: list[tuple[float, str, int]] = []
     latest_time = float("-inf")
     for index, event in enumerate(events):
         try:
@@ -120,9 +119,9 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
                 if username:
                     usernames_by_ip[ip].add(username)
                     failed_usernames[ip][username] += 1
-                    timed_failures.append((event_time, username, event_id))
+                    failures_by_account_60s[(ip, username)].append((event_time, event_id))
             elif event.get("result") == "success" and username:
-                succeeded_usernames[ip].add(username)
+                succeeded_accounts.add((ip, username))
 
         request = decoded_request(event)
         if SQLI.search(request):
@@ -140,25 +139,25 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
         if re.search(r"nmap|nikto|masscan|sqlmap|gobuster|dirbuster", agent, re.I):
             scanners_by_ip[ip] += 1
 
-    cutoff = latest_time - 600 if latest_time != float("-inf") else float("-inf")
-    for event_time, username, event_id in timed_failures:
-        if event_time >= cutoff:
-            failures_by_username_10m[username] += 1
-            failure_ids_by_username_10m[username].append(event_id)
-
     scores: dict[str, tuple[int, list[int], str]] = {}
     for kind, ids in signature_hits.items():
         if ids:
             scores[kind] = (100, ids[:8], "request payload matches an attack signature")
 
     failures_60s, usernames_60s = _auth_counts_per_60s(events)
-    for username, failures in failures_by_username_10m.items():
-        if failures >= 5:
-            scores["brute_force"] = (
-                68 + min(failures, 20),
-                failure_ids_by_username_10m[username][:8],
-                f"{failures} failed logins for one username across sources in 10 minutes",
-            )
+    for (ip, username), attempts in failures_by_account_60s.items():
+        attempts.sort()
+        left = 0
+        for right, (now, _) in enumerate(attempts):
+            while now - attempts[left][0] > 60:
+                left += 1
+            span = attempts[left:right + 1]
+            if len(span) >= 5 and username and (ip, username) not in succeeded_accounts:
+                scores["brute_force"] = (
+                    80 + min(len(span), 20),
+                    [event_id for _, event_id in span[:8]],
+                    f"{len(span)} failed logins for one account from one source within 60 seconds, with no matching success",
+                )
     for ip, failures in failures_60s.items():
         unique_users = len(usernames_60s.get(ip, set()))
         if unique_users >= 4 and failures >= 4:
@@ -167,14 +166,6 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
                 [int(e["event_id"]) for e in events if str(e.get("src_ip")) == ip and e.get("event_type") == "auth" and (e.get("result") == "fail" or e.get("status") == 401)][:8],
                 f"{failures} failed logins across {unique_users} usernames from one source",
             )
-        elif failures >= 5:
-            attempted = usernames_60s.get(ip, set())
-            if not attempted.intersection(succeeded_usernames[ip]):
-                scores["brute_force"] = (
-                    70 + min(failures, 20),
-                    [int(e["event_id"]) for e in events if str(e.get("src_ip")) == ip and e.get("event_type") == "auth" and (e.get("result") == "fail" or e.get("status") == 401)][:8],
-                    f"{failures} failed logins from one source without a matching success",
-                )
 
     for ip, ids in profile_ids.items():
         if len(ids) >= 5:
@@ -186,7 +177,7 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
 
     for ip in request_by_ip:
         four_xx_rate = four_xx_by_ip[ip] / request_by_ip[ip]
-        if sensitive_by_ip[ip] >= 3 or scanners_by_ip[ip] >= 1 or (four_xx_rate >= 0.75 and len(paths_by_ip[ip]) >= 5):
+        if (sensitive_by_ip[ip] >= 3 or scanners_by_ip[ip] >= 1 or (four_xx_rate >= 0.75 and len(paths_by_ip[ip]) >= 5)) and not authorized_source(ip, "scanner_recon"):
             ids = [
                 int(e["event_id"])
                 for e in events
@@ -196,7 +187,7 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
             scores["scanner_recon"] = (60 + len(ids), ids, "automated probes target sensitive or unrelated endpoints")
 
     if not scores:
-        return {"speak": False, "kind": "none", "evidence_ids": [], "confidence": 0.0, "reason": "no rule crossed its threshold", "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip, failures_by_username_10m)}
+        return {"speak": False, "kind": "none", "evidence_ids": [], "confidence": 0.0, "reason": "no rule crossed its threshold", "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip)}
 
     kind, (score, evidence_ids, reason) = max(scores.items(), key=lambda item: (item[1][0], item[0]))
     return {
@@ -205,7 +196,7 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
         "evidence_ids": evidence_ids,
         "confidence": min(0.99, score / 110),
         "reason": reason,
-        "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip, failures_by_username_10m),
+        "features": _features(events, failed_by_ip, usernames_by_ip, four_xx_by_ip, request_by_ip),
     }
 
 
@@ -222,7 +213,7 @@ def _features(
         "distinct_usernames_per_ip": {ip: len(names) for ip, names in usernames_by_ip.items()},
         "four_xx_rate": sum(four_xx_by_ip.values()) / max(1, len(events)),
         "events": len(events),
-        "failed_logins_per_username_10m": dict(failures_by_username_10m or {}),
+        "failed_logins_per_username_10m": {},
     }
 
 

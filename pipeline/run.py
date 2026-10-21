@@ -34,25 +34,19 @@ def candidate_keys(window):
     return pairs
 
 def call_model_for_window(window, rule_decision):
-    """Route only weak/authorized candidates and selected no-candidate windows."""
+    """Route only weak behavioral rules and payload signatures without a behavioral candidate."""
     checks=window.get("header",{}).get("pattern_checks",{})
     behavioral=[item for field in ("brute_force_candidates","credential_stuffing_candidates","priv_esc_candidates","scanner_recon_candidates") for item in checks.get(field,[]) if item.get("confirmed")]
     authorized=any(item.get("authorized_source") for item in behavioral)
     weak=any(item in checks.get("scanner_recon_candidates",[]) for item in behavioral)
     payload=any(bool(ids) for ids in checks.get("payload_signature_event_ids",{}).values())
     high_4xx=float(window.get("header",{}).get("four_xx_rate",0) or 0)>=0.75
-    # Payload signatures and confirmed auth/profile candidates are strong enough
-    # for the transparent rules to speak without a model call.
-    strong=bool(rule_decision.get("speak")) and (payload or any(
-        item.get("confirmed") for field in ("brute_force_candidates","credential_stuffing_candidates","priv_esc_candidates")
-        for item in checks.get(field,[])
-    )) and not authorized
-    if strong:
-        return False, "strong_rule"
-    if authorized or weak:
-        return True, "authorized_or_weak_candidate"
-    if not behavioral and (payload or high_4xx):
-        return True, "no_candidate_payload_or_high_4xx"
+    if authorized:
+        return False, "authorized_source_scope"
+    if weak:
+        return True, "weak_scanner_candidate"
+    if not behavioral and payload:
+        return True, "payload_signature_without_behavioral_candidate"
     return False, "rules_only"
 
 def process(events, *, gate=None, decider=None, explainer=None, use_model=True, enable_decision_cache=True, enable_cooldown=True, cooldown_seconds=None):
@@ -83,7 +77,25 @@ def process(events, *, gate=None, decider=None, explainer=None, use_model=True, 
             elif enable_cooldown and keys and all(end-last_call_by_candidate.get(key,float("-inf"))<cooldown_seconds for key in keys):
                 decision={"speak":False,"kind":"none","evidence_ids":[],"confidence":0.0,"model_called":False,"skip_reason":"candidate_cooldown"}
             else:
-                decision=decider.decide(window)
+                try:
+                    review=decider.decide(window)
+                    review_error=None
+                except Exception as exc:
+                    review={"speak":False,"evidence_ids":[],"explanation_hint":""}
+                    review_error=f"{type(exc).__name__}: {exc}"
+                # Rules own alert inclusion and evidence. The model can annotate
+                # an existing rule alert but its decision can never suppress it.
+                decision=dict(rule_decision)
+                decision.update({
+                    "review_status":"confirmed" if review.get("speak") else "contested",
+                    "review_explanation_hint":review.get("explanation_hint", ""),
+                    "review_evidence_ids":review.get("evidence_ids", []),
+                    "model_called":True,
+                    "model_review_speak":bool(review.get("speak")),
+                    "model_review_error":review_error,
+                    "latency_ms":review.get("latency_ms", 0.0),
+                    "model":review.get("model"),
+                })
                 if enable_decision_cache:
                     cache[digest]=copy.deepcopy(decision)
                 if enable_cooldown:
@@ -96,11 +108,13 @@ def process(events, *, gate=None, decider=None, explainer=None, use_model=True, 
         gated=gate.evaluate(decision,chunk,now=end,alert_fingerprint=fingerprint)
         explanation=None
         if gated["emit"]:
+            if decision.get("review_explanation_hint"):
+                decision["reason"] = decision.get("review_explanation_hint")
             explanation=explainer.explain(decision,chunk)
         out.append({"session_id":chunk[0].get("session_id"),"event_start":chunk[0].get("event_id"),"event_end":chunk[-1].get("event_id"),
           "speak":bool(decision.get("speak")),"kind":decision.get("kind","none"),"confidence":decision.get("confidence"),
           "evidence_ids":decision.get("evidence_ids",[]),"gate_emit":gated["emit"],"gate_reason":gated["reason"],"gate_budget_count":gated.get("budget_count"),"alert_id":fingerprint if gated["emit"] else None,
-          "explanation":explanation,"model_called":bool(decision.get("model_called",False)),"latency_ms":decision.get("latency_ms",0.0),
+          "explanation":explanation,"review_status":decision.get("review_status"),"model_review_speak":decision.get("model_review_speak"),"model_review_error":decision.get("model_review_error"),"model_called":bool(decision.get("model_called",False)),"latency_ms":decision.get("latency_ms",0.0),
           "skip_reason":decision.get("skip_reason")})
     return out
 

@@ -5,10 +5,12 @@ import json, sys
 from datetime import datetime, timezone
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+LAST_TRACES={}
 sys.path.insert(0,str(ROOT))
 from pipeline.run import process
 from explain.bedrock import BedrockExplainer
 from explain.template import explain as template_explain
+from eval.run_metadata import snapshot
 
 def read_jsonl(path):
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -18,6 +20,11 @@ def seconds(event, fallback):
         if dt.tzinfo is None: dt=dt.replace(tzinfo=timezone.utc)
         return dt.timestamp()
     except (ValueError,KeyError): return fallback/5
+
+def percentile(values, q):
+    if not values: return None
+    ordered=sorted(values); pos=(len(ordered)-1)*q; lo=int(pos); hi=min(len(ordered)-1,lo+1)
+    return ordered[lo]*(hi-pos)+ordered[hi]*(pos-lo)
 
 class FailingBedrockClient:
     def __init__(self): self.calls=0
@@ -50,13 +57,22 @@ def explanation_checks(sample_trace, sample_events):
             "injected_timeout_alerts":len(first_five),"fallback_template_alerts":sum(fallback_results),
             "fallback_pass":len(first_five)>=5 and all(fallback_results),"injected_client_calls":failing_client.calls}
 
-def evaluate():
+def evaluate(*, use_model=True):
+    global LAST_TRACES
     manifest=json.loads((ROOT/"data/streams/manifest.json").read_text())
     reports=[]; total_episodes=detected=false_alerts=dupes=0; delays=[]; budget_violations=unaccounted=grounding_failures=alerts_without_explanation=0
     entity_mentions=grounded_mentions=0
-    first_stream_events=None; first_stream_trace=None; all_alert_samples=[]
+    first_stream_events=None; first_stream_trace=None; all_alert_samples=[]; traces_by_stream={}; inference_error=None
+    explainer=BedrockExplainer()
     for sid in manifest["dev_streams"]:
-        info=manifest["streams"][sid]; events=read_jsonl(ROOT/info["path"]); trace=process(events,use_model=False)
+        info=manifest["streams"][sid]; events=read_jsonl(ROOT/info["path"])
+        try:
+            trace=process(events,use_model=use_model,explainer=explainer)
+        except Exception as exc:
+            inference_error=f"{type(exc).__name__}: {exc}"
+            break
+        traces_by_stream[sid]=(events,trace)
+        LAST_TRACES=traces_by_stream
         if first_stream_events is None: first_stream_events,first_stream_trace=events,trace
         attacks=[e for e in info["episodes"] if not e.get("hard_benign")]
         benign=[e for e in info["episodes"] if e.get("hard_benign")]
@@ -90,9 +106,11 @@ def evaluate():
         for i,(now,_) in enumerate(timeline):
             while now-timeline[left][0]>=600: left+=1
             if i-left+1>6: budget_violations+=1
-        reports.append({"stream":sid,"episodes_detected":len(episode_hits),"attack_episodes":len(attacks),"false_alerts":false,"emitted_alerts":len(emitted),"decider_speaks":sum(r["speak"] for r in trace)})
+        reports.append({"stream":sid,"episodes_detected":len(episode_hits),"attack_episodes":len(attacks),"false_alerts":false,"emitted_alerts":len(emitted),"decider_speaks":sum(r["speak"] for r in trace),
+                        "model_review_calls":sum(bool(r.get("model_called")) for r in trace),"model_confirmed":sum(r.get("review_status")=="confirmed" for r in trace),
+                        "model_contested":sum(r.get("review_status")=="contested" for r in trace),"model_review_errors":sum(bool(r.get("model_review_error")) for r in trace)})
     def ratio(n,d): return n/d if d else 0
-    checks=explanation_checks(first_stream_trace,first_stream_events)
+    checks=explanation_checks(first_stream_trace,first_stream_events) if first_stream_trace is not None else {"status":"blocked by inference error"}
     return {"phase":"3","data_scope":"dev streams 01-03 only","streams":reports,
       "episode_recall":{"numerator":detected,"denominator":total_episodes,"value":ratio(detected,total_episodes),"target":">=21/24"},
       "false_alerts":{"value":false_alerts,"target":"<=3"},"duplicate_alerts":{"value":dupes,"detected_episodes":detected,"per_detected_episode":ratio(dupes,detected),"target":"<=1.5 alerts/episode"},
@@ -100,24 +118,35 @@ def evaluate():
       "unaccounted_speaks":unaccounted,"evidence_id_grounding_failures":grounding_failures,
       "entity_grounding":{"grounded_mentions":grounded_mentions,"mentioned_entities":entity_mentions,"rate":grounded_mentions/entity_mentions if entity_mentions else 1.0,"target":">=0.98"},
       "emitted_without_explanation":alerts_without_explanation,
-      "explanation_mode":"deterministic template (Bedrock disabled); Bedrock call parity not measured",
+      "pipeline_mode":"rules decide and emit; model is review-only" if use_model else "rules-only",
+      "explanation_mode":"Bedrock configured" if explainer.model_id else "template fallback (BEDROCK_MODEL_ID unavailable)",
+      "live_bedrock_calls":explainer.invocation_count,
+      "emitted_alerts_in_processed_traces":sum(r.get("emitted_alerts",0) for r in reports),
+      "bedrock_call_parity":explainer.invocation_count==sum(r.get("emitted_alerts",0) for r in reports) if explainer.model_id else None,
+      "bedrock_latency_ms":{"p95":percentile(explainer.invocation_latencies_ms,.95),"samples":len(explainer.invocation_latencies_ms)},
+      "inference_error":inference_error,
       "injected_explainer_checks":checks,
       "manual_quality":"pending owner review; a 20-alert rating sheet is emitted beside this report",
-      "live_bedrock_latency_and_quality":"not measured; injected clients do not make AWS calls",
-      "gate":"not passed; manual quality scoring and live Bedrock checks remain outstanding"}
+      "live_bedrock_latency_and_quality":"see emitted alert rating sheet" if explainer.model_id else "not measured; BEDROCK_MODEL_ID unavailable",
+      "gate":"not passed" if inference_error or not explainer.model_id else "pending manual quality review"}
 
 if __name__=="__main__":
-    report=evaluate(); out=ROOT/"eval/runs"/f"phase3-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"; out.parent.mkdir(exist_ok=True)
+    import argparse
+    parser=argparse.ArgumentParser(); parser.add_argument("--model",action="store_true",help="use final rules-first model-review pipeline"); args=parser.parse_args()
+    report=evaluate(use_model=args.model); report["created_at"]=datetime.now(timezone.utc).isoformat(); report["config_snapshot"]=snapshot()
+    out=ROOT/"eval/runs"/f"phase3-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"; out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
     manifest=json.loads((ROOT/"data/streams/manifest.json").read_text())
     review=[]
     for sid in manifest["dev_streams"]:
-        events=read_jsonl(ROOT/manifest["streams"][sid]["path"]); trace=process(events,use_model=False)
+        if sid not in LAST_TRACES: continue
+        events,trace=LAST_TRACES[sid]
         for row in (x for x in trace if x["gate_emit"]):
             window=[e for e in events if int(row["event_start"])<=int(e["event_id"])<=int(row["event_end"])]
-            review.append({"alert_id":row["alert_id"],"stream":sid,"kind":row["kind"],"summary":row["explanation"]["summary"],"suggested_action":row["explanation"]["suggested_action"],"evidence_ids":row["evidence_ids"],"events":[{"event_id":e.get("event_id"),"src_ip":e.get("src_ip"),"username":e.get("username"),"path":e.get("path"),"query":e.get("query"),"status":e.get("status"),"result":e.get("result"),"is_cited":int(e["event_id"]) in set(row["evidence_ids"])} for e in window],"score_correct_kind":None,"score_evidence_use":None,"score_actionability":None,"notes":""})
+            review.append({"alert_id":row["alert_id"],"stream":sid,"kind":row["kind"],"model_review_status":row.get("review_status"),"summary":row["explanation"]["summary"],"suggested_action":row["explanation"]["suggested_action"],"evidence_ids":row["evidence_ids"],"events":[{"event_id":e.get("event_id"),"src_ip":e.get("src_ip"),"username":e.get("username"),"path":e.get("path"),"query":e.get("query"),"status":e.get("status"),"result":e.get("result"),"is_cited":int(e["event_id"]) in set(row["evidence_ids"])} for e in window],"score_correct_kind":None,"score_evidence_use":None,"score_actionability":None,"notes":""})
             if len(review)>=20: break
         if len(review)>=20: break
     review_path=out.with_name(out.stem+"-manual-review.jsonl")
-    review_path.write_text("".join(json.dumps(row,ensure_ascii=False)+"\n" for row in review),encoding="utf-8")
+    metadata_row={"record_type":"run_metadata","config_snapshot":report["config_snapshot"],"created_at":report["created_at"]}
+    review_path.write_text(json.dumps(metadata_row,ensure_ascii=False)+"\n"+"".join(json.dumps(row,ensure_ascii=False)+"\n" for row in review),encoding="utf-8")
     print(json.dumps({"artifact":str(out),"manual_review_sheet":str(review_path),"summary":report},indent=2))

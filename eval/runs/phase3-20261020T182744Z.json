@@ -1,0 +1,122 @@
+{
+  "phase": "3",
+  "data_scope": "dev streams 01-03 only",
+  "streams": [
+    {
+      "stream": "stream_01",
+      "episodes_detected": 8,
+      "attack_episodes": 8,
+      "false_alerts": 0,
+      "emitted_alerts": 8,
+      "decider_speaks": 8,
+      "model_review_calls": 4,
+      "model_confirmed": 4,
+      "model_contested": 0,
+      "model_review_errors": 0
+    },
+    {
+      "stream": "stream_02",
+      "episodes_detected": 8,
+      "attack_episodes": 8,
+      "false_alerts": 0,
+      "emitted_alerts": 8,
+      "decider_speaks": 8,
+      "model_review_calls": 5,
+      "model_confirmed": 5,
+      "model_contested": 0,
+      "model_review_errors": 0
+    },
+    {
+      "stream": "stream_03",
+      "episodes_detected": 8,
+      "attack_episodes": 8,
+      "false_alerts": 0,
+      "emitted_alerts": 8,
+      "decider_speaks": 9,
+      "model_review_calls": 5,
+      "model_confirmed": 5,
+      "model_contested": 0,
+      "model_review_errors": 0
+    }
+  ],
+  "episode_recall": {
+    "numerator": 24,
+    "denominator": 24,
+    "value": 1.0,
+    "target": ">=21/24"
+  },
+  "false_alerts": {
+    "value": 0,
+    "target": "<=3"
+  },
+  "duplicate_alerts": {
+    "value": 0,
+    "detected_episodes": 24,
+    "per_detected_episode": 0.0,
+    "target": "<=1.5 alerts/episode"
+  },
+  "median_time_to_detect_events": 20,
+  "budget_violations": 0,
+  "unaccounted_speaks": 0,
+  "evidence_id_grounding_failures": 0,
+  "entity_grounding": {
+    "grounded_mentions": 95,
+    "mentioned_entities": 95,
+    "rate": 1.0,
+    "target": ">=0.98"
+  },
+  "emitted_without_explanation": 0,
+  "pipeline_mode": "rules decide and emit; model is review-only",
+  "explanation_mode": "template fallback (BEDROCK_MODEL_ID unavailable)",
+  "live_bedrock_calls": 0,
+  "emitted_alerts_in_processed_traces": 24,
+  "bedrock_call_parity": null,
+  "bedrock_latency_ms": {
+    "p95": null,
+    "samples": 0
+  },
+  "inference_error": null,
+  "injected_explainer_checks": {
+    "pipeline_explainer_calls": 8,
+    "emitted_alerts": 8,
+    "call_parity": true,
+    "injected_timeout_alerts": 5,
+    "fallback_template_alerts": 5,
+    "fallback_pass": true,
+    "injected_client_calls": 5
+  },
+  "manual_quality": "pending owner review; a 20-alert rating sheet is emitted beside this report",
+  "live_bedrock_latency_and_quality": "not measured; BEDROCK_MODEL_ID unavailable",
+  "gate": "not passed",
+  "created_at": "2026-10-20T18:27:44.451743+00:00",
+  "config_snapshot": {
+    "prompt_hash_sha256": "3d5eb3f0153eba5ce33bb9209fd9422bdf207d949a5454784a95787562957dfc",
+    "prompt_format_version": 17,
+    "model": "qwen3:1.7b",
+    "model_digest_sha256": "41ecdb852f9d8cc8d67bcdf886b097855daa7694055314d00209b4d061a87ce9",
+    "model_digest_status": "available",
+    "thresholds": {
+      "brute_force": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "credential_stuffing": ">=4 failures across >=4 usernames from one source in rolling 60s",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "window_spacing_seconds": 600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    }
+  }
+}
