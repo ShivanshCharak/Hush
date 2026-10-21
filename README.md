@@ -87,10 +87,10 @@ These targets apply to the final evaluation. The Phase 2 values above are dev re
 | Metric | Target | Measured |
 |---|---:|---|
 | Attack recall | >= 0.90 (>= 87/96) | — |
-| Benign false-speak rate | <= 0.05 (<= 6/120) | — |
+| Benign false-speak rate vs simulated benign traffic | <= 0.05 (<= 6/120) | — |
 | Precision | >= 0.90 | — |
 | Hard-attack recall | >= 11/14 and >= 20 points above baseline | — |
-| Hard-benign false-speak | <= 2/24 | — |
+| Hard-benign false-speak vs simulated benign traffic | <= 2/24 | — |
 | Kind accuracy | >= 0.85 | — |
 | Episode recall | >= 14/16 | — |
 | False alerts on held-out streams | <= 2 total | — |
@@ -131,7 +131,7 @@ The audit run snapshot records explainer prompt SHA-256 `29aa38e29b246d168b595fb
 |---|---:|---:|---:|---:|---:|---:|
 | [Rules baseline, shared 60-window sample](eval/runs/phase2-requested-qwen3-8b-sample60.json) | 21/24 (source split not recorded) | 3/6 | 0/24 | 18/21 | not run | not run |
 | [Rules baseline, full dev](eval/runs/phase2-20261020T033832Z.json) (kind comparison: [audit](eval/runs/phase2-followup-audit-20261020T095052Z.json)) | 125/144 (source split not recorded) | 7/36 | 0/144 | 111/125 | not run | not run |
-| [Current rules pipeline](eval/runs/dev-rules-20261021T055255Z.json) | pending source-stratified rescore | 0/36 | 0/144 | 111/125 | not applicable | not applicable |
+| [Current rules pipeline](eval/runs/dev-rules-20261021T055255Z.json) | 53/72 real; 72/72 simulated (125/144 overall) | 0/36 | 0/144 | 111/125 | not applicable | not applicable |
 | Current Bedrock explainer (no run) | — | — | — | rules-owned | pending | pending |
 | [qwen3:1.7b, 354 dev windows](eval/runs/phase2-requested-qwen3-1.7b.json) | 46/141 | 3/34 | 23/143 | 42/46 | 0.497 (n=314) | 6.22 / 10.14 s |
 | [qwen3:4b, shared 60-window sample](eval/runs/phase2-requested-qwen3-4b-sample60.json) | 13/24 | 2/6 | 0/24 | 9/13 | 0.909 (n=52) | 13.59 / 32.60 s |
@@ -174,7 +174,8 @@ Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clea
 ### What we found
 
 - The exact per-source brute-force rule is at least five failed logins for the same username and source IP in a rolling 60 seconds, with no successful login for that username in the interval. The distributed rule is at least three distinct source IPs failing for the same username in a trailing 60 minutes, with no success for that username in that interval. Both apply; labels do not authorize sources.
-- Current rules dev metrics are 125/144 attack recall, 111/125 kind accuracy, 0/36 hard-benign false speaks, and 0/144 normal-benign false speaks. Per-kind: brute force 24/24, credential stuffing 24/24, SQLi 16/24, XSS 14/18, path traversal 17/18, privilege escalation 18/18, scanner reconnaissance 12/18. Dev streams 01-03 had 0 false alerts each.
+- Current rules dev metrics are 125/144 attack recall (53/72 ModSecurity, 72/72 simulated), 111/125 kind accuracy, 0/36 hard-benign false speaks vs simulated benign traffic, and 0/144 normal-benign false speaks vs simulated benign traffic. Per-kind: brute force 24/24, credential stuffing 24/24, SQLi 16/24, XSS 14/18, path traversal 17/18, privilege escalation 18/18, scanner reconnaissance 12/18. Dev streams 01-03 had 0 false alerts each.
+- Source-stratified dev recall is 53/72 on ModSecurity attacks and 72/72 on simulated attacks (125/144 overall). See [Recall by data source](#recall-by-data-source-dev); simulated-kind results are not a real-world estimate.
 - Brute force exact rule: >=5 failures for the same username from one source IP in a rolling 60 seconds, with no matching success in that interval. Distributed brute force: same username fails from >=3 distinct IPs within 60 minutes and has no success in that interval. A separate auth-endpoint stuffing rule uses >=4 distinct failed usernames, >=2 distinct IPs, >=4 failures, and successes/attempts <=0.25 in 60 minutes. Thresholds were proposed using dev streams 01-03 only.
 - With rotating usernames, the distinct-username stuffing rule catches v4 at 15-minute spacing (5/5; five failures fit within 60 minutes) but misses 30/45/60-minute spacing because those sequences contribute only three or fewer failures in the trailing hour. V2 30-minute slow rate remains 0/20; v3 remains 0/7 at 30m and 0/6 at 45m. The 60-minute change does not solve this attack shape.
 - The final comment-normalization tweak restored SQL-split evasion recall (v3 4/10 to 10/10; v2 parser 11/20 to 20/20), but v1 case/comment ended at 13/20 after an intermediate 20/20. This regression is retained as a known result for follow-up.
@@ -183,6 +184,7 @@ Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clea
 - The previous Phase 3/4 artifacts are retained as historical. A refreshed Phase 3/4 run through the final rules + Bedrock/template explanation path awaits user confirmation of Bedrock credentials. Bedrock smoke previously failed with an invalid security token; no live 20-alert run was performed.
 - Dashboard desktop Lighthouse with a healthy API: LCP 733 ms, TBT 3 ms, JS transfer 243,713 bytes (263,881 bytes total). The dashboard remains under the 300 KB JS-transfer target. Headed Chrome used the AMD Radeon Graphics GPU for a synthetic 50k-row fixture: scroll 37.5 FPS average, p95 frame interval 50 ms. Filter click-to-results was 660 ms: handler 1.2 ms, scheduling/debounce 243.7 ms, network 344.2 ms, render 71.3 ms. Only `/api/events?limit=200` and `/api/histogram` were requested for the filter; alert-card-to-evidence linkage passed. The API was a Playwright-intercepted dev fixture, not a live backend benchmark.
 - A–E ablation dry run on the same dev streams 01–03 (24 attacks, 9 hard-benign episodes): all variants detected 24/24 attacks. A (frozen naive rules), B (+cross-IP/stuffing), and C (+normalization) each emitted 1 hard-benign false alert (25 alerts); D (+allowlist) and E (+template explanation proxy; Bedrock pending) emitted 0 hard-benign false alerts (24 alerts). E made zero Bedrock calls. This small in-sample subset contains no attacks that distinguish A/B/C, so equal recall does not show those additions have no value on other data.
+- Frozen [benign-lookalike-v1](eval/fixtures/benign-lookalike-v1.jsonl) false speaks by category (12 each): A naive frozen rules = 12/60 overall (search 0/12, apostrophes 0/12, escaped HTML comments 0/12, path-like titles 12/12, long encoded parameters 0/12); B + cross-IP/stuffing = the same; C + normalization = 24/60 (escaped HTML 12/12 and path-like titles 12/12); D + allowlist = 24/60; E + explanation-only template proxy = 24/60. The current frozen rules result is **24/60**. V1 was committed as `ec0c7fe2` before scoring (SHA-256 `d17178bc03daf13e8f71d5c1c2202b4c1ae4660b5303ee571b86a1db81cfc120`); no v2 or rule fix was made. Full A–E counts are in [the ablation run](eval/runs/ablation-20261021T064132Z.json).
 - Known detector limitations: rotating-username slow-rate attacks at spacing >=30 minutes remain mostly undetected; nested encoding requiring 4 or more decode passes exceeds the 3-pass normalizer; each dev stream spans only about 33 minutes, so these streams cannot validate long observation windows such as 60 minutes.
 - Bedrock smoke only: configured AWS region was `local`; explicit us-west-2 identity, profile/model access, and one synthetic CLI invocation were attempted but failed with an invalid security token. Model access is unverified; no dev alert was sent and no 20-alert run occurred. The Haiku 4.5 profile used was `us.anthropic.claude-haiku-4-5-20251001-v1:0`.
 
@@ -204,9 +206,9 @@ Earlier completed run: [phase2-20261020T033832Z.json](eval/runs/phase2-20261020T
 | Schema validity | 360/360, no repairs | 360/360 | Pass |
 | Pre-filter | Drop >=90% of events; preserve 24/24 attack episodes | 96.7%; 24/24 | Pass |
 | Attack recall | >=85% (>=123/144) | 125/144 (86.8%) | Pass |
-| Benign false-speak | <=8% (<=14/180) | 7/180 (3.9%) | Pass |
+| Benign false-speak vs simulated benign traffic | <=8% (<=14/180) | 7/180 (3.9%) | Pass |
 | Hard attacks | >=14/21 and >=20 percentage points above baseline | 29/29 detected; dev set has 29, target expects 21 | Blocked |
-| Hard-benign false alerts | <=5/36 | 7/36 | Fail |
+| Hard-benign false alerts vs simulated benign traffic | <=5/36 | 7/36 | Fail |
 | Kind accuracy | >=80% of true positives | 96/125 (76.8%) | Fail |
 | Confidence quality | AUROC >=0.93 with all 324 scored | 0.9008 (retired token-overwrite scorer; 192 skipped windows scored 0) | Fail |
 | Latency | p50 <=400 ms; p95 <=1,200 ms | Evaluator: 0s / 44.2s across windows; model-call-only: 31.8s / 48.8s | Fail |
