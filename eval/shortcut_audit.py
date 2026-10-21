@@ -8,7 +8,6 @@ import json
 import math
 from pathlib import Path
 import random
-import re
 import statistics
 import sys
 
@@ -96,7 +95,7 @@ def sigmoid(value: float) -> float:
     return 1.0 / (1.0 + math.exp(-value))
 
 
-def fit_predict(train_x: list[list[float]], train_y: list[int], test_x: list[list[float]]) -> list[float]:
+def fit_model(train_x: list[list[float]], train_y: list[int]) -> tuple[list[float], list[float], list[float], float]:
     width = len(train_x[0])
     means = [sum(row[j] for row in train_x) / len(train_x) for j in range(width)]
     scales = []
@@ -119,7 +118,16 @@ def fit_predict(train_x: list[list[float]], train_y: list[int], test_x: list[lis
         rate = learning_rate / len(tx)
         bias -= rate * grad_b
         weights = [w - rate * g for w, g in zip(weights, grad)]
-    return [sigmoid(bias + sum(a * b for a, b in zip(row, weights))) for row in vx]
+    return means, scales, weights, bias
+
+
+def predict_model(model: tuple[list[float], list[float], list[float], float], rows: list[list[float]]) -> list[float]:
+    means, scales, weights, bias = model
+    return [sigmoid(bias + sum(((value - means[j]) / scales[j]) * weights[j] for j, value in enumerate(row))) for row in rows]
+
+
+def fit_predict(train_x: list[list[float]], train_y: list[int], test_x: list[list[float]]) -> list[float]:
+    return predict_model(fit_model(train_x, train_y), test_x)
 
 
 def auc(labels: list[int], scores: list[float]) -> float:
@@ -162,14 +170,54 @@ def main() -> int:
     all_x = [[float(row.get(key, 0.0)) for key in FEATURES] for row, _ in examples]
     all_y = [label for _, label in examples]
     scores = [0.0] * len(examples)
+    fold_models = []
     fold_auc = []
     for fold, test_indices in enumerate(fold_lists, 1):
         test_set = set(test_indices)
         train_indices = [i for i in range(len(examples)) if i not in test_set]
-        predictions = fit_predict([all_x[i] for i in train_indices], [all_y[i] for i in train_indices], [all_x[i] for i in test_indices])
+        model = fit_model([all_x[i] for i in train_indices], [all_y[i] for i in train_indices])
+        test_x = [all_x[i] for i in test_indices]
+        predictions = predict_model(model, test_x)
         for index, score in zip(test_indices, predictions):
             scores[index] = score
         fold_auc.append({"fold": fold, "n": len(test_indices), "auroc": round(auc([all_y[i] for i in test_indices], predictions), 4)})
+        fold_models.append((model, test_indices, test_x))
+    baseline_auc = auc(all_y, scores)
+    feature_drops: dict[str, list[float]] = {name: [] for name in FEATURES}
+    for fold_no, ((model, test_indices, test_x), baseline) in enumerate(zip(fold_models, fold_auc), 1):
+        labels = [all_y[index] for index in test_indices]
+        base_auc = float(baseline["auroc"])
+        for column, name in enumerate(FEATURES):
+            permuted = [row[:] for row in test_x]
+            values = [row[column] for row in permuted]
+            random.Random(SEED + fold_no * 1009 + column).shuffle(values)
+            for row, value in zip(permuted, values):
+                row[column] = value
+            feature_drops[name].append(base_auc - auc(labels, predict_model(model, permuted)))
+    importance = sorted(
+        ({"feature": name, "mean_auroc_drop": round(statistics.fmean(drops), 6), "fold_drops": [round(v, 6) for v in drops]}
+         for name, drops in feature_drops.items()), key=lambda item: item["mean_auroc_drop"], reverse=True
+    )
+    ablation_results = {}
+    for n_remove in (1, 3, 5):
+        removed = [item["feature"] for item in importance[:n_remove]]
+        retained = [index for index, feature in enumerate(FEATURES) if feature not in removed]
+        subset_scores = [0.0] * len(examples)
+        subset_folds = []
+        for fold_no, test_indices in enumerate(fold_lists, 1):
+            test_set = set(test_indices)
+            train_indices = [i for i in range(len(examples)) if i not in test_set]
+            model = fit_model([[all_x[i][j] for j in retained] for i in train_indices], [all_y[i] for i in train_indices])
+            test_x = [[all_x[i][j] for j in retained] for i in test_indices]
+            predictions = predict_model(model, test_x)
+            for index, score in zip(test_indices, predictions):
+                subset_scores[index] = score
+            subset_folds.append(round(auc([all_y[i] for i in test_indices], predictions), 4))
+        ablation_results[f"top_{n_remove}_removed"] = {
+            "removed_features": removed,
+            "pooled_oof_auroc": round(auc(all_y, subset_scores), 4),
+            "fold_aurocs": subset_folds,
+        }
     report = {
         "phase": "shortcut-audit-dev",
         "scope": "data/golden/dev.jsonl only; ModSecurity attack vs simulator-declared silent windows",
@@ -179,13 +227,16 @@ def main() -> int:
         "features": list(FEATURES),
         "excluded_inputs": ["raw request/path/query/payload content", "gold kind", "label", "provenance", "source/session IDs", "event IDs"],
         "cross_validation": {"method": "5-fold stratified; deterministic shuffled assignment", "seed": SEED,
-                             "folds": fold_auc, "pooled_oof_auroc": round(auc(all_y, scores), 4)},
+                             "folds": fold_auc, "pooled_oof_auroc": round(baseline_auc, 4)},
+        "permutation_importance": {"method": "mean held-out-fold AUROC drop after permuting one feature", "top_5": importance[:5]},
+        "feature_removal_ablation": ablation_results,
         "config_snapshot": snapshot(),
     }
     out = ROOT / "eval/runs" / "shortcut-audit-dev-20261021.json"
     out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"artifact": str(out.relative_to(ROOT)), "target_counts": report["target_counts"],
-                      "folds": fold_auc, "pooled_oof_auroc": report["cross_validation"]["pooled_oof_auroc"]}, indent=2))
+                      "folds": fold_auc, "pooled_oof_auroc": report["cross_validation"]["pooled_oof_auroc"],
+                      "top_5": importance[:5], "feature_removal_ablation": ablation_results}, indent=2))
     return 0
 
 
