@@ -35,6 +35,7 @@ def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
     data_paths = ("data/golden/dev.jsonl", "data/streams/manifest.json", *dev_stream_paths,
                   "eval/runs/evasion-v1-dev.json", "eval/runs/evasion-v2-dev.json",
                   "eval/runs/evasion-v3-dev.json", "eval/runs/evasion-v4-dev.json",
+                  "eval/runs/evasion-v4-clean-dev.json",
                   "config/authorized_sources.json")
     return {
         "prompt_hash_sha256": hashlib.sha256(prompt_material.encode()).hexdigest(),

@@ -33,7 +33,7 @@ ATTACK_KINDS = (
 # Include numeric tautologies such as `AND 1=1` found in encoded ModSecurity
 # probes. The request is decoded before this signature is evaluated.
 SQLI = re.compile(
-    r"(?:union\s+(?:all\s+)?select|(?:'|%27)\s*or\s+['\"%]?[0-9]+['\"%]?\s*=|"
+    r"(?:union\s*(?:all\s*)?select|(?:'|%27)\s*or\s+['\"%]?[0-9]+['\"%]?\s*=|"
     r"select\s+.+\s+from|\b(?:or|and)\s*\(?\s*['\"%]*[0-9]+['\"%]*\s*=\s*['\"%]*[0-9]+)",
     re.I,
 )

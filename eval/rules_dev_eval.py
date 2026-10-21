@@ -63,7 +63,8 @@ def main() -> None:
     evasion_v1 = eval_mutations("evasion-v1")
     evasion_v2 = eval_mutations("evasion-v2")
     evasion_v3 = eval_mutations("evasion-v3")
-    evasion_v4 = eval_mutations("evasion-v4")
+    evasion_v4_original = eval_mutations("evasion-v4")
+    evasion_v4 = eval_mutations("evasion-v4-clean")
     stream_eval = evaluate_dev_streams()
     pre_fix_path = ROOT / "eval/runs/dev-rules-20261020T181310Z.json"
     pre_fix = json.loads(pre_fix_path.read_text(encoding="utf-8"))
@@ -97,6 +98,7 @@ def main() -> None:
         "evasion_v3_pre_normalization_reference": last_pre_normalization["evasion_v3_rules_recall"],
         "evasion_v3_slow_rate_window_samples": evasion_v3["slow_window_samples"],
         "evasion_v4_post_normalization_recall": evasion_v4["families"],
+        "evasion_v4_original_fixture_recall_invalid_due_to_source_payload_contamination": evasion_v4_original["families"],
         "evasion_v4_slow_rate_window_samples": evasion_v4["slow_window_samples"],
         "dev_streams_01_03_false_alerts": {item["stream"]: item["false_alerts"] for item in stream_eval["streams"]},
         "distributed_rule": "same username; failures from >=3 distinct sources in trailing 60m; no success for that username in the interval",
@@ -117,6 +119,7 @@ def main() -> None:
                       "evasion_v2_rules_recall_after_60m_change": evasion_v2["families"],
                       "evasion_v3_rules_recall": evasion_v3["families"],
                       "evasion_v4_post_normalization_recall": evasion_v4["families"],
+                      "evasion_v4_original_fixture_recall_invalid": evasion_v4_original["families"],
                       "dev_streams_01_03_false_alerts": report["dev_streams_01_03_false_alerts"],
                       "historical_8b_false_speaks": len(hardbenign_false)}, indent=2))
 
