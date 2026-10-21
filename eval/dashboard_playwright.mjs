@@ -84,6 +84,7 @@ const filterProfile=await page.evaluate(()=>{
   const networkStart=requests.length?Math.min(...requests.map(x=>x.startTime)):null;
   const networkEnd=requests.length?Math.max(...requests.map(x=>x.responseEnd||x.startTime+x.duration)):null;
   return {handler_ms:handlerStart===undefined||handlerEnd===undefined?null:handlerEnd-handlerStart,
+    scheduling_ms:networkStart===null||handlerEnd===undefined?null:Math.max(0,networkStart-handlerEnd),
     network_ms:networkStart===null?null:networkEnd-networkStart,
     render_ms:rendered===undefined||networkEnd===null?null:Math.max(0,rendered-networkEnd),
     click_to_results_ms:handlerStart===undefined||rendered===undefined?null:rendered-handlerStart,

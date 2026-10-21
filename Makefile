@@ -1,5 +1,7 @@
 .PHONY: rules-dev study-phase2 phase1 phase2 phase3 phase4 ablation eval-check-locked eval
 
+ABLATION_MODE ?= --dry-run
+
 # `eval` includes Phase 1's integrity/hash checks of read-only locked files.
 # All detector, ablation, Phase 2-4, and rules-dev measurements use dev inputs only.
 rules-dev:
@@ -33,4 +35,4 @@ eval:
 	$(MAKE) rules-dev
 	$(MAKE) phase3 PHASE3_ARGS="$(PHASE3_ARGS)"
 	$(MAKE) phase4 PHASE4_ARGS="$(PHASE4_ARGS)"
-	$(MAKE) ablation ABLATION_ARGS="$(ABLATION_ARGS)"
+	$(MAKE) ablation ABLATION_MODE="$(ABLATION_MODE)" ABLATION_ARGS="$(ABLATION_ARGS)"
