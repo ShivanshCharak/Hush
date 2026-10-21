@@ -1,0 +1,163 @@
+{
+  "phase": "1",
+  "created_at": "2026-10-21T06:21:37.105992+00:00",
+  "data_scope": "Phase 1 integrity checks; includes locked test/held-out hashes",
+  "passed": 8,
+  "total": 8,
+  "phase1_complete": true,
+  "checks": [
+    {
+      "check": 1,
+      "name": "check_counts",
+      "dev": {
+        "rows": 360,
+        "counts": {
+          "xss": 18,
+          "none": 144,
+          "priv_esc": 18,
+          "brute_force": 24,
+          "ambiguous": 36,
+          "scanner_recon": 18,
+          "hard_benign": 36,
+          "sqli": 24,
+          "path_traversal": 18,
+          "credential_stuffing": 24
+        },
+        "pass": true
+      },
+      "test": {
+        "rows": 240,
+        "counts": {
+          "sqli": 16,
+          "none": 96,
+          "ambiguous": 24,
+          "hard_benign": 24,
+          "brute_force": 16,
+          "credential_stuffing": 16,
+          "xss": 12,
+          "scanner_recon": 12,
+          "priv_esc": 12,
+          "path_traversal": 12
+        },
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "check": 2,
+      "name": "check_session_leakage",
+      "shared_sessions": [],
+      "pass": true
+    },
+    {
+      "check": 3,
+      "name": "check_real_share",
+      "real_attack_windows": 120,
+      "attack_windows": 240,
+      "pass": true
+    },
+    {
+      "check": 4,
+      "name": "check_annotation",
+      "eligible_pairs": 73,
+      "cohen_kappa": 0.7834,
+      "pass": true
+    },
+    {
+      "check": 5,
+      "name": "check_streams",
+      "stream_count": 5,
+      "attack_episodes": 40,
+      "hard_benign_episodes": 15,
+      "attack_kinds": {
+        "brute_force": 6,
+        "credential_stuffing": 5,
+        "sqli": 6,
+        "xss": 6,
+        "path_traversal": 5,
+        "priv_esc": 6,
+        "scanner_recon": 6
+      },
+      "invalid_streams": [],
+      "pass": true
+    },
+    {
+      "check": 6,
+      "name": "check_parse_validity",
+      "jsonl_rows_checked": 50600,
+      "modsecurity_parse_errors": 0,
+      "pass": true
+    },
+    {
+      "check": 7,
+      "name": "check_determinism",
+      "replay_hashes_match": true,
+      "pass": true
+    },
+    {
+      "check": 8,
+      "name": "check_lock",
+      "locked_files": [
+        "data/golden/test.jsonl",
+        "data/streams/stream_04.jsonl",
+        "data/streams/stream_05.jsonl"
+      ],
+      "issues": [],
+      "pass": true
+    }
+  ],
+  "config_snapshot": {
+    "code_commit_sha": "8d6b166fc8a31ffb8a2fa2ed0dea71cd3ddb4cb3",
+    "tracked_worktree_clean": true,
+    "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
+    "prompt_format_version": 17,
+    "pattern_check_version": 5,
+    "model": null,
+    "model_digest_sha256": null,
+    "model_digest_status": "not_applicable_to_rules_bedrock_pipeline",
+    "thresholds": {
+      "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+      "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "cross_ip_brute_force_window_seconds": 3600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "allowlist_sha256": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805",
+    "normalizer_settings": {
+      "url_decode_passes_max": 3,
+      "html_entity_decode": true,
+      "unicode_escape_decode": true,
+      "sql_comment_stripping": true,
+      "whitespace_collapse": true
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v1-dev.json": "b0a4106dd05150ee708bfe7e16e656f4cce46efb0cd930ed0319055c2740a403",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "eval/runs/evasion-v3-dev.json": "94bb184fde4d413a4b3222dbc1db77b749b0c89d4c72a6b9540cd1cc4c094f53",
+      "eval/runs/evasion-v4-dev.json": "4a60e0dce3456dd680fadc51a2ce1b9eca05d8e1d6f0b635de67bffcca7e3877",
+      "eval/runs/evasion-v4-clean-dev.json": "341e4baacf79db482f56fc5f7d97d7a5969eb24a3c326fba7191524952c2c3df",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805",
+      "data/golden/test.jsonl": "404f5d7eac4f862a06a506422d4a4e72ee9bf9a9d93944ff5cd6ee71eb11403d",
+      "data/streams/stream_04.jsonl": "8444ee0e6b906034d0ff70ee4ce7f3fc03eea02d41083cbceb10993bb6a1cf76",
+      "data/streams/stream_05.jsonl": "2e9baba1c95d474e62faf5857e8ea616eb183dc2119f996224dba5416383884a",
+      "data/annotations/second_annotator_filled.jsonl": "5c75a70d76e86ab703cc047b760fe3c4313927fc41a00174d536b145c1e0142c",
+      "data/annotations/second_annotator_key.json": "944d59dafe092757965b33f3e41d2db0e181ea217d6170ffb83b1d93e9931ba5",
+      "data/VERSION": "a4288fbd96effb33aa595c6dc2e003ff2be44b27c4d3e97fa83c0f1f956d4d55",
+      "sim/scenarios.json": "da88fc9fff0b607b144289c88cf321415ca35dd3818557f1a955b84b7277f4dd"
+    }
+  }
+}

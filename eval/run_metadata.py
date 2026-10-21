@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -57,6 +58,9 @@ def snapshot(*, model: str | None = None, seed: int | None = None, include_phase
         "whitespace_collapse": True,
     }
     allowlist_hash = _sha256(ROOT / "config/authorized_sources.json")
+    from explain.bedrock import SYSTEM as EXPLAINER_SYSTEM
+    explainer_region = os.environ.get("AWS_REGION")
+    explainer_model_id = os.environ.get("BEDROCK_MODEL_ID")
     return {
         "code_commit_sha": code_commit,
         "tracked_worktree_clean": tracked_worktree_clean,
@@ -80,6 +84,20 @@ def snapshot(*, model: str | None = None, seed: int | None = None, include_phase
             "cross_ip_brute_force_window_seconds": 3600,
         },
         "seeds": {"evaluation_seed": seed},
+        "evaluation_seed": seed,
+        "evaluation_seed_note": "Rules are deterministic; evaluation_seed is null unless a randomized evaluator explicitly supplies one.",
+        "explainer_config": {
+            "prompt_hash_sha256": hashlib.sha256(EXPLAINER_SYSTEM.encode("utf-8")).hexdigest(),
+            "bedrock_region": explainer_region,
+            "requested_bedrock_region": "us-west-2",
+            "model_or_inference_profile_id": explainer_model_id,
+            "requested_model_or_inference_profile_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "temperature": None,
+            "temperature_note": "Not explicitly set in the Bedrock request; provider default applies.",
+            "max_tokens": 300,
+            "retry_settings": {"max_attempts": 0},
+            "timeout_seconds": {"connect": 4, "read": 4},
+        },
         "allowlist_sha256": allowlist_hash,
         "normalizer_settings": normalizer_settings,
         "data_hashes_sha256": {path: _sha256(ROOT / path) for path in data_paths},

@@ -25,7 +25,7 @@ flowchart LR
 
 ## Project status
 
-Phase 1 artifacts are frozen and its evaluator passes 8/8 checks; the second-pass kappa was AI-produced, so independent human agreement remains unverified. The current alert path is rules-first; local Qwen results remain historical study artifacts. See [PROGRESS.md](PROGRESS.md) and [docs/DECIDER-SEC-SPEC.md](docs/DECIDER-SEC-SPEC.md) for status and phase criteria.
+Phase 1 is complete: the saved report passes **8/8 checks** ([artifact](eval/runs/phase1-20261021T062137Z.json)). The second-pass kappa was AI-produced, so independent human agreement remains unverified. The current alert path is rules-first; local Qwen results remain historical study artifacts. See [PROGRESS.md](PROGRESS.md) and [docs/DECIDER-SEC-SPEC.md](docs/DECIDER-SEC-SPEC.md) for status and phase criteria.
 
 ## Setup
 
@@ -35,7 +35,7 @@ Rules decide and emit alerts immediately. Bedrock only writes explanations when 
 
 Use `make eval` for the Phase 1–4 evaluators, the dev rules report, and A–E ablation runner; it first verifies the locked-run counter is zero and Phase 5 remains unauthorized. Phase 2 runs baseline-only with Ollama skipped. Phase 3/4 use templates by default. `make study-phase2` is the separate historical Ollama study. No target runs Phase 5.
 
-`make eval` includes Phase 1 integrity checks, which read hashes/counts from the locked test file and held-out stream files. Please run `python eval/phase1_eval.py` yourself when ready; it writes its report and config snapshot to `eval/runs/phase1-<timestamp>.json`. Codex has not run Phase 1 in this pass.
+`make eval` includes Phase 1 integrity checks, which read hashes/counts from the locked test file and held-out stream files. Phase 1 was run by the user and its report is committed at [`phase1-20261021T062137Z.json`](eval/runs/phase1-20261021T062137Z.json). No `.txt` log accompanied it.
 
 ## Data provenance
 
@@ -103,6 +103,25 @@ These targets apply to the final evaluation. The Phase 2 values above are dev re
 ## Results so far (dev only)
 
 Detector and ablation measurements use dev data only. Phase 1's separate integrity checks intentionally read locked-file hashes and counts when the user runs them. The locked-run counter remains 0 and Phase 5 remains unauthorized. The current rules and clean evasion-v4 results are in [the 2026-10-21 run](eval/runs/dev-rules-20261021T055255Z.json), the A–E dry run is [here](eval/runs/ablation-20261021T060624Z.json), and the latest headed browser measurement is [here](eval/runs/dashboard-playwright-20261021T060747Z.json). Lighthouse desktop results are [here](eval/runs/dashboard-lighthouse-desktop-final.json).
+
+### Recall by data source (dev)
+
+The golden-set count manifest gives 144 dev and 96 test attack windows (240 total). The ModSecurity selection manifest declares 72 real windows in dev and 48 in test; the rest are simulator-generated. These source counts are derived from manifest counts and declared per-kind selection quotas, without reading test or held-out window contents. Recall below is the current dev rules result; for mixed-source XSS it is not split by provenance.
+
+| Kind / source family | Dev ModSecurity | Dev simulated | Test ModSecurity | Test simulated | Dev recall |
+|---|---:|---:|---:|---:|---:|
+| sqli (real-traffic family) | 24 | 0 | 16 | 0 | 16/24 |
+| xss (real-traffic family; mixed) | 12 | 6 | 8 | 4 | 14/18 |
+| path_traversal (real-traffic family) | 18 | 0 | 12 | 0 | 17/18 |
+| scanner_recon (real-traffic family) | 18 | 0 | 12 | 0 | 12/18 |
+| brute_force (simulated only) | 0 | 24 | 0 | 16 | 24/24 |
+| credential_stuffing (simulated only) | 0 | 24 | 0 | 16 | 24/24 |
+| priv_esc (simulated only) | 0 | 18 | 0 | 12 | 18/18 |
+| **Total** | **72** | **72** | **48** | **48** | **125/144** |
+
+Brute force, credential stuffing, and privilege escalation are **100% simulated** in both splits. Simulated-kind recall is not a real-world estimate: the simulator and rules were co-developed. The perfect/near-perfect simulated-kind results should not be generalized to production traffic.
+
+The dev-only non-content shortcut audit ([report](eval/runs/shortcut-audit-dev-20261021.json)) trained L2 logistic regression to distinguish ModSecurity attack windows from simulated benign windows using coarse user-agent family, status distribution, field-presence rates, byte-null rate, and timing/within-window metadata. Five-fold stratified CV pooled AUROC was **1.000** (folds 1.000 each; 72 real attacks, 180 simulated benign). This perfect separation is a strong source shortcut warning, not evidence of detector quality; the audit did not change data or rules.
 
 ### Model comparison
 
