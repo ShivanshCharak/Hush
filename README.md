@@ -33,7 +33,9 @@ Rules decide and emit alerts immediately. Bedrock only writes explanations when 
 
 ## Planned commands
 
-Use `make rules-dev`, `make phase3`, or `make phase4` for dev-only runs. `make study-phase2` runs the historical local-model experiment. No target runs Phase 5.
+Use `make eval` for the Phase 1–4 evaluators, the dev rules report, and A–E ablation runner; it first verifies the locked-run counter is zero and Phase 5 remains unauthorized. Phase 2 runs baseline-only with Ollama skipped. Phase 3/4 use templates by default. `make study-phase2` is the separate historical Ollama study. No target runs Phase 5.
+
+`make eval` includes Phase 1 integrity checks, which read hashes/counts from the locked test file and held-out stream files. Please run `python eval/phase1_eval.py` yourself when ready; it writes its report and config snapshot to `eval/runs/phase1-<timestamp>.json`. Codex has not run Phase 1 in this pass.
 
 ## Data provenance
 
@@ -60,7 +62,7 @@ The current build creates five replay streams with 10,000 events each and 40 att
 
 ## Phase 2 baseline and Decider
 
-The rules baseline, event prefilter, count header, prompt, output schema, local Ollama adapter, and dev-only evaluator are implemented in [`baseline/`](baseline/README.md), [`decider/`](decider/README.md), and [`eval/phase2_eval.py`](eval/phase2_eval.py). The evaluator reads dev windows and streams 01–03 only; model request duration counts against the locked latency targets. Earlier and current model comparisons are summarized under [Results so far](#results-so-far-dev-only-provisional), with the earlier rules-gated 8B run retained in its historical details block.
+The rules baseline and historical local-model study code are in [`baseline/`](baseline/README.md), [`decider/`](decider/README.md), and [`eval/phase2_eval.py`](eval/phase2_eval.py). The standard Phase 2 target uses `--skip-model`, reads dev windows and streams 01–03 only, and does not probe Ollama. Earlier model comparisons are summarized under [Results so far](#results-so-far-dev-only).
 
 ### Authorized-source allowlist
 
@@ -100,7 +102,7 @@ These targets apply to the final evaluation. The Phase 2 values above are dev re
 
 ## Results so far (dev only)
 
-Dev data only. Test/held-out data have not been touched. Locked-run counter remains 0 and Phase 5 remains unauthorized. The current rules and clean evasion-v4 results are in [the 2026-10-21 run](eval/runs/dev-rules-20261021T055255Z.json), with the final dashboard measurements in [Playwright](eval/runs/dashboard-playwright-20261021T055317Z.json) and [desktop Lighthouse](eval/runs/dashboard-lighthouse-desktop-final.json).
+Detector and ablation measurements use dev data only. Phase 1's separate integrity checks intentionally read locked-file hashes and counts when the user runs them. The locked-run counter remains 0 and Phase 5 remains unauthorized. The current rules and clean evasion-v4 results are in [the 2026-10-21 run](eval/runs/dev-rules-20261021T055255Z.json), with the final dashboard measurements in [Playwright](eval/runs/dashboard-playwright-20261021T055317Z.json) and [desktop Lighthouse](eval/runs/dashboard-lighthouse-desktop-final.json).
 
 ### Model comparison
 
@@ -128,7 +130,7 @@ On the shared sample, the rules recalled 21/24 and 8B recalled 22/24, a one-wind
 
 Historical model values are from [the Evasion-v1 model run](eval/runs/evasion-qwen3-1.7b.json). Final post-normalization numbers are from the latest rules artifact; earlier intermediate normalization scoring reached 20/20 on case/comment, but the final comment-handling revision regressed to 13/20.
 
-| Mutation family | Evasion-v2 pre-fix | Evasion-v2 after 60m + normalization | Evasion-v3 pre-fix | Evasion-v3 current | Evasion-v4 current |
+| Mutation family | Evasion-v2 pre-fix | Evasion-v2 post-fix, in-sample | Evasion-v3 pre-fix | Evasion-v3 post-fix, in-sample | Evasion-v4 current |
 |---|---:|---:|---:|---:|---:|
 | Slow, 15m spacing | — | — | 7/7 | 7/7 | 5/5 |
 | Slow, 30m spacing | 0/20 | 0/20 | 0/7 | 0/7 | 0/5 |
@@ -144,6 +146,8 @@ Historical model values are from [the Evasion-v1 model run](eval/runs/evasion-qw
 
 Evasion-v2 pre-fix figures are preserved from [`dev-rules-20261020T181310Z.json`](eval/runs/dev-rules-20261020T181310Z.json). V1-v3 are the original frozen mutation sets; the clean v4 revision is [`evasion-v4-clean-dev.json`](eval/runs/evasion-v4-clean-dev.json), committed before rescoring. The first v4 candidate was contaminated by unchanged source payloads, so its per-family payload scores are invalid and remain documented in the run report. V4 covers 60 new dev mutations; its 3-pass nested cases pass while the intentionally deeper 4-pass cases do not.
 
+V4 current recall totals **41/60**. V2/v3 post-fix figures are in-sample because those same development mutation families informed the rule and normalizer changes; they are not held-out estimates. The clean v4 fixture was built after the first v4 scoring exposed contamination, then committed before its own detector scoring.
+
 Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clean, uncontaminated revision commit `89b5d1d7`). V1-v3 pre-fix references are retained in the current rules run. Normalization is capped at three repeated URL-decode passes, then decodes HTML and Unicode escapes, strips SQL comments, and collapses whitespace.
 
 ### What we found
@@ -156,7 +160,8 @@ Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clea
 - The 27 historical local-model explanation attempts (14 Phase 3, 13 Phase 4) failed. The known adapter exception is `Could not connect to Ollama at http://127.0.0.1:11434: [Errno 1] Operation not permitted`; the 27 summary artifacts omit individual raw errors, so they do not establish that every attempt had the identical exception. No retry or fix was made.
 - Reviewer value did not separate attacks from benign controls: all 24 emitted dev-stream attack alerts were confirmed and all 7 formerly false-speaking hard-benign windows (with allowlist flag removed) were also confirmed; contested rate was 0% for each. The confirmed/contested badge and trace field were removed. The model can supply explanation hints only and cannot suppress or create alerts.
 - The previous Phase 3/4 artifacts are retained as historical. A refreshed Phase 3/4 run through the final rules + Bedrock/template explanation path awaits user confirmation of Bedrock credentials. Bedrock smoke previously failed with an invalid security token; no live 20-alert run was performed.
-- Dashboard desktop Lighthouse with a healthy API: LCP 733 ms, TBT 3 ms, JS transfer 243,713 bytes (total transfer 263,881 bytes), Lighthouse interactive/TTI 733 ms. The dashboard still meets the <=300 KB JS transfer target. Playwright on a synthetic 50k-row fixture: table completeness passed; after reducing overscan from 12 to 6 and adding scroll-container containment, mounted rows fell from 39 to 19 and average scroll FPS rose from 22.5 to 30.6 (GPU-enabled Chromium with ANGLE SwiftShader). Filter click-to-results was 666 ms: 8.3 ms in the mock API handler and about 658 ms in browser/router/render; production filtering is already server-side. Alert detail and evidence-row linkage/highlight passed. The separate Playwright quiet-window TTI proxy was 6.52 s; Lighthouse TTI is the production metric reported above.
+- Dashboard desktop Lighthouse with a healthy API: LCP 733 ms, TBT 3 ms, JS transfer 243,713 bytes (263,881 bytes total). The dashboard remains under the 300 KB JS-transfer target. Playwright ran headed with GPU enabled on a synthetic 50k-row fixture; final scroll FPS and handler/network/render split are in the current browser report. Alert-card-to-evidence linkage passed.
+- Known detector limitations: rotating-username slow-rate attacks at spacing >=30 minutes remain mostly undetected; nested encoding requiring 4 or more decode passes exceeds the 3-pass normalizer; each dev stream spans only about 33 minutes, so these streams cannot validate long observation windows such as 60 minutes.
 - Bedrock smoke only: configured AWS region was `local`; explicit us-west-2 identity, profile/model access, and one synthetic CLI invocation were attempted but failed with an invalid security token. Model access is unverified; no dev alert was sent and no 20-alert run occurred. The Haiku 4.5 profile used was `us.anthropic.claude-haiku-4-5-20251001-v1:0`.
 
 - On the 1.7B 354-window run, recall was 46/141 versus the rules baseline's 125/144 on the full dev set; it caught 0/19 attacks the rules missed. The scopes differ, so the recall figures are not a paired comparison.
@@ -165,7 +170,7 @@ Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clea
 - On the earlier full-dev 8B artifact, rules kind accuracy was 111/125 and model kind accuracy was 96/125. The shared sample also has lower model kind accuracy than rules (18/21 for rules versus 9/13 for 4B and 15/22 for 8B); on the 1.7B scope, rules were 108/122 and the model 42/46. These are conditional on each detector's speaks, so the claim that every model is worse on kind accuracy is not supported across all scopes.
 - Prompt processing dominated the 4B sample p50 latency (12.45 s prompt evaluation versus 1.10 s generation). The earlier 8B run was rules-gated: the model's speak decisions matched the rules because 200 no-candidate windows were skipped and every one of 160 candidate windows was sent to the model.
 
-**Hardware:** historical Ollama study ran with 7.1 GiB host RAM, 6.0 GB runner, and 54% GPU / 46% CPU; physical GPU model was not recorded. Browser performance used Google Chrome with ANGLE SwiftShader (software GPU), so scroll FPS is not a physical-GPU measurement.
+**Hardware:** historical Ollama study ran with 7.1 GiB host RAM, 6.0 GB runner, and 54% GPU / 46% CPU; physical GPU model was not recorded. The current headed Chrome run records its detected WebGL renderer and hardware-acceleration status in the Playwright artifact.
 
 <details>
 <summary>Earlier 8B run (rules-gated, context 8192, superseded)</summary>

@@ -16,7 +16,7 @@ def _sha256(path: Path) -> str | None:
         return None
 
 
-def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
+def snapshot(*, model: str | None = None, seed: int | None = None, include_phase1_inputs: bool = False) -> dict:
     from decider.prompt import FEWSHOT_ENABLED, PROMPT_FORMAT_VERSION, SYSTEM_PROMPT
     from decider.window import PATTERN_CHECK_VERSION
     prompt_material = SYSTEM_PROMPT + ("\n" + (ROOT / "decider/fewshot_dev.json").read_text(encoding="utf-8") if FEWSHOT_ENABLED else "")
@@ -37,7 +37,29 @@ def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
                   "eval/runs/evasion-v3-dev.json", "eval/runs/evasion-v4-dev.json",
                   "eval/runs/evasion-v4-clean-dev.json",
                   "config/authorized_sources.json")
+    if include_phase1_inputs:
+        data_paths += ("data/golden/test.jsonl", "data/streams/stream_04.jsonl", "data/streams/stream_05.jsonl",
+                       "data/annotations/second_annotator_filled.jsonl", "data/annotations/second_annotator_key.json",
+                       "data/VERSION", "sim/scenarios.json")
+    try:
+        code_commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
+                                     text=True, timeout=3, check=True).stdout.strip()
+        tracked_worktree_clean = subprocess.run(["git", "diff", "--quiet", "HEAD", "--"], cwd=ROOT,
+                                                timeout=3).returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        code_commit = None
+        tracked_worktree_clean = None
+    normalizer_settings = {
+        "url_decode_passes_max": 3,
+        "html_entity_decode": True,
+        "unicode_escape_decode": True,
+        "sql_comment_stripping": True,
+        "whitespace_collapse": True,
+    }
+    allowlist_hash = _sha256(ROOT / "config/authorized_sources.json")
     return {
+        "code_commit_sha": code_commit,
+        "tracked_worktree_clean": tracked_worktree_clean,
         "prompt_hash_sha256": hashlib.sha256(prompt_material.encode()).hexdigest(),
         "prompt_format_version": PROMPT_FORMAT_VERSION,
         "pattern_check_version": PATTERN_CHECK_VERSION,
@@ -58,5 +80,7 @@ def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
             "cross_ip_brute_force_window_seconds": 3600,
         },
         "seeds": {"evaluation_seed": seed},
+        "allowlist_sha256": allowlist_hash,
+        "normalizer_settings": normalizer_settings,
         "data_hashes_sha256": {path: _sha256(ROOT / path) for path in data_paths},
     }

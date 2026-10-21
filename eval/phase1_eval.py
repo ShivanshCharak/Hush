@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -14,6 +15,8 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from eval.run_metadata import snapshot
 EXPECTED = {
     "dev": {
         "none": 144,
@@ -230,8 +233,15 @@ def main() -> int:
         except Exception as exc:
             passed, detail = False, {"error": f"{type(exc).__name__}: {exc}", "pass": False}
         results.append({"check": index, "name": check.__name__, **detail, "pass": passed})
-    report = {"passed": sum(bool(item["pass"]) for item in results), "total": len(results), "phase1_complete": all(item["pass"] for item in results), "checks": results}
-    print(json.dumps(report, indent=2))
+    report = {"phase": "1", "created_at": datetime.now(timezone.utc).isoformat(),
+              "data_scope": "Phase 1 integrity checks; includes locked test/held-out hashes",
+              "passed": sum(bool(item["pass"]) for item in results), "total": len(results),
+              "phase1_complete": all(item["pass"] for item in results), "checks": results,
+              "config_snapshot": snapshot(include_phase1_inputs=True)}
+    out = ROOT / "eval/runs" / f"phase1-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps({"artifact": str(out.relative_to(ROOT)), **report}, indent=2))
     return 0 if report["phase1_complete"] else 1
 
 

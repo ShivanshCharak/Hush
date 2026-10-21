@@ -378,7 +378,7 @@ def main() -> int:
             "No test windows or held-out streams were read.",
             "The dev data contains 29 hard attack windows; the Phase 2 specification expects 21. Results retain the observed denominator and flag the mismatch.",
         ],
-        "config_snapshot": snapshot(model=args.model or "qwen3:1.7b"),
+        "config_snapshot": snapshot(model=None if args.skip_model else (args.model or "qwen3:1.7b")),
     }
     runs_dir = ROOT / "eval/runs"
     runs_dir.mkdir(parents=True, exist_ok=True)
