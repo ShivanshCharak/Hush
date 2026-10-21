@@ -103,7 +103,6 @@ def fit_model(train_x: list[list[float]], train_y: list[int]) -> tuple[list[floa
         variance = sum((row[j] - means[j]) ** 2 for row in train_x) / len(train_x)
         scales.append(math.sqrt(variance) or 1.0)
     tx = [[(v - means[j]) / scales[j] for j, v in enumerate(row)] for row in train_x]
-    vx = [[(v - means[j]) / scales[j] for j, v in enumerate(row)] for row in test_x]
     weights = [0.0] * width
     bias = 0.0
     learning_rate, l2 = 0.08, 0.01
