@@ -1,0 +1,712 @@
+{
+  "phase": "dev-rules-and-audit",
+  "created_at": "2026-10-21T05:52:55.291554+00:00",
+  "data_scope": "data/golden/dev.jsonl, dev streams 01-03, and frozen dev-only evasion sets v1-v4; historical dev-only 8B artifact",
+  "metrics": {
+    "attack_recall": {
+      "n": 125,
+      "d": 144
+    },
+    "kind_accuracy": {
+      "n": 111,
+      "d": 125
+    },
+    "hard_benign_false_speaks": {
+      "n": 0,
+      "d": 36
+    },
+    "normal_benign_false_speaks": {
+      "n": 0,
+      "d": 144
+    }
+  },
+  "per_kind_dev_recall": {
+    "xss": {
+      "detected": 14,
+      "total": 18,
+      "kind_correct": 10
+    },
+    "priv_esc": {
+      "detected": 18,
+      "total": 18,
+      "kind_correct": 18
+    },
+    "brute_force": {
+      "detected": 24,
+      "total": 24,
+      "kind_correct": 24
+    },
+    "scanner_recon": {
+      "detected": 12,
+      "total": 18,
+      "kind_correct": 12
+    },
+    "sqli": {
+      "detected": 16,
+      "total": 24,
+      "kind_correct": 9
+    },
+    "path_traversal": {
+      "detected": 17,
+      "total": 18,
+      "kind_correct": 14
+    },
+    "credential_stuffing": {
+      "detected": 24,
+      "total": 24,
+      "kind_correct": 24
+    }
+  },
+  "evasion_v1_rules_recall": {
+    "double_url_encoding": {
+      "detected": 18,
+      "total": 20
+    },
+    "case_comment_obfuscation": {
+      "detected": 13,
+      "total": 20
+    },
+    "slow_rate_5plus_ips": {
+      "detected": 20,
+      "total": 20
+    }
+  },
+  "evasion_v1_pre_normalization_reference": {
+    "double_url_encoding": {
+      "detected": 18,
+      "total": 20
+    },
+    "case_comment_obfuscation": {
+      "detected": 13,
+      "total": 20
+    },
+    "slow_rate_5plus_ips": {
+      "detected": 20,
+      "total": 20
+    }
+  },
+  "evasion_v2_pre_fix_reference": {
+    "artifact": "eval/runs/dev-rules-20261020T181310Z.json",
+    "evasion_v2_rules_recall": {
+      "slow_rate_10ip_30m_rotating_users": {
+        "detected": 0,
+        "total": 20
+      },
+      "triple_encoding": {
+        "detected": 17,
+        "total": 20
+      },
+      "parser_obfuscation": {
+        "detected": 11,
+        "total": 20
+      }
+    }
+  },
+  "evasion_v2_rules_recall_after_60m_change": {
+    "slow_rate_10ip_30m_rotating_users": {
+      "detected": 0,
+      "total": 20
+    },
+    "triple_encoding": {
+      "detected": 17,
+      "total": 20
+    },
+    "parser_obfuscation": {
+      "detected": 20,
+      "total": 20
+    }
+  },
+  "evasion_v3_rules_recall": {
+    "slow_rate_15m_rotating_usernames_20ip": {
+      "detected": 7,
+      "total": 7
+    },
+    "slow_rate_30m_rotating_usernames_20ip": {
+      "detected": 0,
+      "total": 7
+    },
+    "slow_rate_45m_rotating_usernames_20ip": {
+      "detected": 0,
+      "total": 6
+    },
+    "encoding_html_entity": {
+      "detected": 10,
+      "total": 10
+    },
+    "encoding_unicode_escape": {
+      "detected": 10,
+      "total": 10
+    },
+    "parser_sql_keyword_splitting": {
+      "detected": 10,
+      "total": 10
+    },
+    "parser_path_separator_confusion": {
+      "detected": 10,
+      "total": 10
+    }
+  },
+  "evasion_v3_pre_normalization_reference": {
+    "slow_rate_15m_rotating_usernames_20ip": {
+      "detected": 7,
+      "total": 7
+    },
+    "slow_rate_30m_rotating_usernames_20ip": {
+      "detected": 0,
+      "total": 7
+    },
+    "slow_rate_45m_rotating_usernames_20ip": {
+      "detected": 0,
+      "total": 6
+    },
+    "encoding_html_entity": {
+      "detected": 7,
+      "total": 10
+    },
+    "encoding_unicode_escape": {
+      "detected": 10,
+      "total": 10
+    },
+    "parser_sql_keyword_splitting": {
+      "detected": 4,
+      "total": 10
+    },
+    "parser_path_separator_confusion": {
+      "detected": 10,
+      "total": 10
+    }
+  },
+  "evasion_v3_slow_rate_window_samples": [
+    {
+      "id": "evasion-v3-slow-15m-01",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-15m-02",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-15m-03",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-15m-04",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-15m-05",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-15m-06",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-15m-07",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "brute_force"
+    },
+    {
+      "id": "evasion-v3-slow-30m-08",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-30m-09",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-30m-10",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-30m-11",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-30m-12",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-30m-13",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-30m-14",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-45m-15",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-45m-16",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-45m-17",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-45m-18",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-45m-19",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v3-slow-45m-20",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    }
+  ],
+  "evasion_v4_post_normalization_recall": {
+    "slow_rate_15m_rotating_users_14ip": {
+      "detected": 5,
+      "total": 5
+    },
+    "slow_rate_30m_rotating_users_14ip": {
+      "detected": 0,
+      "total": 5
+    },
+    "slow_rate_45m_rotating_users_14ip": {
+      "detected": 0,
+      "total": 5
+    },
+    "slow_rate_60m_rotating_users_14ip": {
+      "detected": 0,
+      "total": 5
+    },
+    "nested_triple_encoding_3pass": {
+      "detected": 4,
+      "total": 4
+    },
+    "nested_triple_encoding_4pass": {
+      "detected": 0,
+      "total": 4
+    },
+    "html_entity_encoding": {
+      "detected": 8,
+      "total": 8
+    },
+    "unicode_escape_encoding": {
+      "detected": 8,
+      "total": 8
+    },
+    "sql_keyword_splitting": {
+      "detected": 8,
+      "total": 8
+    },
+    "comment_case_obfuscation": {
+      "detected": 8,
+      "total": 8
+    }
+  },
+  "evasion_v4_original_fixture_recall_invalid_due_to_source_payload_contamination": {
+    "slow_rate_15m_rotating_users_12ip": {
+      "detected": 5,
+      "total": 5
+    },
+    "slow_rate_30m_rotating_users_12ip": {
+      "detected": 1,
+      "total": 5
+    },
+    "slow_rate_45m_rotating_users_12ip": {
+      "detected": 0,
+      "total": 5
+    },
+    "slow_rate_60m_rotating_users_12ip": {
+      "detected": 1,
+      "total": 5
+    },
+    "nested_triple_encoding_3pass": {
+      "detected": 4,
+      "total": 4
+    },
+    "nested_triple_encoding_4pass": {
+      "detected": 4,
+      "total": 4
+    },
+    "html_entity_encoding": {
+      "detected": 8,
+      "total": 8
+    },
+    "unicode_escape_encoding": {
+      "detected": 8,
+      "total": 8
+    },
+    "sql_keyword_splitting": {
+      "detected": 8,
+      "total": 8
+    },
+    "comment_case_obfuscation": {
+      "detected": 8,
+      "total": 8
+    }
+  },
+  "evasion_v4_slow_rate_window_samples": [
+    {
+      "id": "evasion-v4-clean-slow-15m-01",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "credential_stuffing"
+    },
+    {
+      "id": "evasion-v4-clean-slow-15m-02",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "credential_stuffing"
+    },
+    {
+      "id": "evasion-v4-clean-slow-15m-03",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "credential_stuffing"
+    },
+    {
+      "id": "evasion-v4-clean-slow-15m-04",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "credential_stuffing"
+    },
+    {
+      "id": "evasion-v4-clean-slow-15m-05",
+      "spacing_minutes": 15,
+      "failures_in_latest_60m": 5,
+      "distinct_sources_in_latest_60m": 5,
+      "decision": true,
+      "kind": "credential_stuffing"
+    },
+    {
+      "id": "evasion-v4-clean-slow-30m-06",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-30m-07",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-30m-08",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-30m-09",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-30m-10",
+      "spacing_minutes": 30,
+      "failures_in_latest_60m": 3,
+      "distinct_sources_in_latest_60m": 3,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-45m-11",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-45m-12",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-45m-13",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-45m-14",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-45m-15",
+      "spacing_minutes": 45,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-60m-16",
+      "spacing_minutes": 60,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-60m-17",
+      "spacing_minutes": 60,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-60m-18",
+      "spacing_minutes": 60,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-60m-19",
+      "spacing_minutes": 60,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    },
+    {
+      "id": "evasion-v4-clean-slow-60m-20",
+      "spacing_minutes": 60,
+      "failures_in_latest_60m": 2,
+      "distinct_sources_in_latest_60m": 2,
+      "decision": false,
+      "kind": "none"
+    }
+  ],
+  "dev_streams_01_03_false_alerts": {
+    "stream_01": 0,
+    "stream_02": 0,
+    "stream_03": 0
+  },
+  "distributed_rule": "same username; failures from >=3 distinct sources in trailing 60m; no success for that username in the interval",
+  "spacing_hypothesis": {
+    "hypothesis": "A 10-minute cross-IP rolling feature misses events spaced 30 minutes apart.",
+    "window_changed_from_10m_to_60m": true,
+    "interpretation": "The frozen evasion-v3 file records each slow attempt's 15/30/45-minute spacing; see per-spacing family recall and latest-60m source counts."
+  },
+  "historical_8b_hard_benign_false_speaks": {
+    "n": 7,
+    "details": [
+      {
+        "id": "sim-dev-hard_benign-0030",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0005",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0025",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0020",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0035",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0010",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      },
+      {
+        "id": "sim-dev-hard_benign-0015",
+        "authorized_source_flag_present": false,
+        "authorized_source_flag_values": [
+          null
+        ],
+        "returned_speak": true,
+        "returned_kind": "scanner_recon",
+        "raw_model_output": "{\n  \"speak\": true,\n  \"kind\": \"scanner_recon\",\n  \"evidence_ids\": [1]\n}"
+      }
+    ]
+  },
+  "credential_stuffing_rule": "auth endpoint; rolling 60m; >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts; successes/attempts <=0.25",
+  "normalization": "up to 3 repeated URL-decode passes, HTML entity and Unicode escape decode, SQL comment stripping, whitespace collapse",
+  "config_snapshot": {
+    "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
+    "prompt_format_version": 17,
+    "pattern_check_version": 5,
+    "model": null,
+    "model_digest_sha256": null,
+    "model_digest_status": "not_applicable_to_rules_bedrock_pipeline",
+    "thresholds": {
+      "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+      "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "cross_ip_brute_force_window_seconds": 3600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v1-dev.json": "b0a4106dd05150ee708bfe7e16e656f4cce46efb0cd930ed0319055c2740a403",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "eval/runs/evasion-v3-dev.json": "94bb184fde4d413a4b3222dbc1db77b749b0c89d4c72a6b9540cd1cc4c094f53",
+      "eval/runs/evasion-v4-dev.json": "4a60e0dce3456dd680fadc51a2ce1b9eca05d8e1d6f0b635de67bffcca7e3877",
+      "eval/runs/evasion-v4-clean-dev.json": "341e4baacf79db482f56fc5f7d97d7a5969eb24a3c326fba7191524952c2c3df",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    }
+  }
+}

@@ -47,7 +47,7 @@ def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
         "thresholds": {
             "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
             "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
-            "credential_stuffing": "proposed: >=4 distinct failed usernames across >=4 source IPs on auth endpoint in rolling 60m; success ratio <=0.10",
+            "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
             "sensitive_path_scan": ">=3 sensitive-path probes from one source",
             "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
             "priv_esc_proxy": ">=5 distinct profile IDs from one source",
@@ -55,7 +55,7 @@ def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
             "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
             "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
             "window_size_events": 20,
-            "window_spacing_seconds": 600,
+            "cross_ip_brute_force_window_seconds": 3600,
         },
         "seeds": {"evaluation_seed": seed},
         "data_hashes_sha256": {path: _sha256(ROOT / path) for path in data_paths},
