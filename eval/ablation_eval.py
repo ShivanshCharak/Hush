@@ -110,6 +110,21 @@ def evaluate_variant(
     return {"streams": stream_reports, "totals": dict(totals), "emitted_kinds": dict(kind_counts)}
 
 
+def evaluate_lookalikes(
+    rows: list[dict[str, Any]], predict: Callable[[list[dict[str, Any]]], dict[str, Any]]
+) -> dict[str, Any]:
+    by_category: dict[str, dict[str, int]] = {}
+    for row in rows:
+        category = str(row["provenance"]["variant"])
+        category_result = by_category.setdefault(category, {"false_speaks": 0, "windows": 0})
+        decision = predict(row["events"])
+        category_result["windows"] += 1
+        category_result["false_speaks"] += int(bool(decision.get("speak")))
+    return {"categories": by_category,
+            "false_speaks": sum(value["false_speaks"] for value in by_category.values()),
+            "windows": sum(value["windows"] for value in by_category.values())}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="Never call Bedrock; use templates for E")
@@ -130,6 +145,10 @@ def main() -> int:
         stream_id: (read_jsonl(ROOT / manifest["streams"][stream_id]["path"]), manifest["streams"][stream_id]["episodes"])
         for stream_id in DEV_STREAMS
     }
+    lookalike_path = ROOT / "eval/fixtures/benign-lookalike-v1.jsonl"
+    lookalikes = read_jsonl(lookalike_path)
+    if len(lookalikes) != 60:
+        raise RuntimeError(f"expected 60 frozen lookalike-v1 windows, found {len(lookalikes)}")
 
     global naive_rules
     naive_rules = load_naive_rules()
@@ -139,21 +158,26 @@ def main() -> int:
     variants: dict[str, dict[str, Any]] = {}
     try:
         variants["A"] = evaluate_variant("A", naive_rules.predict, streams)
+        variants["A"]["benign_lookalike_v1"] = evaluate_lookalikes(lookalikes, naive_rules.predict)
 
         current_rules.authorized_source = lambda _source, _scope: False
         current_rules.normalize_request = legacy_url_only
         current_rules.SQLI = naive_rules.SQLI
         variants["B"] = evaluate_variant("B", current_rules.predict, streams)
+        variants["B"]["benign_lookalike_v1"] = evaluate_lookalikes(lookalikes, current_rules.predict)
 
         current_rules.normalize_request = original_normalizer
         current_rules.SQLI = original_sqli
         variants["C"] = evaluate_variant("C", current_rules.predict, streams)
+        variants["C"]["benign_lookalike_v1"] = evaluate_lookalikes(lookalikes, current_rules.predict)
 
         current_rules.authorized_source = original_auth
         variants["D"] = evaluate_variant("D", current_rules.predict, streams)
+        variants["D"]["benign_lookalike_v1"] = evaluate_lookalikes(lookalikes, current_rules.predict)
 
         bedrock = BedrockExplainer() if args.real_bedrock else None
         variants["E"] = evaluate_variant("E", current_rules.predict, streams, explainer=bedrock)
+        variants["E"]["benign_lookalike_v1"] = evaluate_lookalikes(lookalikes, current_rules.predict)
     finally:
         current_rules.authorized_source = original_auth
         current_rules.normalize_request = original_normalizer
@@ -162,7 +186,7 @@ def main() -> int:
     report = {
         "phase": "ablation-A-E",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "data_scope": "data/streams/stream_01.jsonl, stream_02.jsonl, stream_03.jsonl only",
+        "data_scope": "data/streams/stream_01.jsonl, stream_02.jsonl, stream_03.jsonl plus frozen eval/fixtures/benign-lookalike-v1.jsonl; no test/held-out",
         "dry_run": args.dry_run,
         "bedrock_explanations": "pending; E uses template proxy and makes zero live calls" if not args.real_bedrock else "live Bedrock, explanation-only",
         "bedrock_call_count": bedrock.invocation_count if args.real_bedrock else 0,
@@ -176,7 +200,7 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"artifact": str(out.relative_to(ROOT)), "dry_run": report["dry_run"],
-                      "variants": {key: value["totals"] for key, value in variants.items()},
+                      "variants": {key: {"totals": value["totals"], "benign_lookalike_v1": value["benign_lookalike_v1"]} for key, value in variants.items()},
                       "bedrock_call_count": report["bedrock_call_count"]}, indent=2))
     return 0
 

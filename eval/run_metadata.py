@@ -37,6 +37,7 @@ def snapshot(*, model: str | None = None, seed: int | None = None, include_phase
                   "eval/runs/evasion-v1-dev.json", "eval/runs/evasion-v2-dev.json",
                   "eval/runs/evasion-v3-dev.json", "eval/runs/evasion-v4-dev.json",
                   "eval/runs/evasion-v4-clean-dev.json",
+                  "eval/fixtures/benign-lookalike-v1.jsonl",
                   "config/authorized_sources.json")
     if include_phase1_inputs:
         data_paths += ("data/golden/test.jsonl", "data/streams/stream_04.jsonl", "data/streams/stream_05.jsonl",
