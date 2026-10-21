@@ -1,0 +1,150 @@
+{
+  "phase": "shortcut-audit-dev",
+  "scope": "data/golden/dev.jsonl only; ModSecurity attack vs simulator-declared silent windows",
+  "target_counts": {
+    "real_modsecurity_attack": 72,
+    "simulated_benign": 180
+  },
+  "excluded_dev_windows": {
+    "simulator/speak": 72,
+    "zenodo:17178461/ambiguous": 36
+  },
+  "model": "pure-Python L2 logistic regression; no external model dependencies",
+  "features": [
+    "event_count",
+    "bytes_null_rate",
+    "unique_source_ips",
+    "session_duration_s",
+    "event_spacing_mean_s",
+    "event_spacing_median_s",
+    "event_spacing_sd_s",
+    "presence_src_ip",
+    "presence_method",
+    "presence_path",
+    "presence_query",
+    "presence_status",
+    "presence_bytes",
+    "presence_user_agent",
+    "presence_referer",
+    "presence_username",
+    "presence_event_type",
+    "status_missing",
+    "status_1xx",
+    "status_2xx",
+    "status_3xx",
+    "status_4xx",
+    "status_5xx",
+    "ua_curl",
+    "ua_python",
+    "ua_scanner",
+    "ua_browser",
+    "ua_other",
+    "ua_missing"
+  ],
+  "excluded_inputs": [
+    "raw request/path/query/payload content",
+    "gold kind",
+    "label",
+    "provenance",
+    "source/session IDs",
+    "event IDs"
+  ],
+  "cross_validation": {
+    "method": "5-fold stratified; deterministic shuffled assignment",
+    "seed": 20261021,
+    "folds": [
+      {
+        "fold": 1,
+        "n": 51,
+        "auroc": 1.0
+      },
+      {
+        "fold": 2,
+        "n": 51,
+        "auroc": 1.0
+      },
+      {
+        "fold": 3,
+        "n": 50,
+        "auroc": 1.0
+      },
+      {
+        "fold": 4,
+        "n": 50,
+        "auroc": 1.0
+      },
+      {
+        "fold": 5,
+        "n": 50,
+        "auroc": 1.0
+      }
+    ],
+    "pooled_oof_auroc": 1.0
+  },
+  "config_snapshot": {
+    "code_commit_sha": "57f286c173bd76952a3ad97c7cd9304402f5c705",
+    "tracked_worktree_clean": true,
+    "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
+    "prompt_format_version": 17,
+    "pattern_check_version": 5,
+    "model": null,
+    "model_digest_sha256": null,
+    "model_digest_status": "not_applicable_to_rules_bedrock_pipeline",
+    "thresholds": {
+      "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+      "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "cross_ip_brute_force_window_seconds": 3600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "evaluation_seed": null,
+    "evaluation_seed_note": "Rules are deterministic; evaluation_seed is null unless a randomized evaluator explicitly supplies one.",
+    "explainer_config": {
+      "prompt_hash_sha256": "29aa38e29b246d168b595fb9d387e85c06b8f0da18301f7df6b6c743ae274f8d",
+      "bedrock_region": null,
+      "requested_bedrock_region": "us-west-2",
+      "model_or_inference_profile_id": null,
+      "requested_model_or_inference_profile_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "temperature": null,
+      "temperature_note": "Not explicitly set in the Bedrock request; provider default applies.",
+      "max_tokens": 300,
+      "retry_settings": {
+        "max_attempts": 0
+      },
+      "timeout_seconds": {
+        "connect": 4,
+        "read": 4
+      }
+    },
+    "allowlist_sha256": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805",
+    "normalizer_settings": {
+      "url_decode_passes_max": 3,
+      "html_entity_decode": true,
+      "unicode_escape_decode": true,
+      "sql_comment_stripping": true,
+      "whitespace_collapse": true
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v1-dev.json": "b0a4106dd05150ee708bfe7e16e656f4cce46efb0cd930ed0319055c2740a403",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "eval/runs/evasion-v3-dev.json": "94bb184fde4d413a4b3222dbc1db77b749b0c89d4c72a6b9540cd1cc4c094f53",
+      "eval/runs/evasion-v4-dev.json": "4a60e0dce3456dd680fadc51a2ce1b9eca05d8e1d6f0b635de67bffcca7e3877",
+      "eval/runs/evasion-v4-clean-dev.json": "341e4baacf79db482f56fc5f7d97d7a5969eb24a3c326fba7191524952c2c3df",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    }
+  }
+}
