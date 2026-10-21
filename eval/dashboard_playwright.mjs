@@ -68,7 +68,7 @@ const avgFps=intervals.length?1000/(intervals.reduce((a,b)=>a+b,0)/intervals.len
 const sortedIntervals=[...intervals].sort((a,b)=>a-b);
 const p95FrameMs=sortedIntervals.length?sortedIntervals[Math.min(sortedIntervals.length-1,Math.ceil(sortedIntervals.length*.95)-1)]:null;
 const finalMountedRows=await page.locator("tbody tr").count();
-const traceSummary=await page.evaluate(()=>({long_tasks:(window.__longTasks||[]).map(task=>({start_ms:task.startTime,duration_ms:task.duration})),trace_method:"requestAnimationFrame sample while programmatically scrolling the 50k-row virtualized table"}));
+const traceSummary=await page.evaluate(({start,end})=>({long_tasks:(window.__longTasks||[]).filter(task=>task.startTime<end&&task.startTime+task.duration>=start).map(task=>({start_ms:task.startTime,duration_ms:task.duration})),trace_method:"requestAnimationFrame sample while programmatically scrolling the 50k-row virtualized table"}),{start:frameSamples[0],end:frameSamples.at(-1)});
 const frameTrace=frameSamples.map((time_ms,index)=>({frame:index,time_ms,interval_ms:index?time_ms-frameSamples[index-1]:null}));
 await page.evaluate(()=>{performance.clearMarks("dashboard:filter-handler-start");performance.clearMarks("dashboard:filter-handler-end");performance.clearMarks("dashboard:filter-render-complete")});
 const filterStarted=Date.now();
