@@ -121,17 +121,17 @@ The golden-set count manifest gives 144 dev and 96 test attack windows (240 tota
 
 Brute force, credential stuffing, and privilege escalation are **100% simulated** in both splits. Simulated-kind recall is not a real-world estimate: the simulator and rules were co-developed. The perfect/near-perfect simulated-kind results should not be generalized to production traffic.
 
-The dev-only non-content shortcut audit ([report](eval/runs/shortcut-audit-dev-20261021.json)) trained L2 logistic regression to distinguish ModSecurity attack windows from simulated benign windows using coarse user-agent family, status distribution, field-presence rates, byte-null rate, and timing/within-window metadata. Five-fold stratified CV pooled AUROC was **1.000** (folds 1.000 each; 72 real attacks, 180 simulated benign). This perfect separation is a strong source shortcut warning, not evidence of detector quality; the audit did not change data or rules.
+**Known confound:** the dev-only non-content shortcut audit ([report](eval/runs/shortcut-audit-dev-20261021.json)) trained L2 logistic regression to distinguish ModSecurity attack windows from simulated benign windows using coarse user-agent family, status distribution, field-presence rates, byte-null rate, and timing/within-window metadata. Five-fold stratified CV pooled AUROC was **1.000** (folds 1.000 each; 72 real attacks, 180 simulated benign). The top five permutation drops were `status_4xx` (0.002593 AUROC), `presence_username` (0.000741), then `event_count`, `bytes_null_rate`, and `unique_source_ips` (each 0.000000). Removing the top 1 feature left AUROC **1.000**; removing the top 3 yielded **0.9977**; removing the top 5 yielded **0.9978**. The remaining metadata still separates source domains nearly perfectly; this is a source shortcut warning, not evidence of detector quality. The audit did not change data or rules.
 
 The audit run snapshot records explainer prompt SHA-256 `29aa38e29b246d168b595fb9d387e85c06b8f0da18301f7df6b6c743ae274f8d`, requested Bedrock region `us-west-2`, and requested inference profile `us.anthropic.claude-haiku-4-5-20251001-v1:0`. The actual AWS region/model environment variables were unset. The explainer request uses `max_tokens=300`, leaves temperature unspecified (provider default), sets retries to `max_attempts=0`, and uses 4-second connect/read timeouts. Rules are deterministic; `evaluation_seed` is null.
 
 ### Model comparison
 
-| Model and scope | Attack recall | Hard-benign false speaks | Normal-benign false speaks | Kind accuracy | AUROC (model-called only) | Total latency p50 / p95 |
+| Model and scope | Attack recall (real / simulated) | Hard-benign false speaks vs simulated benign traffic | Normal-benign false speaks vs simulated benign traffic | Kind accuracy | AUROC (model-called only) | Total latency p50 / p95 |
 |---|---:|---:|---:|---:|---:|---:|
-| [Rules baseline, shared 60-window sample](eval/runs/phase2-requested-qwen3-8b-sample60.json) | 21/24 | 3/6 | 0/24 | 18/21 | not run | not run |
-| [Rules baseline, full dev](eval/runs/phase2-20261020T033832Z.json) (kind comparison: [audit](eval/runs/phase2-followup-audit-20261020T095052Z.json)) | 125/144 | 7/36 | 0/144 | 111/125 | not run | not run |
-| [Current rules pipeline](eval/runs/dev-rules-20261021T055255Z.json) | 125/144 | 0/36 | 0/144 | 111/125 | not applicable | not applicable |
+| [Rules baseline, shared 60-window sample](eval/runs/phase2-requested-qwen3-8b-sample60.json) | 21/24 (source split not recorded) | 3/6 | 0/24 | 18/21 | not run | not run |
+| [Rules baseline, full dev](eval/runs/phase2-20261020T033832Z.json) (kind comparison: [audit](eval/runs/phase2-followup-audit-20261020T095052Z.json)) | 125/144 (source split not recorded) | 7/36 | 0/144 | 111/125 | not run | not run |
+| [Current rules pipeline](eval/runs/dev-rules-20261021T055255Z.json) | pending source-stratified rescore | 0/36 | 0/144 | 111/125 | not applicable | not applicable |
 | Current Bedrock explainer (no run) | — | — | — | rules-owned | pending | pending |
 | [qwen3:1.7b, 354 dev windows](eval/runs/phase2-requested-qwen3-1.7b.json) | 46/141 | 3/34 | 23/143 | 42/46 | 0.497 (n=314) | 6.22 / 10.14 s |
 | [qwen3:4b, shared 60-window sample](eval/runs/phase2-requested-qwen3-4b-sample60.json) | 13/24 | 2/6 | 0/24 | 9/13 | 0.909 (n=52) | 13.59 / 32.60 s |

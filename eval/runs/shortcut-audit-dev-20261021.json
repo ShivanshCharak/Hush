@@ -81,8 +81,115 @@
     ],
     "pooled_oof_auroc": 1.0
   },
+  "permutation_importance": {
+    "method": "mean held-out-fold AUROC drop after permuting one feature",
+    "top_5": [
+      {
+        "feature": "status_4xx",
+        "mean_auroc_drop": 0.002593,
+        "fold_drops": [
+          0.0,
+          0.012963,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "feature": "presence_username",
+        "mean_auroc_drop": 0.000741,
+        "fold_drops": [
+          0.0,
+          0.003704,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "feature": "event_count",
+        "mean_auroc_drop": 0.0,
+        "fold_drops": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "feature": "bytes_null_rate",
+        "mean_auroc_drop": 0.0,
+        "fold_drops": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "feature": "unique_source_ips",
+        "mean_auroc_drop": 0.0,
+        "fold_drops": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  },
+  "feature_removal_ablation": {
+    "top_1_removed": {
+      "removed_features": [
+        "status_4xx"
+      ],
+      "pooled_oof_auroc": 1.0,
+      "fold_aurocs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "top_3_removed": {
+      "removed_features": [
+        "status_4xx",
+        "presence_username",
+        "event_count"
+      ],
+      "pooled_oof_auroc": 0.9977,
+      "fold_aurocs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "top_5_removed": {
+      "removed_features": [
+        "status_4xx",
+        "presence_username",
+        "event_count",
+        "bytes_null_rate",
+        "unique_source_ips"
+      ],
+      "pooled_oof_auroc": 0.9978,
+      "fold_aurocs": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
   "config_snapshot": {
-    "code_commit_sha": "57f286c173bd76952a3ad97c7cd9304402f5c705",
+    "code_commit_sha": "19e445db7002210ef8381e8a6ca9954daa19c64b",
     "tracked_worktree_clean": true,
     "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
     "prompt_format_version": 17,
