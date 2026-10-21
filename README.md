@@ -58,7 +58,7 @@ python sim/finalize_data.py
 python eval/phase1_eval.py
 ```
 
-The current build creates five replay streams with 10,000 events each and 40 attack plus 15 hard-benign episodes. The golden files have the target class counts and include 120 ModSecurity attack windows split by source day. The project owner reports reviewing and verifying all 600 golden windows; their labels are marked final by owner review in [`data/golden/REVIEW_STATUS.md`](data/golden/REVIEW_STATUS.md). A blind AI second pass yields 73 eligible pairs and Cohen's kappa 0.7834; all eight automated checks pass. Because Codex helped create the original labels, this is not independent human agreement; see the [review record](data/annotations/second_annotator_filled.REVIEW.md). `sim/finalize_data.py` locks the test file and held-out streams and writes hashes to `data/VERSION`.
+The current build creates five replay streams with 10,000 events each and 40 attack plus 15 hard-benign episodes. The golden files have the target class counts and include 120 ModSecurity attack windows split by source day. The project owner reports reviewing and verifying all 600 golden windows; their labels are marked final by owner review in [`data/golden/REVIEW_STATUS.md`](data/golden/REVIEW_STATUS.md). Phase 1 passes **8/8 checks**: 0 shared dev/test sessions, 120/240 attack windows from ModSecurity, determinism hashes match, and locked-file integrity passes ([report](eval/runs/phase1-20261021T062137Z.json)). The AI second pass has 73 eligible pairs and Cohen's kappa **0.7834**; a rough aggregate-only 95% interval is **0.64–0.93**. This is not independent human agreement; see the [review record](data/annotations/second_annotator_filled.REVIEW.md). `sim/finalize_data.py` locks the test file and held-out streams and writes hashes to `data/VERSION`.
 
 ## Phase 2 baseline and Decider
 
@@ -122,6 +122,8 @@ The golden-set count manifest gives 144 dev and 96 test attack windows (240 tota
 Brute force, credential stuffing, and privilege escalation are **100% simulated** in both splits. Simulated-kind recall is not a real-world estimate: the simulator and rules were co-developed. The perfect/near-perfect simulated-kind results should not be generalized to production traffic.
 
 The dev-only non-content shortcut audit ([report](eval/runs/shortcut-audit-dev-20261021.json)) trained L2 logistic regression to distinguish ModSecurity attack windows from simulated benign windows using coarse user-agent family, status distribution, field-presence rates, byte-null rate, and timing/within-window metadata. Five-fold stratified CV pooled AUROC was **1.000** (folds 1.000 each; 72 real attacks, 180 simulated benign). This perfect separation is a strong source shortcut warning, not evidence of detector quality; the audit did not change data or rules.
+
+The audit run snapshot records explainer prompt SHA-256 `29aa38e29b246d168b595fb9d387e85c06b8f0da18301f7df6b6c743ae274f8d`, requested Bedrock region `us-west-2`, and requested inference profile `us.anthropic.claude-haiku-4-5-20251001-v1:0`. The actual AWS region/model environment variables were unset. The explainer request uses `max_tokens=300`, leaves temperature unspecified (provider default), sets retries to `max_attempts=0`, and uses 4-second connect/read timeouts. Rules are deterministic; `evaluation_seed` is null.
 
 ### Model comparison
 
