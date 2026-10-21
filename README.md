@@ -1,20 +1,17 @@
 # Decider-Sec
 
-Decider-Sec is a local log monitor that scores 20-event windows for attacks and routes alerts through a gate. It compares deterministic rules with local language models; explanation support is optional.
+Decider-Sec is a local log monitor that evaluates 20-event windows with deterministic rules. Rules decide and emit alerts. Bedrock can write a grounded explanation when explicitly enabled; a deterministic template is the fallback. Historical Ollama experiments are retained as study code and cannot change alerts.
 
 ## Dev snapshot
 
-- Shared sample: rules 21/24, Qwen3 4B 13/24, and Qwen3 8B 22/24 attack recall; [full comparison](#model-comparison).
-- Evasion-v1: rules baseline 31/60 and Qwen3 1.7B 11/60; [run artifact](eval/runs/evasion-qwen3-1.7b.json).
-- Earlier full-dev 8B: model and rules both 125/144 attack recall; model kind accuracy 96/125 versus rules 111/125; [run artifact](eval/runs/phase2-20261020T033832Z.json) and [kind audit](eval/runs/phase2-followup-audit-20261020T095052Z.json).
+- Historical local-model comparisons are study results only; see [model comparison](#model-comparison).
+- Current rules results and evasion-v1-v3 results are in [Results so far](#results-so-far-dev-only-provisional); v4 will be scored only after its freeze commit.
 
 ```mermaid
 flowchart LR
   S[Simulator or replay<br/>5 events/sec] --> E[events.jsonl<br/>every raw request]
-  E --> P[Event prefilter<br/>keeps likely candidates for inference]
-  P --> W[20-event window<br/>plus count header]
-  W --> D[Qwen3 via Ollama<br/>speak/silent, kind, confidence]
-  P -. no candidate .-> T[trace.jsonl<br/>silent prefilter row]
+  E --> W[20-event window]
+  W --> D[Deterministic rules<br/>kind and evidence]
   D --> G[Alert gate<br/>threshold, cooldown, budget, dedup]
   G --> T
   G -->|emitted only| X[Bedrock explainer<br/>template fallback]
@@ -28,15 +25,15 @@ flowchart LR
 
 ## Project status
 
-Phase 1 artifacts are frozen and its evaluator passes 8/8 checks; the second-pass kappa was AI-produced, so independent human agreement remains unverified. Phase 2 baseline and inference scaffolding are in progress. [Qwen3 1.7B was dropped after its dev results](#model-comparison); the best model is still being chosen. See [PROGRESS.md](PROGRESS.md) for status and [docs/DECIDER-SEC-SPEC.md](docs/DECIDER-SEC-SPEC.md) for phase criteria and locked targets.
+Phase 1 artifacts are frozen and its evaluator passes 8/8 checks; the second-pass kappa was AI-produced, so independent human agreement remains unverified. The current alert path is rules-first; local Qwen results remain historical study artifacts. See [PROGRESS.md](PROGRESS.md) and [docs/DECIDER-SEC-SPEC.md](docs/DECIDER-SEC-SPEC.md) for status and phase criteria.
 
 ## Setup
 
-The local inference adapter uses Ollama; model selection is still in progress. Qwen3 1.7B was dropped after its [dev results](#model-comparison). See [`decider/README.md`](decider/README.md) for setup and configuration, including the per-window request timeout. Optional AWS Bedrock setup is planned for Phase 3.
+The production pipeline does not use Ollama. Bedrock explanations are opt-in and require working AWS credentials; template explanations are used otherwise. See [`decider/README.md`](decider/README.md) for the local-model study code.
 
 ## Planned commands
 
-The project specification calls for `make data`, `make baseline`, `make decide`, `make pipeline`, `make demo`, and `make eval`. These commands will be added with their corresponding phases; they are not available yet.
+Use `make rules-dev`, `make phase3`, or `make phase4` for dev-only runs. `make study-phase2` runs the historical local-model experiment. No target runs Phase 5.
 
 ## Data provenance
 
@@ -65,17 +62,21 @@ The current build creates five replay streams with 10,000 events each and 40 att
 
 The rules baseline, event prefilter, count header, prompt, output schema, local Ollama adapter, and dev-only evaluator are implemented in [`baseline/`](baseline/README.md), [`decider/`](decider/README.md), and [`eval/phase2_eval.py`](eval/phase2_eval.py). The evaluator reads dev windows and streams 01–03 only; model request duration counts against the locked latency targets. Earlier and current model comparisons are summarized under [Results so far](#results-so-far-dev-only-provisional), with the earlier rules-gated 8B run retained in its historical details block.
 
+### Authorized-source allowlist
+
+The config-backed allowlist in [`config/authorized_sources.json`](config/authorized_sources.json) mirrors the simulator-declared authorized source (`198.51.100.42`, emitted with `Approved-Internal-Scanner/2.0`). Each grant has an explicit scope and expiry; runtime authorization is loaded from config and never inferred from labels or event text. Expired, out-of-scope, and unlisted sources are not authorized. Focused boundary tests are in [`eval/test_authorization.py`](eval/test_authorization.py).
+
 ## Phase 3 gate, explanations, and pipeline
 
-The stream processor is [`pipeline/run.py`](pipeline/run.py); it keeps every event in the JSONL stream, applies the event prefilter to decide which 20-event windows need inference, and sends candidate windows to local Ollama by default. Every window still receives a trace row, including prefilter skips. Pass `--rules` to use the rules baseline. Emitted alerts are explained with Bedrock when `BEDROCK_MODEL_ID` and AWS credentials are configured, with a deterministic evidence-grounded template fallback. Gate settings are in [`gate/gate.py`](gate/gate.py): 30-second cooldown and six alerts per rolling simulated 10 minutes by default.
+The stream processor is [`pipeline/run.py`](pipeline/run.py); rules decide and emit alerts immediately. Bedrock may explain emitted alerts when explicitly enabled and configured. Without Bedrock, or when it fails, the deterministic evidence-grounded template is used. Explanations cannot create, alter, or suppress alerts. Gate settings are in [`gate/gate.py`](gate/gate.py): 30-second cooldown and six alerts per rolling simulated 10 minutes by default.
 
-The model reads event windows from the stream; DuckDB is a dashboard store, not a model input. The API refreshes event rows when either new requests or new trace rows arrive, so a verdict can attach to a request that is already visible. Histogram severity bars come from raw statuses; alert badges come only from gate-emitted alerts. The exact rule for scheduling candidate windows is still a Phase 2 decision; the current implementation evaluates non-overlapping 20-event windows and calls Ollama when any event in that window passes the prefilter. The confidence threshold is configurable with `DECIDER_CONFIDENCE_THRESHOLD`; it defaults to `0.0` until a calibrated threshold is selected.
+DuckDB is a dashboard store, not a decision input. The API refreshes event rows when either new requests or new trace rows arrive, so an alert explanation can attach to a request that is already visible. Histogram severity bars come from raw statuses; alert badges come only from gate-emitted alerts. Rules evaluate non-overlapping 20-event windows.
 
-Run `python eval/phase3_eval.py` for the rules-baseline replay over dev streams 01–03. The latest replay is [`eval/runs/phase3-20261020T043100Z.json`](eval/runs/phase3-20261020T043100Z.json): 24/24 episodes detected, 1 false alert, 0 duplicates, median detection delay 20 events, no budget violations, and 100% entity grounding. An injected explainer confirms call parity; five forced timeouts return five template fallbacks. Human ratings of the revised recommendations averaged 4.60/5 overall (correct kind 4.60, evidence use 4.80, actionability 4.40), meeting the manual quality target. See the [completed rating sheet](eval/runs/phase3-20261020T043100Z-actionability-review.jsonl). Live Bedrock and end-to-end latency checks remain outstanding, so Phase 3 remains in progress.
+Run `python eval/phase3_eval.py` for a dev-stream replay with rules decisions and template explanations; add `--real-explainer` only after the user confirms Bedrock credentials work. The prior model-review artifact is historical, not a production-pipeline result.
 
 ## Phase 4 dashboard, demo, and robustness
 
-Phase 4 includes a seeded 180-second replay with credential stuffing, encoded SQL injection, and a “stay silent” user-agent attack; [`demo/replay.py`](demo/replay.py) streams 900 events and a 45-window trace. The injection, canary, truth-separation, and demo results in [`eval/runs/phase4-20261020T050608Z.json`](eval/runs/phase4-20261020T050608Z.json) were produced with `use_model=False` (`model_calls: 0`, rules baseline); they do not test the model. The dev-only evaluator [`eval/phase4_eval.py`](eval/phase4_eval.py) reports injection (30/30 attacks, 0/20 benign alerts), canary (0/10 leaks), truth separation, and three paced demos (180.059–180.107 seconds). The Next.js/Tailwind dashboard is black and white, with a line chart and compact evidence-linked alert cards. Snapshot ingestion, API reconciliation (900 events/45 windows/3 alerts), live-tail duplicate handling, 10-way histogram reconciliation on 50k synthetic rows, and query speed (p95 71 ms histogram; 41 ms page of 200) were exercised. The imported public ModSecurity archive is also loaded into `dashboard/data/modsecurity.duckdb` (151,011 real request records); its 7,551 detector windows and 4,131 alerts are generated by this project's pipeline, not source labels. The dashboard now replays those stored rows in 500-event batches every 3.5 seconds, updating the visible chart and alerts to the replay cursor; this is paced playback of real historical data, not a new live source feed. `npm run lint` and `npm run build` pass. Phase 4 remains in progress until full browser UI lag, 50k-row scroll FPS, repaint latency, and time-to-interactive are measured; see [`PROGRESS.md`](PROGRESS.md).
+The latest [Phase 4 run](eval/runs/phase4-20261021T042552Z.json) uses the rules-first pipeline: 30/30 attacks flagged, 0/20 benign alerts, and ten template canaries with zero leaks. Bedrock canary remains pending. All 13 local model explanation attempts errored; this did not affect decisions. The Next.js/Tailwind dashboard uses a dynamically imported chart. [Lighthouse 13.5](eval/runs/dashboard-lighthouse-20261021T043022Z.json) measured TTI 3.01 s, FCP 758 ms, LCP 3.01 s, TBT 252 ms, and 243,696 bytes of script transfer (251,034 bytes total transfer). The [Playwright run](eval/runs/dashboard-playwright-20261021T042851Z.json) loaded 50,000 synthetic rows (25 virtual rows after scroll), averaged 30.8 FPS (p95 frame interval 66.6 ms), measured filter repaint at 498 ms, and confirmed the alert card selected/highlighted its evidence row. Initial-route JS files total 127,514 bytes gzipped. Summing every static JS chunk separately gives 362,458 bytes, including unused page chunks and the 105,405-byte lazy chart chunk; actual Lighthouse page script transfer is under the 300 KB target. `npm run lint` and `npm run build` pass.
 
 ## Locked final targets
 
@@ -99,7 +100,7 @@ These targets apply to the final evaluation. The Phase 2 values above are dev re
 
 ## Results so far (dev only, provisional)
 
-Dev data only. The locked test set and held-out streams have not been run. Numbers will change as prompts and gates are finalized. Date: 2026-10-20.
+Dev data only. The locked test set and held-out streams have not been run. Locked-run counter remains 0 and Phase 5 remains unauthorized. Current rules results and pipeline checks are from 2026-10-21.
 
 ### Model comparison
 
@@ -107,6 +108,7 @@ Dev data only. The locked test set and held-out streams have not been run. Numbe
 |---|---:|---:|---:|---:|---:|---:|
 | [Rules baseline, shared 60-window sample](eval/runs/phase2-requested-qwen3-8b-sample60.json) | 21/24 | 3/6 | 0/24 | 18/21 | not run | not run |
 | [Rules baseline, full dev](eval/runs/phase2-20261020T033832Z.json) (kind comparison: [audit](eval/runs/phase2-followup-audit-20261020T095052Z.json)) | 125/144 | 7/36 | 0/144 | 111/125 | not run | not run |
+| [Rules, restored 60-minute distributed rule](eval/runs/dev-rules-20261021T041605Z.json) | 125/144 | 0/36 | 0/144 | 111/125 | not applicable | not applicable |
 | [qwen3:1.7b, 354 dev windows](eval/runs/phase2-requested-qwen3-1.7b.json) | 46/141 | 3/34 | 23/143 | 42/46 | 0.497 (n=314) | 6.22 / 10.14 s |
 | [qwen3:4b, shared 60-window sample](eval/runs/phase2-requested-qwen3-4b-sample60.json) | 13/24 | 2/6 | 0/24 | 9/13 | 0.909 (n=52) | 13.59 / 32.60 s |
 | [qwen3:8b, shared 60-window sample](eval/runs/phase2-requested-qwen3-8b-sample60.json) | 22/24 | 3/6 | 1/24 | 15/22 | 0.976 (n=54) | 30.89 / 67.46 s |
@@ -119,15 +121,41 @@ On the shared sample, the rules recalled 21/24 and 8B recalled 22/24, a one-wind
 
 | Attack family | Rules baseline | qwen3:1.7b |
 |---|---:|---:|
-| Double URL encoding | not run | 8/20 |
-| Case/comment obfuscation | not run | 3/20 |
-| Slow-rate across 5 IPs | not run | 0/20 |
-| Total attacks | 31/60 | 11/60 |
-| Kind accuracy | not run | 2/11 |
+| Double URL encoding | 18/20 | 8/20 |
+| Case/comment obfuscation | 13/20 | 3/20 |
+| Slow-rate across 5+ IPs | 20/20 after restoring cross-IP rule (historical pre-restoration 0/20) | 0/20 |
+| Total attacks | 51/60 | 11/60 |
+| Kind accuracy | rules are the kind authority | 2/11 |
 
-The run artifact reports the rules baseline total (31/60) and model per-window outcomes; it does not record a rules-baseline family breakdown. Model values and kind accuracy are from [the Evasion-v1 run](eval/runs/evasion-qwen3-1.7b.json).
+Model values and kind accuracy are from [the Evasion-v1 model run](eval/runs/evasion-qwen3-1.7b.json); current rule-family measurements are in the final rules artifact.
+
+### Evasion-v2 and frozen Evasion-v3
+
+| Mutation family | Evasion-v2 pre-fix (10-minute rule) | Evasion-v2 after 60-minute rule | Frozen Evasion-v3 after 60-minute rule |
+|---|---:|---:|---:|
+| Slow-rate, 30-minute spacing | 0/20 | 0/20 | — |
+| Slow-rate, 15-minute spacing | — | — | 7/7 |
+| Slow-rate, 30-minute spacing | — | — | 0/7 |
+| Slow-rate, 45-minute spacing | — | — | 0/6 |
+| Triple encoding | 17/20 | 17/20 | — |
+| HTML entity encoding | — | — | 7/10 |
+| Unicode escape encoding | — | — | 10/10 |
+| Parser obfuscation | 11/20 | 11/20 | — |
+| SQL keyword splitting | — | — | 4/10 |
+| Path separator confusion | — | — | 10/10 |
+
+Evasion-v3 was generated and committed as `25ece7c7` before detector scoring. Its fixed input is [`eval/runs/evasion-v3-dev.json`](eval/runs/evasion-v3-dev.json), with the config/hash sidecar at [`eval/runs/evasion-v3-dev-snapshot.json`](eval/runs/evasion-v3-dev-snapshot.json); the full rules report is [`eval/runs/dev-rules-20261021T041605Z.json`](eval/runs/dev-rules-20261021T041605Z.json).
 
 ### What we found
+
+- The exact per-source brute-force rule is at least five failed logins for the same username and source IP in a rolling 60 seconds, with no successful login for that username in the interval. The distributed rule is at least three distinct source IPs failing for the same username in a trailing 60 minutes, with no success for that username in that interval. Both apply; labels do not authorize sources.
+- Final rules dev metrics are 125/144 attack recall, 111/125 kind accuracy, 0/36 hard-benign false speaks, and 0/144 normal-benign false speaks. Per-kind recall: brute force 24/24, credential stuffing 24/24, SQLi 16/24, XSS 14/18, path traversal 17/18, privilege escalation 18/18, scanner reconnaissance 12/18.
+- The 60-minute rule fixes v1 slow-rate (20/20), but does not detect v2 30-minute spacing (0/20). In v3 with rotating usernames, the rule detects 15-minute spacing (7/7) but misses 30-minute (0/7) and 45-minute (0/6): each username does not accumulate failures from three sources inside one hour.
+- Reviewer value did not separate attacks from benign controls: all 24 emitted dev-stream attack alerts were confirmed and all 7 formerly false-speaking hard-benign windows (with allowlist flag removed) were also confirmed; contested rate was 0% for each. The confirmed/contested badge and trace field were removed. The model can supply explanation hints only and cannot suppress or create alerts.
+- Final [Phase 3](eval/runs/phase3-20261021T042553Z.json): 24/24 episodes, 0 false alerts, 0 duplicates, median detection delay 20 events, 0 evidence-ID grounding failures, entities 95/95 grounded. Fourteen explanation-hint calls were attempted and all 14 errored; template fallback was used. Live Bedrock/manual rating remains pending.
+- Final [Phase 4](eval/runs/phase4-20261021T042552Z.json): injection 30/30 attacks and 0/20 benign alerts; ten template canaries had 0 leaks. Bedrock canary is pending. The evaluator's local-model explanation calls errored 13/13; this did not change the rules decisions.
+- Dashboard Lighthouse measured 243,696 bytes of JS transfer and TTI 3.01 s, under the 300 KB page-transfer target. Initial-route JS files total 127,514 bytes gzipped. Static chunk gzip sums total 362,458 bytes when including unused chunks; the chart chunk is dynamically imported (105,405 gzip bytes). Lighthouse ran with the dashboard shell because its local API proxy target was unavailable; Playwright used explicit synthetic dev-derived API fixtures and measured 50k-row scroll at 30.8 FPS average, filter repaint at 498 ms, and successful alert-card linkage. These checks used no test/held-out data.
+- Bedrock smoke only: configured AWS region was `local`; explicit us-west-2 identity, profile/model access, and one synthetic CLI invocation were attempted but failed with an invalid security token. Model access is unverified; no dev alert was sent and no 20-alert run occurred. The Haiku 4.5 profile used was `us.anthropic.claude-haiku-4-5-20251001-v1:0`.
 
 - On the 1.7B 354-window run, recall was 46/141 versus the rules baseline's 125/144 on the full dev set; it caught 0/19 attacks the rules missed. The scopes differ, so the recall figures are not a paired comparison.
 - Qwen3 4B was weak on the shared sample at 13/24, below the rules baseline's 21/24.
@@ -167,6 +195,8 @@ The run used context 8192. Its per-call latency is the full HTTP request duratio
 - **2026-10-20 — Latency:** the p50 <=400 ms target is not met; model-call p50 values are in seconds in the linked run artifacts. **Effect:** the locked latency gate fails.
 - **2026-10-20 — Kind accuracy:** the >=0.80 target is not met by the earlier 8B model result (96/125). **Effect:** the kind-accuracy gate fails.
 - **2026-10-20 — Hard-attack improvement:** the required +20 percentage points over baseline cannot be met on this dev set because the baseline detects 29/29 hard attacks. **Effect:** there is no measurable headroom under the current denominator.
-- **2026-10-20 — Phase 3/4 model use:** Phase 3 and Phase 4 results were produced with `use_model=False` / rules baseline. **Effect:** they do not establish model performance.
+- **2026-10-21 — Model explanation calls:** final Phase 3/4 local-model explanation attempts failed (14/14 and 13/13 respectively); deterministic template explanations remained available and rule decisions were unaffected. **Effect:** model explanation quality is unverified.
 - **2026-10-20 — Context length:** the earlier 8B run used context 8192, while the shared-sample runs use context 4096. **Effect:** latency and quality across those runs are not a controlled context-length comparison.
-- **2026-10-20 — Evasion-v1 baseline breakdown:** the run artifact records the rules baseline total but not per-family counts. **Effect:** only the aggregate 31/60 baseline result is reported; a family breakdown is not run in the artifact.
+- **2026-10-21 — Bedrock credentials:** STS, model/profile metadata and one synthetic invocation failed with an invalid security token. **Effect:** Bedrock model access, latency, and rating are pending; the requested 20-alert run and live canary were not run.
+- **2026-10-21 — Dashboard all-chunk sum:** summing every static JS chunk separately (including chunks not requested by this page) is 362,458 gzip bytes; Lighthouse's actual page script transfer is 243,696 bytes. **Effect:** page-transfer target passes; static all-chunk sum is not the page payload.
+- **2026-10-21 — Historical v2 results:** the pre-fix artifact is retained unchanged; the 60-minute rule changes no v2 outcomes. **Effect:** v2 30-minute slow-rate remains 0/20.

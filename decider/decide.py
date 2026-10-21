@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Structured local-model inference through Ollama's chat API."""
+"""STUDY ONLY: structured local-model inference through Ollama's chat API.
+
+The production pipeline does not import or invoke this adapter.
+"""
 
 from __future__ import annotations
 
@@ -52,7 +55,7 @@ def schema_for_window(window: dict[str, Any], confirm_schema: bool | None = None
     if candidates and confirm_schema:
         candidate_ids = set()
         checks = window.get("header", {}).get("pattern_checks", {})
-        for field in ("brute_force_candidates", "credential_stuffing_candidates", "priv_esc_candidates", "scanner_recon_candidates"):
+        for field in ("brute_force_candidates", "distributed_brute_force_candidates", "credential_stuffing_candidates", "priv_esc_candidates", "scanner_recon_candidates"):
             for candidate in checks.get(field, []):
                 if candidate.get("confirmed"):
                     candidate_ids.update(int(event_id) for event_id in candidate.get("evidence_event_ids", []))
@@ -82,6 +85,7 @@ def candidate_kind_for_evidence(window: dict[str, Any], evidence_ids: list[int])
     matched: set[str] = set()
     for field, kind in (
         ("brute_force_candidates", "brute_force"),
+        ("distributed_brute_force_candidates", "brute_force"),
         ("credential_stuffing_candidates", "credential_stuffing"),
         ("priv_esc_candidates", "priv_esc"),
         ("scanner_recon_candidates", "scanner_recon"),

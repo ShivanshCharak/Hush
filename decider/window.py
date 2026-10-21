@@ -6,13 +6,13 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import unquote
-
-from baseline.rules import PROFILE_PATH, SENSITIVE_PATH, SQLI, TRAVERSAL, XSS
+from baseline.rules import (PROFILE_PATH, SENSITIVE_PATH, SQLI, TRAVERSAL, XSS,
+                            distributed_credential_stuffing_candidates)
 from baseline.authorization import authorized_source
+from baseline.normalization import normalize_request
 
 WINDOW_SIZE = 20
-PATTERN_CHECK_VERSION = 4
+PATTERN_CHECK_VERSION = 5
 def _event_seconds(event: dict[str, Any], fallback: int) -> float:
     try:
         timestamp = datetime.fromisoformat(str(event.get("timestamp", "")).replace("Z", "+00:00"))
@@ -45,6 +45,8 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
     failures_by_account: dict[tuple[str, str], list[tuple[float, str, int]]] = defaultdict(list)
     failures_by_source: dict[str, list[tuple[float, str, int]]] = defaultdict(list)
     successful_accounts: set[tuple[str, str]] = set()
+    distributed_failures: dict[str, list[tuple[float, str, int]]] = defaultdict(list)
+    distributed_successes: dict[str, list[float]] = defaultdict(list)
     profiles_by_source: dict[str, set[str]] = defaultdict(set)
     profile_event_ids_by_source: dict[str, list[int]] = defaultdict(list)
     paths_by_source: dict[str, set[str]] = defaultdict(set)
@@ -52,6 +54,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
     four_xx_by_source: Counter[str] = Counter()
     request_by_source: Counter[str] = Counter()
     signature_ids: dict[str, list[int]] = {"sqli": [], "xss": [], "path_traversal": []}
+    distributed_stuffing = distributed_credential_stuffing_candidates(events)
 
     for index, event in enumerate(events):
         source = str(event.get("src_ip", "unknown"))
@@ -64,8 +67,12 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
         if is_auth and is_failure:
             failures_by_account[(source, username)].append((second, username, event_id))
             failures_by_source[source].append((second, username, event_id))
+            if username:
+                distributed_failures[username].append((second, source, event_id))
         elif is_auth and event.get("result") == "success":
             successful_accounts.add((source, username))
+            if username:
+                distributed_successes[username].append(second)
 
         path = str(event.get("path", ""))
         paths_by_source[source].add(path)
@@ -79,12 +86,7 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
             profiles_by_source[source].add(profile.group(1))
             profile_event_ids_by_source[source].append(event_id)
 
-        request_text = f"{path}?{event.get('query', '')}"
-        for _ in range(3):
-            decoded = unquote(request_text)
-            if decoded == request_text:
-                break
-            request_text = decoded
+        request_text = normalize_request(event)
         if SQLI.search(request_text):
             signature_ids["sqli"].append(event_id)
         if XSS.search(request_text):
@@ -104,6 +106,23 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
             "matching_success_in_window": matching_success,
             "confirmed": bool(username) and max_failures >= 5 and not matching_success,
             "evidence_event_ids": [event_id for _, _, event_id in attempts],
+        })
+
+    latest_time = max((_event_seconds(event, index) for index, event in enumerate(events)), default=float("-inf"))
+    cutoff_60m = latest_time - 3600
+    distributed_candidates = []
+    for username, attempts in sorted(distributed_failures.items()):
+        recent = sorted((second, source, event_id) for second, source, event_id in attempts if second >= cutoff_60m)
+        sources = sorted({source for _, source, _ in recent})
+        matching_success = any(second >= cutoff_60m for second in distributed_successes.get(username, []))
+        distributed_candidates.append({
+            "username": username,
+            "source_ips": sources,
+            "authorized_source": bool(sources) and all(authorized_source(source, "authentication") for source in sources),
+            "max_failures_60m": len(recent),
+            "matching_success_in_window": matching_success,
+            "confirmed": len(sources) >= 3 and not matching_success,
+            "evidence_event_ids": [event_id for _, _, event_id in recent],
         })
 
     credential_candidates = []
@@ -155,7 +174,9 @@ def compute_pattern_checks(events: list[dict[str, Any]]) -> dict[str, Any]:
 
     return {
         "brute_force_candidates": brute_candidates,
+        "distributed_brute_force_candidates": distributed_candidates,
         "credential_stuffing_candidates": credential_candidates,
+        "distributed_credential_stuffing_candidates": distributed_stuffing,
         "priv_esc_candidates": profile_candidates,
         "scanner_recon_candidates": scan_candidates,
         "payload_signature_event_ids": signature_ids,
@@ -166,7 +187,7 @@ def compute_header(events: list[dict[str, Any]]) -> dict[str, Any]:
     failed_by_ip: Counter[str] = Counter()
     usernames_by_ip: dict[str, set[str]] = defaultdict(set)
     four_xx = 0
-    failed_usernames_10m: Counter[str] = Counter()
+    failed_usernames_60m: Counter[str] = Counter()
     timed_failures: list[tuple[float, str]] = []
     latest_time = max((_event_seconds(event, index) for index, event in enumerate(events)), default=float("-inf"))
     for event in events:
@@ -180,16 +201,16 @@ def compute_header(events: list[dict[str, Any]]) -> dict[str, Any]:
                 timed_failures.append((_event_seconds(event, len(timed_failures)), username))
         if 400 <= status < 500:
             four_xx += 1
-    cutoff = latest_time - 600
+    cutoff = latest_time - 3600
     for event_time, username in timed_failures:
         if event_time >= cutoff:
-            failed_usernames_10m[username] += 1
+            failed_usernames_60m[username] += 1
     return {
         "event_count": len(events),
         "failed_logins_per_ip": dict(failed_by_ip),
         "distinct_usernames_per_ip": {ip: len(users) for ip, users in usernames_by_ip.items()},
         "four_xx_rate": four_xx / max(1, len(events)),
-        "failed_logins_per_username_10m": dict(failed_usernames_10m),
+        "failed_logins_per_username_60m": dict(failed_usernames_60m),
         "pattern_checks": compute_pattern_checks(events),
     }
 

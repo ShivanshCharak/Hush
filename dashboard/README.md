@@ -11,7 +11,7 @@ python pipeline/run.py data/streams/stream_01.jsonl --trace dashboard/data/strea
 python dashboard/api/ingest.py data/streams/stream_01.jsonl dashboard/data/stream_01_trace.jsonl
 ```
 
-The pipeline keeps every raw event in `events.jsonl`, then uses the prefilter to decide whether a 20-event window needs Ollama inference. It writes a trace row for each window, including windows skipped by the prefilter. Use `--rules` to generate the rules-baseline comparison trace.
+The pipeline keeps every raw event in `events.jsonl`, evaluates each 20-event window with deterministic rules, and writes a trace row. Bedrock can explain emitted alerts when explicitly configured; templates are the default and fallback. Ollama is retained only for historical study evaluations.
 
 For a static snapshot, start the API with:
 
@@ -53,9 +53,9 @@ python dashboard/api/ingest.py dashboard/data/demo-events.jsonl dashboard/data/d
 HUSH_EVENTS_PATH="$PWD/dashboard/data/demo-events.jsonl" HUSH_TRACE_PATH="$PWD/dashboard/data/demo-trace.jsonl" python -m uvicorn dashboard.api.routes:app --host 127.0.0.1 --port 8000
 ```
 
-In another terminal run `python demo/replay.py`. It writes 900 events over 180 seconds while a separate worker processes each 20-event window and appends the decision row afterward. This lets raw requests reach DuckDB and the UI before slow model verdicts arrive. Use `--speed 20` for a faster rehearsal or `--rules` for the deterministic rules baseline. Start the Next.js app as above and enable **Live tail**. Use a fresh, empty database for each replay because event IDs restart at zero.
+In another terminal run `python demo/replay.py`. It writes 900 events over 180 seconds while a separate worker processes each 20-event window and appends the decision row afterward. Rules emit without waiting for model inference. Use `--speed 20` for a faster rehearsal. Start the Next.js app as above and enable **Live tail**. Use a fresh, empty database for each replay because event IDs restart at zero.
 
-Run `python eval/phase4_eval.py` for a dev-only injection, canary, truth-separation, and deterministic demo preflight report. Pass `--model` to measure the currently configured Ollama model instead of the rules baseline. The default baseline evaluation replays three deterministic traces; paced 180-second rehearsals still need to be run separately. Do not use this command against the locked test set.
+Run `python eval/phase4_eval.py` for a dev-only injection, canary, truth-separation, and deterministic demo preflight report. It always uses rules for decisions and templates for explanations. Use `--real-explainer` only after the user confirms Bedrock credentials work. The default evaluation replays three deterministic traces; paced 180-second rehearsals still need to be run separately. Do not use this command against test/held-out data.
 
 ## Features
 

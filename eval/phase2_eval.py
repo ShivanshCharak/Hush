@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate Phase 2 baseline, prefilter, and local Decider on dev data only."""
+"""STUDY ONLY: historical Phase 2 local-model experiments on dev data."""
 
 from __future__ import annotations
 

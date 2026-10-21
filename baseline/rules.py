@@ -5,10 +5,20 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
-from urllib.parse import unquote
 import re
 from typing import Any
 from baseline.authorization import authorized_source
+from baseline.normalization import normalize_request
+
+PER_SOURCE_BRUTE_FORCE_SECONDS = 60
+DISTRIBUTED_BRUTE_FORCE_SECONDS = 60 * 60
+BRUTE_FORCE_MIN_FAILURES = 5
+DISTRIBUTED_BRUTE_FORCE_MIN_SOURCES = 3
+CREDENTIAL_STUFFING_WINDOW_SECONDS = 60 * 60
+CREDENTIAL_STUFFING_MIN_FAILED_USERNAMES = 4
+CREDENTIAL_STUFFING_MIN_SOURCE_IPS = 2
+CREDENTIAL_STUFFING_MIN_FAILURES = 4
+CREDENTIAL_STUFFING_MAX_SUCCESS_RATIO = 0.25
 
 ATTACK_KINDS = (
     "brute_force",
@@ -36,6 +46,7 @@ SENSITIVE_PATH = re.compile(
     re.I,
 )
 PROFILE_PATH = re.compile(r"/api/users/(\d+)/profile(?:/|$)", re.I)
+AUTH_ENDPOINT = re.compile(r"(?:^|/)(?:auth|login|signin)(?:/|$)", re.I)
 
 
 def _auth_counts_per_60s(events: list[dict[str, Any]]) -> tuple[Counter[str], dict[str, set[str]]]:
@@ -70,22 +81,66 @@ def _auth_counts_per_60s(events: list[dict[str, Any]]) -> tuple[Counter[str], di
 
 
 def decoded_request(event: dict[str, Any]) -> str:
-    value = f"{event.get('path', '')}?{event.get('query', '')}"
-    for _ in range(3):
-        decoded = unquote(value)
-        if decoded == value:
-            break
-        value = decoded
-    return value
+    return normalize_request(event)
+
+
+def distributed_credential_stuffing_candidates(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Measure distinct failed accounts and IPs on auth endpoints in rolling 60m spans."""
+    attempts: list[tuple[float, dict[str, Any], bool, bool]] = []
+    for index, event in enumerate(events):
+        path = str(event.get("path", ""))
+        is_auth = event.get("event_type") == "auth" or bool(AUTH_ENDPOINT.search(path))
+        if not is_auth:
+            continue
+        status = int(event.get("status", 0) or 0)
+        failed = event.get("result") == "fail" or status == 401
+        succeeded = not failed and (event.get("result") == "success" or 200 <= status < 300)
+        if not (failed or succeeded):
+            continue
+        try:
+            parsed = datetime.fromisoformat(str(event.get("timestamp", "")).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            when = parsed.timestamp()
+        except ValueError:
+            when = float(index)
+        attempts.append((when, event, failed, succeeded))
+
+    attempts.sort(key=lambda item: item[0])
+    best: dict[str, Any] | None = None
+    left = 0
+    for right, (when, _, _, _) in enumerate(attempts):
+        while when - attempts[left][0] > CREDENTIAL_STUFFING_WINDOW_SECONDS:
+            left += 1
+        span = attempts[left:right + 1]
+        failures = [event for _, event, failed, _ in span if failed]
+        successes = sum(1 for _, _, _, succeeded in span if succeeded)
+        usernames = {str(event.get("username", "")) for event in failures if event.get("username")}
+        sources = {str(event.get("src_ip", "unknown")) for event in failures}
+        ratio = successes / max(1, len(failures) + successes)
+        confirmed = (len(usernames) >= CREDENTIAL_STUFFING_MIN_FAILED_USERNAMES
+                     and len(sources) >= CREDENTIAL_STUFFING_MIN_SOURCE_IPS
+                     and len(failures) >= CREDENTIAL_STUFFING_MIN_FAILURES
+                     and ratio <= CREDENTIAL_STUFFING_MAX_SUCCESS_RATIO)
+        candidate = {"distinct_failed_usernames": len(usernames), "distinct_source_ips": len(sources),
+                     "failed_attempts": len(failures), "successful_attempts": successes,
+                     "success_ratio": ratio, "source_ips": sorted(sources),
+                     "evidence_event_ids": [int(event.get("event_id", -1)) for event in failures[:8]],
+                     "confirmed": confirmed}
+        if best is None or (confirmed, len(usernames), len(sources), len(failures)) > (
+                best["confirmed"], best["distinct_failed_usernames"], best["distinct_source_ips"], best["failed_attempts"]):
+            best = candidate
+    return [best] if best else []
 
 
 def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
     """Return rule decisions and compact features for one window."""
     failed_by_ip: Counter[str] = Counter()
     usernames_by_ip: dict[str, set[str]] = defaultdict(set)
-    failed_usernames: dict[str, Counter[str]] = defaultdict(Counter)
     failures_by_account_60s: dict[tuple[str, str], list[tuple[float, int]]] = defaultdict(list)
     succeeded_accounts: set[tuple[str, str]] = set()
+    distributed_failures: dict[str, list[tuple[float, str, int]]] = defaultdict(list)
+    successful_usernames: dict[str, list[float]] = defaultdict(list)
     four_xx_by_ip: Counter[str] = Counter()
     request_by_ip: Counter[str] = Counter()
     paths_by_ip: dict[str, set[str]] = defaultdict(set)
@@ -118,10 +173,11 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
                 failed_by_ip[ip] += 1
                 if username:
                     usernames_by_ip[ip].add(username)
-                    failed_usernames[ip][username] += 1
                     failures_by_account_60s[(ip, username)].append((event_time, event_id))
+                    distributed_failures[username].append((event_time, ip, event_id))
             elif event.get("result") == "success" and username:
                 succeeded_accounts.add((ip, username))
+                successful_usernames[username].append(event_time)
 
         request = decoded_request(event)
         if SQLI.search(request):
@@ -149,15 +205,36 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
         attempts.sort()
         left = 0
         for right, (now, _) in enumerate(attempts):
-            while now - attempts[left][0] > 60:
+            while now - attempts[left][0] > PER_SOURCE_BRUTE_FORCE_SECONDS:
                 left += 1
             span = attempts[left:right + 1]
-            if len(span) >= 5 and username and (ip, username) not in succeeded_accounts:
+            if len(span) >= BRUTE_FORCE_MIN_FAILURES and username and (ip, username) not in succeeded_accounts:
                 scores["brute_force"] = (
                     80 + min(len(span), 20),
                     [event_id for _, event_id in span[:8]],
                     f"{len(span)} failed logins for one account from one source within 60 seconds, with no matching success",
                 )
+
+    cutoff_60m = latest_time - DISTRIBUTED_BRUTE_FORCE_SECONDS
+    for username, attempts in distributed_failures.items():
+        recent = sorted((when, ip, event_id) for when, ip, event_id in attempts if when >= cutoff_60m)
+        sources = {ip for _, ip, _ in recent}
+        had_success = any(when >= cutoff_60m for when in successful_usernames.get(username, []))
+        if username and len(sources) >= DISTRIBUTED_BRUTE_FORCE_MIN_SOURCES and not had_success:
+            scores["brute_force"] = (
+                70 + len(sources),
+                [event_id for _, _, event_id in recent[:8]],
+                f"failed logins for one account across {len(sources)} sources in the trailing 60 minutes, with no success for that username",
+            )
+    for candidate in distributed_credential_stuffing_candidates(events):
+        if candidate["confirmed"]:
+            scores["credential_stuffing"] = (
+                74 + candidate["distinct_failed_usernames"] + candidate["distinct_source_ips"],
+                candidate["evidence_event_ids"],
+                (f"{candidate['distinct_failed_usernames']} failed usernames across "
+                 f"{candidate['distinct_source_ips']} source IPs on auth endpoints in 60 minutes; "
+                 f"success ratio {candidate['success_ratio']:.2f}"),
+            )
     for ip, failures in failures_60s.items():
         unique_users = len(usernames_60s.get(ip, set()))
         if unique_users >= 4 and failures >= 4:

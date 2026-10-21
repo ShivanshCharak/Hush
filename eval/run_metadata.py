@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import subprocess
 from pathlib import Path
 
@@ -19,31 +18,40 @@ def _sha256(path: Path) -> str | None:
 
 def snapshot(*, model: str | None = None, seed: int | None = None) -> dict:
     from decider.prompt import FEWSHOT_ENABLED, PROMPT_FORMAT_VERSION, SYSTEM_PROMPT
+    from decider.window import PATTERN_CHECK_VERSION
     prompt_material = SYSTEM_PROMPT + ("\n" + (ROOT / "decider/fewshot_dev.json").read_text(encoding="utf-8") if FEWSHOT_ENABLED else "")
-    model_name = model or os.environ.get("DECIDER_MODEL", "qwen3:1.7b")
+    # Local model identity is recorded only for explicit study runs. Normal
+    # rules/Bedrock pipeline metadata never probes the Ollama service.
+    model_name = model
     model_digest = None
-    try:
-        result = subprocess.run(["ollama", "show", model_name, "--modelfile"], capture_output=True, text=True, timeout=3, check=True)
-        model_digest = hashlib.sha256(result.stdout.encode()).hexdigest()
-    except (OSError, subprocess.SubprocessError):
-        pass
+    if model_name:
+        try:
+            result = subprocess.run(["ollama", "show", model_name, "--modelfile"], capture_output=True, text=True, timeout=3, check=True)
+            model_digest = hashlib.sha256(result.stdout.encode()).hexdigest()
+        except (OSError, subprocess.SubprocessError):
+            pass
     manifest = json.loads((ROOT / "data/streams/manifest.json").read_text(encoding="utf-8"))
     dev_stream_paths = [manifest["streams"][sid]["path"] for sid in manifest["dev_streams"]]
     data_paths = ("data/golden/dev.jsonl", "data/streams/manifest.json", *dev_stream_paths,
-                  "eval/runs/evasion-v2-dev.json", "config/authorized_sources.json")
+                  "eval/runs/evasion-v1-dev.json", "eval/runs/evasion-v2-dev.json",
+                  "eval/runs/evasion-v3-dev.json", "eval/runs/evasion-v4-dev.json",
+                  "config/authorized_sources.json")
     return {
         "prompt_hash_sha256": hashlib.sha256(prompt_material.encode()).hexdigest(),
         "prompt_format_version": PROMPT_FORMAT_VERSION,
+        "pattern_check_version": PATTERN_CHECK_VERSION,
         "model": model_name,
         "model_digest_sha256": model_digest,
-        "model_digest_status": "available" if model_digest else "unavailable",
+        "model_digest_status": "available" if model_digest else ("unavailable" if model_name else "not_applicable_to_rules_bedrock_pipeline"),
         "thresholds": {
-            "brute_force": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
-            "credential_stuffing": ">=4 failures across >=4 usernames from one source in rolling 60s",
+            "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+            "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+            "credential_stuffing": "proposed: >=4 distinct failed usernames across >=4 source IPs on auth endpoint in rolling 60m; success ratio <=0.10",
             "sensitive_path_scan": ">=3 sensitive-path probes from one source",
             "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
             "priv_esc_proxy": ">=5 distinct profile IDs from one source",
             "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+            "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
             "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
             "window_size_events": 20,
             "window_spacing_seconds": 600,

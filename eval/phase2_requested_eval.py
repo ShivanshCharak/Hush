@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Requested dev-only qwen measurement run; never reads held-out/test inputs."""
+"""STUDY ONLY: historical dev-only local Qwen measurement; not a pipeline gate."""
 
 from __future__ import annotations
 

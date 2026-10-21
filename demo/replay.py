@@ -66,7 +66,7 @@ def make_timeline() -> list[dict]:
     return timeline
 
 
-def run(events: list[dict], events_path: Path, trace_path: Path, *, speed: float = 1.0, use_model: bool = True) -> dict:
+def run(events: list[dict], events_path: Path, trace_path: Path, *, speed: float = 1.0, explainer=None) -> dict:
     if speed <= 0:
         raise ValueError("speed must be greater than zero")
     events_path.parent.mkdir(parents=True, exist_ok=True)
@@ -84,7 +84,7 @@ def run(events: list[dict], events_path: Path, trace_path: Path, *, speed: float
                 try:
                     if batch is None:
                         return
-                    trace = process(batch, gate=gate, use_model=use_model)
+                    trace = process(batch, gate=gate, explainer=explainer)
                     for row in trace:
                         trace_file.write(json.dumps(row, separators=(",", ":"), ensure_ascii=False) + "\n")
                         emitted[0] += int(bool(row["gate_emit"]))
@@ -119,9 +119,8 @@ def main() -> None:
     parser.add_argument("--events", type=Path, default=ROOT / "dashboard/data/demo-events.jsonl")
     parser.add_argument("--trace", type=Path, default=ROOT / "dashboard/data/demo-trace.jsonl")
     parser.add_argument("--speed", type=float, default=1.0, help="1.0 is real-time; 20 replays at 20x")
-    parser.add_argument("--rules", action="store_true", help="use the rules baseline instead of the model")
     args = parser.parse_args()
-    report = run(make_timeline(), args.events, args.trace, speed=args.speed, use_model=not args.rules)
+    report = run(make_timeline(), args.events, args.trace, speed=args.speed)
     print(json.dumps(report, indent=2))
 
 

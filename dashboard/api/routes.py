@@ -160,13 +160,12 @@ def alerts(filter: list[str] = Query(default=[]), from_: str | None = Query(defa
                 return []
             window_filter = " AND try_cast(e.timestamp AS TIMESTAMPTZ) BETWEEN ? AND ?"
             window_args = [latest-timedelta(seconds=window_seconds), latest]
-        rows = connection.execute(f"""SELECT a.alert_id,a.event_start,a.event_end,a.kind,a.confidence,a.evidence_ids,a.gate_reason,a.explanation,
-            json_extract_string(w.trace_json, '$.review_status')
+        rows = connection.execute(f"""SELECT a.alert_id,a.event_start,a.event_end,a.kind,a.confidence,a.evidence_ids,a.gate_reason,a.explanation
           FROM alerts a JOIN events e ON e.event_id=a.event_start JOIN windows w ON w.event_start=a.event_start AND w.event_end=a.event_end
           WHERE {where_filter} AND {range_filter}{through_filter}{window_filter}
           GROUP BY ALL ORDER BY a.event_start DESC LIMIT ?""", args+range_args+([through_id] if through_id is not None else [])+window_args+[limit]).fetchall()
         return [{"alert_id": r[0], "event_start": r[1], "event_end": r[2], "kind": r[3], "confidence": r[4],
-                 "evidence_ids": json.loads(r[5]), "gate_reason": r[6], "explanation": json.loads(r[7]), "review_status": r[8]} for r in rows]
+                 "evidence_ids": json.loads(r[5]), "gate_reason": r[6], "explanation": json.loads(r[7])} for r in rows]
     finally:
         connection.close()
 
