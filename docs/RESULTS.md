@@ -434,28 +434,6 @@ Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clea
 
 - Dashboard desktop Lighthouse with a healthy API: LCP 733 ms, TBT 3 ms, JS transfer 243,713 bytes (263,881 bytes total). The dashboard remains under the 300 KB JS-transfer target. The 55 FPS scroll gate was missed: on headed Chrome with the AMD Radeon Graphics GPU, the 50k-row virtualized table sustained 40.0 FPS average with p95 frame interval 50 ms; one 69 ms long task fell in the 2.5-second scroll sample. The table had 20 rows initially and 19 after scroll. Fixed 42px row sizing, overscan reduced from 12 to 6, and CSS layout/paint containment are in place. Practical target deviation: >=40 FPS average, p95 frame interval <=50 ms, and at most one >50 ms long task in a 2.5-second sample. For the real local FastAPI API populated from dev stream 01, filter latency is defined as click-handler-start to render-complete for handler-to-render, and click action to both filtered responses and rendered results for wall time. The earlier `kind=sqli` sample was 282.7 ms handler-to-render versus 351 ms wall time (handler 2.4 ms, scheduling 45.4 ms, network 81 ms, render 153.9 ms). A separate 20-click profile used 20 distinct `src_ip` filters and nearest-rank p50/p95: handler-to-render 242.8/288.1 ms and wall 344/394 ms. The profile is [here](eval/runs/dashboard-real-api-filter-20-20261022T040747Z.json). No explicit debounce was present in the filter code. Filter actions requested event and histogram routes only; the initial page load also requested alerts. The filter profile did not navigate away from the page. Alert-card-to-evidence linkage passed in the 50k-row browser fixture. The separate synthetic filter portion of the scroll profile measured 694 ms repaint and is not the real-API timing.
 
-### Earlier 8B details
-
-<summary>Earlier 8B run (rules-gated, context 8192, superseded)</summary>
-
-Earlier completed run: [phase2-20261020T033832Z.json](eval/runs/phase2-20261020T033832Z.json).
-
-| Phase 2 dev check | Target | Qwen3 8B result | Status |
-|---|---:|---:|---|
-| Schema validity | 360/360, no repairs | 360/360 | Pass |
-| Pre-filter | Drop >=90% of events; preserve 24/24 attack episodes | 96.7%; 24/24 | Pass |
-| Attack recall | >=85% (>=123/144) | 125/144 (86.8%) | Pass |
-| Benign false-speak vs simulated benign traffic | <=8% (<=14/180) | 7/180 (3.9%) | Pass |
-| Hard attacks | >=14/21 and >=20 percentage points above baseline | 29/29 detected; dev set has 29, target expects 21 | Blocked |
-| Hard-benign false alerts vs simulated benign traffic | <=5/36 | 7/36 | Fail |
-| Kind accuracy | >=80% of true positives | 96/125 (76.8%) | Fail |
-| Confidence quality | AUROC >=0.93 with all 324 scored | 0.9008 (retired token-overwrite scorer; 192 skipped windows scored 0) | Fail |
-| Latency | p50 <=400 ms; p95 <=1,200 ms | Evaluator: 0s / 44.2s across windows; model-call-only: 31.8s / 48.8s | Fail |
-
-The run used context 8192. Its per-call latency is the full HTTP request duration, not time-to-first-token. The run used an 8B model on a host with 7.1 GiB RAM; the observed Ollama runner was 6.0 GB and split 54% GPU / 46% CPU, with 2.1 GiB swap in use.
-
-</details>
-
 ### Additional development findings
 
 ### What we found
