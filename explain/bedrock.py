@@ -29,7 +29,7 @@ class BedrockExplainer:
             return fallback
         payload = {"kind": decision["kind"], "evidence_ids": decision["evidence_ids"], "events": [e for e in events if int(e.get("event_id", -1)) in set(decision["evidence_ids"])]}
         wrapped = json.dumps(payload, ensure_ascii=False).replace("<DATA>", "&lt;DATA&gt;").replace("</DATA>", "&lt;/DATA&gt;")
-        body = json.dumps({"anthropic_version":"bedrock-2023-05-31", "max_tokens":300,
+        body = json.dumps({"anthropic_version":"bedrock-2023-05-31", "max_tokens":300, "temperature":0,
                            "system":SYSTEM, "messages":[{"role":"user","content":[{"type":"text","text":"<DATA>\n"+wrapped+"\n</DATA>"}]}]})
         try:
             self.invocation_count += 1

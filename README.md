@@ -7,6 +7,64 @@ Decider-Sec is a local log monitor that evaluates 20-event windows with determin
 - Historical local-model comparisons are study results only; see [model comparison](#model-comparison).
 - Current rules results and evasion-v1-v4 results are in [Results so far](#results-so-far-dev-only).
 
+### Status confound and sensitivity
+
+The 72 ModSecurity-derived dev attack windows contain statuses 301:255, 302:20, 304:37, 400:4, 401:4, 403:373, 404:572, 405:8, 500:32, and 503:135. The 252 simulated windows contain 200:3830, 302:163, 401:859, and 404:188. **Attack recall** means any speak on a labeled attack; **kind accuracy** means the correct kind among spoken attacks; **matching-kind recall** is the secondary count of attacks both spoken and assigned the true kind. Each is reported with a count and denominator. Status-neutral is a sensitivity analysis: for the dev comparison only, status is set to 200 on ModSecurity-marked events.
+
+| Kind | n | Standard speak | Neutral speak | Standard matching-kind | Neutral matching-kind |
+|---|---:|---:|---:|---:|---:|
+| brute_force | 24 | 24/24 | 24/24 | 24/24 | 24/24 |
+| credential_stuffing | 24 | 24/24 | 24/24 | 24/24 | 24/24 |
+| path_traversal | 18 | 17/18 | 17/18 | 14/18 | 14/18 |
+| priv_esc | 18 | 18/18 | 18/18 | 18/18 | 18/18 |
+| scanner_recon | 18 | 12/18 | 10/18 | 12/18 | 10/18 |
+| sqli | 24 | 16/24 | 13/24 | 9/24 | 9/24 |
+| xss | 18 | 14/18 | 13/18 | 10/18 | 10/18 |
+| **Overall** | **144** | **125/144** | **119/144** | **111/144** | **109/144** |
+
+The earlier `125/144 → 109/144` wording incorrectly compared standard speak recall with neutral matching-kind recall. The apples-to-apples comparison is speak recall **125/144 → 119/144**, and matching-kind recall **111/144 → 109/144**. The four web-attack kinds similarly compare speak recall **59/78 → 53/78** and matching-kind recall **45/78 → 43/78**. These seven SQLi attacks were spoken as `scanner_recon` by the automated-probes rule in standard mode:
+
+| SQLi window ID | Detected kind | Rule |
+|---|---|---|
+| modsec:03-Aug-2025:001200 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+| modsec:27-Jul-2025:000520 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+| modsec:04-Aug-2025:001160 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+| modsec:08-Aug-2025:000400 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+| modsec:15-Aug-2025:003380 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+| modsec:02-Aug-2025:002240 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+| modsec:07-Aug-2025:000400 | scanner_recon | automated probes target sensitive or unrelated endpoints |
+
+Payload-signature rules do not require a 4xx/5xx or WAF-block status. The [shortcut audit](eval/runs/shortcut-audit-dev-20261021.json) AUROC finding remains a separate source-domain warning.
+
+Six dev windows differ in speak outcome or detected kind:
+
+| Window ID | True kind | Standard kind / rule | Neutral kind / rule |
+|---|---|---|---|
+| modsec:03-Aug-2025:001200 | sqli | scanner_recon / automated probes target sensitive or unrelated endpoints | none / no rule crossed its threshold |
+| modsec:29-Jul-2025:000700 | xss | scanner_recon / automated probes target sensitive or unrelated endpoints | none / no rule crossed its threshold |
+| modsec:04-Aug-2025:004840 | scanner_recon | scanner_recon / automated probes target sensitive or unrelated endpoints | none / no rule crossed its threshold |
+| modsec:15-Aug-2025:003380 | sqli | scanner_recon / automated probes target sensitive or unrelated endpoints | none / no rule crossed its threshold |
+| modsec:02-Aug-2025:002240 | sqli | scanner_recon / automated probes target sensitive or unrelated endpoints | none / no rule crossed its threshold |
+| modsec:08-Aug-2025:002360 | scanner_recon | scanner_recon / automated probes target sensitive or unrelated endpoints | none / no rule crossed its threshold |
+
+The A–E ablation runner also reports F, a status-neutral sensitivity analysis using the final rules and ModSecurity source markers (code-only). Its dev dry-run covers golden dev windows, dev streams 01–03, evasion v1–v4, and benign-lookalike v1/v2; artifact: [ablation-20261022T043652Z.json](eval/runs/ablation-20261022T043652Z.json). The golden-dev table includes both speak and matching-kind recall.
+
+| Benign lookalike fixture | Before scoped fix | After scoped fix |
+|---|---:|---:|
+| v1 (in-sample; current rules) | 24/60 false speaks (12 escaped-comment XSS, 12 title traversal) | 0/60 |
+| v2 (frozen before scoring; out-of-sample) | not scored before fix | 0/60 |
+
+| Latency gate | Definition | Measured p50 / p95 |
+|---|---|---:|
+| Handler-to-render | Click handler start through completed render | 242.8 / 288.1 ms |
+| Wall | Click action through filtered responses and rendered results | 344 / 394 ms |
+
+Live Bedrock evaluation is pending. The explainer request now sets temperature to 0 explicitly. Run snapshots record the requested Bedrock region `us-west-2`, requested profile ID `us.anthropic.claude-haiku-4-5-20251001-v1:0`, `max_tokens=300`, connect/read timeouts of 4 seconds, and retry `max_attempts=0`; no Bedrock call was made for this update.
+
+### Repo hygiene
+
+`sim/capture/external/cicids2017` contains 3 tracked files. The only non-data references are this README, `PROGRESS.md`, and `docs/DATA.md`; no code or evaluator consumes that directory. Proposed cleanup: remove these auxiliary capture files from the repository and add a documented download/verify script that fetches the source files and checks each against recorded SHA-256 hashes before use. Repository history was not rewritten. Full `gitleaks detect --source .` was not run because it would read held-out/test contents, which are out of scope; no `gitleaks` executable is installed in the environment. No detector secrets scan was run against locked/held-out files.
+
 ```mermaid
 flowchart LR
   S[Simulator or replay<br/>5 events/sec] --> E[events.jsonl<br/>every raw request]
@@ -186,7 +244,7 @@ Evasion-v4 was frozen before any detector run (candidate commit `e4756fdb`; clea
 - A–E ablation dry run on the same dev streams 01–03 (24 attacks, 9 hard-benign episodes): all variants detected 24/24 attacks. A (frozen naive rules), B (+cross-IP/stuffing), and C (+normalization) each emitted 1 hard-benign false alert (25 alerts); D (+allowlist) and E (+template explanation proxy; Bedrock pending) emitted 0 hard-benign false alerts (24 alerts). E made zero Bedrock calls. This small in-sample subset contains no attacks that distinguish A/B/C, so equal recall does not show those additions have no value on other data.
 - Frozen [benign-lookalike-v1](eval/fixtures/benign-lookalike-v1.jsonl) pre-fix false speaks by category (12 each): A naive frozen rules = 12/60 overall (search 0/12, apostrophes 0/12, escaped HTML comments 0/12, path-like titles 12/12, long encoded parameters 0/12); B + cross-IP/stuffing = the same; C + normalization = 24/60 (escaped HTML 12/12 and path-like titles 12/12); D + allowlist = 24/60; E + explanation-only template proxy = 24/60. V1 was committed as `ec0c7fe2` before scoring (SHA-256 `d17178bc03daf13e8f71d5c1c2202b4c1ae4660b5303ee571b86a1db81cfc120`); full pre-fix A–E counts are in [the original ablation run](eval/runs/ablation-20261021T064132Z.json). The 24 pre-fix current-rule false speaks were IDs lookalike-v1-025–036 (rule `xss`) and lookalike-v1-037–048 (rule `path_traversal`), each with reason “request payload matches an attack signature.”
 - The two scoped exceptions were applied after v2 was frozen and committed. The current D/E rules now false-speak on 0/60 v1 windows (in-sample after fix) and 0/60 v2 windows (out-of-sample), with 0/12 in each of the five categories in each set. The frozen naive A comparator remains at 12/60, all path-like titles; it is not the modified current rules. The fix passed the dev acceptance values unchanged: attack recall 125/144, kind accuracy 111/125, hard-benign false speaks 0/36, normal-benign false speaks 0/144, and dev-stream false alerts 0. Clean evasion-v4 recall is 41/60, above the 39/60 gate. The before/after reports are [the v1/v2 ablation](eval/runs/ablation-20261022T035934Z.json) and [the dev rules evaluation](eval/runs/dev-rules-20261022T035933Z.json).
-- The status-neutralization audit replaces status with 200 only for ModSecurity-derived dev events; status-code counts, per-kind recall, every scanner-recon window's detected/missed status and fired rule, and the v1 false-speak list are in [the dev audit](eval/runs/dev-status-lookalike-audit-20261022.json).
+- The earlier status-neutralization audit retains status-code counts and its original scanner-recon review in [the dev audit](eval/runs/dev-status-lookalike-audit-20261022.json). The apples-to-apples standard/neutral metrics and all changed dev attack windows are in the newer [status-sensitivity ablation artifact](eval/runs/ablation-20261022T043652Z.json).
 - Known detector limitations: rotating-username slow-rate attacks at spacing >=30 minutes remain mostly undetected; nested encoding requiring 4 or more decode passes exceeds the 3-pass normalizer; each dev stream spans only about 33 minutes, so these streams cannot validate long observation windows such as 60 minutes.
 - Repo hygiene/pre-lock status: tracked files over 10 MiB are the listed CICIDS2017 and ModSecurity source captures (largest 49.6 MiB); ignored local DuckDB/source/build artifacts include a roughly 246 MiB dashboard database, 133 MiB event export, and 177/135 MiB CICIDS CSVs. A high-confidence credential-pattern scan of tracked source (excluding data, run outputs, dashboard data, and dependencies) found no matches; dedicated `gitleaks`, `trufflehog`, and `detect-secrets` binaries were unavailable, and untracked `trial.rs` was left untouched. `eval/prelock_guard.py` checks counter 0, a `lock-*` tag at HEAD, clean tracked files (allowing only unrelated untracked `trial.rs`), read-only lock modes, and saved Phase 1 hashes against `data/VERSION` without opening locked files. The throwaway `lock-test` dry run refused a dirty tree and passed with the tracked tree clean; the tag was deleted afterward.
 - Bedrock smoke only: configured AWS region was `local`; explicit us-west-2 identity, profile/model access, and one synthetic CLI invocation were attempted but failed with an invalid security token. Model access is unverified; no dev alert was sent and no 20-alert run occurred. The Haiku 4.5 profile used was `us.anthropic.claude-haiku-4-5-20251001-v1:0`.

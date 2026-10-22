@@ -125,6 +125,57 @@ def evaluate_lookalikes(
             "windows": sum(value["windows"] for value in by_category.values())}
 
 
+def neutralize_modsecurity(events: list[dict[str, Any]], source_dataset: str | None = None) -> list[dict[str, Any]]:
+    """Copy events and remove response-status signal from marked ModSecurity records."""
+    return [{**event, "status": 200} if source_dataset == "zenodo:17178461"
+            or event.get("provenance", {}).get("source_dataset") == "zenodo:17178461" else event
+            for event in events]
+
+
+def evaluate_status_sensitivity(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compare standard and status-neutral decisions on labeled dev attacks only."""
+    per_kind: dict[str, Counter[str]] = {}
+    changed: list[dict[str, Any]] = []
+    sqli_other_kind: list[dict[str, Any]] = []
+    for row in rows:
+        if row.get("label") != "speak":
+            continue
+        kind = str(row["kind"])
+        standard = current_rules.predict(row["events"])
+        source = row.get("provenance", {}).get("source_dataset")
+        neutral = current_rules.predict(neutralize_modsecurity(row["events"], source))
+        counts = per_kind.setdefault(kind, Counter())
+        counts["n"] += 1
+        for mode, decision in (("standard", standard), ("neutral", neutral)):
+            counts[f"{mode}_speak"] += int(bool(decision.get("speak")))
+            counts[f"{mode}_matching_kind"] += int(bool(decision.get("speak")) and decision.get("kind") == kind)
+        if bool(standard.get("speak")) != bool(neutral.get("speak")) or (
+            standard.get("speak") and neutral.get("speak") and standard.get("kind") != neutral.get("kind")
+        ):
+            changed.append({"id": row["id"], "true_kind": kind,
+                            "standard_kind": standard.get("kind"), "standard_rule": standard.get("reason"),
+                            "neutral_kind": neutral.get("kind"), "neutral_rule": neutral.get("reason")})
+        if kind == "sqli" and standard.get("speak") and standard.get("kind") != kind:
+            sqli_other_kind.append({"id": row["id"], "kind": standard.get("kind"), "rule": standard.get("reason")})
+    overall = Counter()
+    for counts in per_kind.values():
+        overall.update(counts)
+    return {"overall": dict(overall), "per_kind": {k: dict(v) for k, v in sorted(per_kind.items())},
+            "changed_windows": changed, "sqli_spoken_as_other_kind": sqli_other_kind}
+
+
+def evaluate_mutations(name: str, predict: Callable[[list[dict[str, Any]]], dict[str, Any]]) -> dict[str, Any]:
+    payload = json.loads((ROOT / f"eval/runs/{name}-dev.json").read_text(encoding="utf-8"))
+    rows = payload.get("attacks", []) if isinstance(payload, dict) else payload
+    families: dict[str, Counter[str]] = {}
+    for row in rows:
+        result = predict(row["events"])
+        stats = families.setdefault(str(row["family"]), Counter())
+        stats["total"] += 1
+        stats["detected"] += int(bool(result.get("speak")))
+    return {key: dict(value) for key, value in families.items()}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="Never call Bedrock; use templates for E")
@@ -162,6 +213,7 @@ def main() -> int:
     original_normalizer = current_rules.normalize_request
     original_sqli = current_rules.SQLI
     variants: dict[str, dict[str, Any]] = {}
+    dev_rows = read_jsonl(ROOT / "data/golden/dev.jsonl")
     try:
         variants["A"] = evaluate_variant("A", naive_rules.predict, streams)
         for version, lookalikes in lookalike_sets.items():
@@ -189,6 +241,17 @@ def main() -> int:
         variants["E"] = evaluate_variant("E", current_rules.predict, streams, explainer=bedrock)
         for version, lookalikes in lookalike_sets.items():
             variants["E"][f"benign_lookalike_{version}"] = evaluate_lookalikes(lookalikes, current_rules.predict)
+        neutral_predict = lambda events: current_rules.predict(neutralize_modsecurity(events))
+        variants["F_status_neutral"] = {
+            "golden_dev_sensitivity": evaluate_status_sensitivity(dev_rows),
+            "streams": evaluate_variant("F_status_neutral", neutral_predict, streams),
+            "evasion_v1": evaluate_mutations("evasion-v1", neutral_predict),
+            "evasion_v2": evaluate_mutations("evasion-v2", neutral_predict),
+            "evasion_v3": evaluate_mutations("evasion-v3", neutral_predict),
+            "evasion_v4": evaluate_mutations("evasion-v4-clean", neutral_predict),
+        }
+        for version, lookalikes in lookalike_sets.items():
+            variants["F_status_neutral"][f"benign_lookalike_{version}"] = evaluate_lookalikes(lookalikes, neutral_predict)
     finally:
         current_rules.authorized_source = original_auth
         current_rules.normalize_request = original_normalizer
@@ -211,7 +274,8 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"artifact": str(out.relative_to(ROOT)), "dry_run": report["dry_run"],
-                      "variants": {key: {"totals": value["totals"], **{name: result for name, result in value.items() if name.startswith("benign_lookalike_")}} for key, value in variants.items()},
+                      "variants": {key: ({"totals": value["totals"], **{name: result for name, result in value.items() if name.startswith("benign_lookalike_")}}
+                                           if "totals" in value else value) for key, value in variants.items()},
                       "bedrock_call_count": report["bedrock_call_count"]}, indent=2))
     return 0
 
