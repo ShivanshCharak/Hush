@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import re
 from typing import Any
+from urllib.parse import parse_qsl, urlencode
 from baseline.authorization import authorized_source
 from baseline.normalization import normalize_request
 
@@ -82,6 +83,39 @@ def _auth_counts_per_60s(events: list[dict[str, Any]]) -> tuple[Counter[str], di
 
 def decoded_request(event: dict[str, Any]) -> str:
     return normalize_request(event)
+
+
+_ESCAPED_SCRIPT_TAG = re.compile(r"&lt;\s*script\b.*?&gt;", re.I | re.S)
+_COMMENT_FIELDS = {"comment", "body"}
+
+
+def _escaped_comment_markup_only(event: dict[str, Any]) -> bool:
+    """Ignore an XSS signature caused only by escaped script markup in comment text."""
+    query = str(event.get("query", ""))
+    pairs = parse_qsl(query, keep_blank_values=True)
+    comment_values = [value for key, value in pairs if key.lower() in _COMMENT_FIELDS]
+    if not comment_values or not any(_ESCAPED_SCRIPT_TAG.search(value) for value in comment_values):
+        return False
+    # Keep detecting literal markup and any signature in the path or another parameter.
+    if any(XSS.search(value) for value in comment_values) or XSS.search(str(event.get("path", ""))):
+        return False
+    other_pairs = [(key, value) for key, value in pairs if key.lower() not in _COMMENT_FIELDS]
+    other_request = normalize_request({"path": event.get("path", ""), "query": urlencode(other_pairs)})
+    return not XSS.search(other_request)
+
+
+def _title_traversal_only(event: dict[str, Any]) -> bool:
+    """Ignore traversal-looking text confined to a title on document search routes."""
+    path = str(event.get("path", "")).split("?", 1)[0].rstrip("/").lower()
+    if not re.search(r"(?:^|/)documents/search$", path):
+        return False
+    pairs = parse_qsl(str(event.get("query", "")), keep_blank_values=True)
+    titles = [value for key, value in pairs if key.lower() == "title"]
+    if not titles or not any(TRAVERSAL.search(value) for value in titles):
+        return False
+    if TRAVERSAL.search(path):
+        return False
+    return not any(TRAVERSAL.search(value) for key, value in pairs if key.lower() != "title")
 
 
 def distributed_credential_stuffing_candidates(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -182,9 +216,9 @@ def inspect_window(events: list[dict[str, Any]]) -> dict[str, Any]:
         request = decoded_request(event)
         if SQLI.search(request):
             signature_hits["sqli"].append(event_id)
-        if XSS.search(request):
+        if XSS.search(request) and not _escaped_comment_markup_only(event):
             signature_hits["xss"].append(event_id)
-        if TRAVERSAL.search(request):
+        if TRAVERSAL.search(request) and not _title_traversal_only(event):
             signature_hits["path_traversal"].append(event_id)
         if SENSITIVE_PATH.search(str(event.get("path", ""))):
             sensitive_by_ip[ip] += 1
