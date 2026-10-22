@@ -1,0 +1,953 @@
+{
+  "phase": "ablation-A-E",
+  "created_at": "2026-10-22T04:55:27.811993+00:00",
+  "data_scope": "dev streams 01-03 plus any frozen benign-lookalike-v1/v2 files present; no test/held-out",
+  "dry_run": true,
+  "bedrock_explanations": "pending; E uses template proxy and makes zero live calls",
+  "bedrock_call_count": 0,
+  "bedrock_alert_call_parity": null,
+  "bedrock_latency_p95_ms": null,
+  "variants": {
+    "A": {
+      "streams": [
+        {
+          "stream": "stream_01",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_02",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 1,
+          "hard_benign_episodes": 3,
+          "false_alerts": 1,
+          "rule_speaks": 9,
+          "emitted_alerts": 9
+        },
+        {
+          "stream": "stream_03",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 9,
+          "emitted_alerts": 8
+        }
+      ],
+      "totals": {
+        "attack_episodes_detected": 24,
+        "attack_episodes": 24,
+        "hard_benign_episodes_alerted": 1,
+        "hard_benign_episodes": 9,
+        "false_alerts": 1,
+        "rule_speaks": 26,
+        "emitted_alerts": 25
+      },
+      "emitted_kinds": {
+        "brute_force": 4,
+        "credential_stuffing": 3,
+        "sqli": 3,
+        "xss": 4,
+        "path_traversal": 3,
+        "priv_esc": 3,
+        "scanner_recon": 5
+      },
+      "benign_lookalike_v1": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 12,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 12,
+        "windows": 60
+      },
+      "benign_lookalike_v2": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 12,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 12,
+        "windows": 60
+      }
+    },
+    "B": {
+      "streams": [
+        {
+          "stream": "stream_01",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_02",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 1,
+          "hard_benign_episodes": 3,
+          "false_alerts": 1,
+          "rule_speaks": 9,
+          "emitted_alerts": 9
+        },
+        {
+          "stream": "stream_03",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 9,
+          "emitted_alerts": 8
+        }
+      ],
+      "totals": {
+        "attack_episodes_detected": 24,
+        "attack_episodes": 24,
+        "hard_benign_episodes_alerted": 1,
+        "hard_benign_episodes": 9,
+        "false_alerts": 1,
+        "rule_speaks": 26,
+        "emitted_alerts": 25
+      },
+      "emitted_kinds": {
+        "brute_force": 4,
+        "credential_stuffing": 3,
+        "sqli": 3,
+        "xss": 4,
+        "path_traversal": 3,
+        "priv_esc": 3,
+        "scanner_recon": 5
+      },
+      "benign_lookalike_v1": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      },
+      "benign_lookalike_v2": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      }
+    },
+    "C": {
+      "streams": [
+        {
+          "stream": "stream_01",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_02",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 1,
+          "hard_benign_episodes": 3,
+          "false_alerts": 1,
+          "rule_speaks": 9,
+          "emitted_alerts": 9
+        },
+        {
+          "stream": "stream_03",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 9,
+          "emitted_alerts": 8
+        }
+      ],
+      "totals": {
+        "attack_episodes_detected": 24,
+        "attack_episodes": 24,
+        "hard_benign_episodes_alerted": 1,
+        "hard_benign_episodes": 9,
+        "false_alerts": 1,
+        "rule_speaks": 26,
+        "emitted_alerts": 25
+      },
+      "emitted_kinds": {
+        "brute_force": 4,
+        "credential_stuffing": 3,
+        "sqli": 3,
+        "xss": 4,
+        "path_traversal": 3,
+        "priv_esc": 3,
+        "scanner_recon": 5
+      },
+      "benign_lookalike_v1": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      },
+      "benign_lookalike_v2": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      }
+    },
+    "D": {
+      "streams": [
+        {
+          "stream": "stream_01",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_02",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_03",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 9,
+          "emitted_alerts": 8
+        }
+      ],
+      "totals": {
+        "attack_episodes_detected": 24,
+        "attack_episodes": 24,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 9,
+        "false_alerts": 0,
+        "rule_speaks": 25,
+        "emitted_alerts": 24
+      },
+      "emitted_kinds": {
+        "brute_force": 4,
+        "credential_stuffing": 3,
+        "sqli": 3,
+        "xss": 4,
+        "path_traversal": 3,
+        "priv_esc": 3,
+        "scanner_recon": 4
+      },
+      "benign_lookalike_v1": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      },
+      "benign_lookalike_v2": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      }
+    },
+    "E": {
+      "streams": [
+        {
+          "stream": "stream_01",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_02",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 8,
+          "emitted_alerts": 8
+        },
+        {
+          "stream": "stream_03",
+          "attack_episodes_detected": 8,
+          "attack_episodes": 8,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 3,
+          "false_alerts": 0,
+          "rule_speaks": 9,
+          "emitted_alerts": 8
+        }
+      ],
+      "totals": {
+        "attack_episodes_detected": 24,
+        "attack_episodes": 24,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 9,
+        "false_alerts": 0,
+        "rule_speaks": 25,
+        "emitted_alerts": 24
+      },
+      "emitted_kinds": {
+        "brute_force": 4,
+        "credential_stuffing": 3,
+        "sqli": 3,
+        "xss": 4,
+        "path_traversal": 3,
+        "priv_esc": 3,
+        "scanner_recon": 4
+      },
+      "benign_lookalike_v1": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      },
+      "benign_lookalike_v2": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      }
+    },
+    "F_status_neutral": {
+      "golden_dev_sensitivity": {
+        "overall": {
+          "n": 144,
+          "standard_speak": 125,
+          "standard_matching_kind": 111,
+          "neutral_speak": 119,
+          "neutral_matching_kind": 109
+        },
+        "per_kind": {
+          "brute_force": {
+            "n": 24,
+            "standard_speak": 24,
+            "standard_matching_kind": 24,
+            "neutral_speak": 24,
+            "neutral_matching_kind": 24
+          },
+          "credential_stuffing": {
+            "n": 24,
+            "standard_speak": 24,
+            "standard_matching_kind": 24,
+            "neutral_speak": 24,
+            "neutral_matching_kind": 24
+          },
+          "path_traversal": {
+            "n": 18,
+            "standard_speak": 17,
+            "standard_matching_kind": 14,
+            "neutral_speak": 17,
+            "neutral_matching_kind": 14
+          },
+          "priv_esc": {
+            "n": 18,
+            "standard_speak": 18,
+            "standard_matching_kind": 18,
+            "neutral_speak": 18,
+            "neutral_matching_kind": 18
+          },
+          "scanner_recon": {
+            "n": 18,
+            "standard_speak": 12,
+            "standard_matching_kind": 12,
+            "neutral_speak": 10,
+            "neutral_matching_kind": 10
+          },
+          "sqli": {
+            "n": 24,
+            "standard_speak": 16,
+            "standard_matching_kind": 9,
+            "neutral_speak": 13,
+            "neutral_matching_kind": 9
+          },
+          "xss": {
+            "n": 18,
+            "standard_speak": 14,
+            "standard_matching_kind": 10,
+            "neutral_speak": 13,
+            "neutral_matching_kind": 10
+          }
+        },
+        "changed_windows": [
+          {
+            "id": "modsec:03-Aug-2025:001200",
+            "true_kind": "sqli",
+            "standard_kind": "scanner_recon",
+            "standard_rule": "automated probes target sensitive or unrelated endpoints",
+            "neutral_kind": "none",
+            "neutral_rule": "no rule crossed its threshold"
+          },
+          {
+            "id": "modsec:29-Jul-2025:000700",
+            "true_kind": "xss",
+            "standard_kind": "scanner_recon",
+            "standard_rule": "automated probes target sensitive or unrelated endpoints",
+            "neutral_kind": "none",
+            "neutral_rule": "no rule crossed its threshold"
+          },
+          {
+            "id": "modsec:04-Aug-2025:004840",
+            "true_kind": "scanner_recon",
+            "standard_kind": "scanner_recon",
+            "standard_rule": "automated probes target sensitive or unrelated endpoints",
+            "neutral_kind": "none",
+            "neutral_rule": "no rule crossed its threshold"
+          },
+          {
+            "id": "modsec:15-Aug-2025:003380",
+            "true_kind": "sqli",
+            "standard_kind": "scanner_recon",
+            "standard_rule": "automated probes target sensitive or unrelated endpoints",
+            "neutral_kind": "none",
+            "neutral_rule": "no rule crossed its threshold"
+          },
+          {
+            "id": "modsec:02-Aug-2025:002240",
+            "true_kind": "sqli",
+            "standard_kind": "scanner_recon",
+            "standard_rule": "automated probes target sensitive or unrelated endpoints",
+            "neutral_kind": "none",
+            "neutral_rule": "no rule crossed its threshold"
+          },
+          {
+            "id": "modsec:08-Aug-2025:002360",
+            "true_kind": "scanner_recon",
+            "standard_kind": "scanner_recon",
+            "standard_rule": "automated probes target sensitive or unrelated endpoints",
+            "neutral_kind": "none",
+            "neutral_rule": "no rule crossed its threshold"
+          }
+        ],
+        "sqli_spoken_as_other_kind": [
+          {
+            "id": "modsec:03-Aug-2025:001200",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          },
+          {
+            "id": "modsec:27-Jul-2025:000520",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          },
+          {
+            "id": "modsec:04-Aug-2025:001160",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          },
+          {
+            "id": "modsec:08-Aug-2025:000400",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          },
+          {
+            "id": "modsec:15-Aug-2025:003380",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          },
+          {
+            "id": "modsec:02-Aug-2025:002240",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          },
+          {
+            "id": "modsec:07-Aug-2025:000400",
+            "kind": "scanner_recon",
+            "rule": "automated probes target sensitive or unrelated endpoints"
+          }
+        ]
+      },
+      "streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "attack_episodes_detected": 8,
+            "attack_episodes": 8,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "false_alerts": 0,
+            "rule_speaks": 8,
+            "emitted_alerts": 8
+          },
+          {
+            "stream": "stream_02",
+            "attack_episodes_detected": 8,
+            "attack_episodes": 8,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "false_alerts": 0,
+            "rule_speaks": 8,
+            "emitted_alerts": 8
+          },
+          {
+            "stream": "stream_03",
+            "attack_episodes_detected": 8,
+            "attack_episodes": 8,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "false_alerts": 0,
+            "rule_speaks": 9,
+            "emitted_alerts": 8
+          }
+        ],
+        "totals": {
+          "attack_episodes_detected": 24,
+          "attack_episodes": 24,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 9,
+          "false_alerts": 0,
+          "rule_speaks": 25,
+          "emitted_alerts": 24
+        },
+        "emitted_kinds": {
+          "brute_force": 4,
+          "credential_stuffing": 3,
+          "sqli": 3,
+          "xss": 4,
+          "path_traversal": 3,
+          "priv_esc": 3,
+          "scanner_recon": 4
+        }
+      },
+      "evasion_v1": {
+        "double_url_encoding": {
+          "total": 20,
+          "detected": 18
+        },
+        "case_comment_obfuscation": {
+          "total": 20,
+          "detected": 13
+        },
+        "slow_rate_5plus_ips": {
+          "total": 20,
+          "detected": 20
+        }
+      },
+      "evasion_v2": {
+        "slow_rate_10ip_30m_rotating_users": {
+          "total": 20,
+          "detected": 0
+        },
+        "triple_encoding": {
+          "total": 20,
+          "detected": 17
+        },
+        "parser_obfuscation": {
+          "total": 20,
+          "detected": 20
+        }
+      },
+      "evasion_v3": {
+        "slow_rate_15m_rotating_usernames_20ip": {
+          "total": 7,
+          "detected": 7
+        },
+        "slow_rate_30m_rotating_usernames_20ip": {
+          "total": 7,
+          "detected": 0
+        },
+        "slow_rate_45m_rotating_usernames_20ip": {
+          "total": 6,
+          "detected": 0
+        },
+        "encoding_html_entity": {
+          "total": 10,
+          "detected": 10
+        },
+        "encoding_unicode_escape": {
+          "total": 10,
+          "detected": 10
+        },
+        "parser_sql_keyword_splitting": {
+          "total": 10,
+          "detected": 10
+        },
+        "parser_path_separator_confusion": {
+          "total": 10,
+          "detected": 10
+        }
+      },
+      "evasion_v4": {
+        "slow_rate_15m_rotating_users_14ip": {
+          "total": 5,
+          "detected": 5
+        },
+        "slow_rate_30m_rotating_users_14ip": {
+          "total": 5,
+          "detected": 0
+        },
+        "slow_rate_45m_rotating_users_14ip": {
+          "total": 5,
+          "detected": 0
+        },
+        "slow_rate_60m_rotating_users_14ip": {
+          "total": 5,
+          "detected": 0
+        },
+        "nested_triple_encoding_3pass": {
+          "total": 4,
+          "detected": 4
+        },
+        "nested_triple_encoding_4pass": {
+          "total": 4,
+          "detected": 0
+        },
+        "html_entity_encoding": {
+          "total": 8,
+          "detected": 8
+        },
+        "unicode_escape_encoding": {
+          "total": 8,
+          "detected": 8
+        },
+        "sql_keyword_splitting": {
+          "total": 8,
+          "detected": 8
+        },
+        "comment_case_obfuscation": {
+          "total": 8,
+          "detected": 8
+        }
+      },
+      "benign_lookalike_v1": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      },
+      "benign_lookalike_v2": {
+        "categories": {
+          "sql_keywords_in_search": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "apostrophes_in_names": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "html_tags_in_comment_text": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "traversal_looking_document_titles": {
+            "false_speaks": 0,
+            "windows": 12
+          },
+          "long_encoded_parameters": {
+            "false_speaks": 0,
+            "windows": 12
+          }
+        },
+        "false_speaks": 0,
+        "windows": 60
+      }
+    }
+  },
+  "config_snapshot": {
+    "code_commit_sha": "92e91f9ca54307d3d9c28cf6f8b2c69043694800",
+    "tracked_worktree_clean": false,
+    "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
+    "prompt_format_version": 17,
+    "pattern_check_version": 5,
+    "model": null,
+    "model_digest_sha256": null,
+    "model_digest_status": "not_applicable_to_rules_bedrock_pipeline",
+    "thresholds": {
+      "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+      "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "cross_ip_brute_force_window_seconds": 3600
+    },
+    "seeds": {
+      "evaluation_seed": 20261021
+    },
+    "evaluation_seed": 20261021,
+    "evaluation_seed_note": "Rules are deterministic; evaluation_seed is null unless a randomized evaluator explicitly supplies one.",
+    "explainer_config": {
+      "prompt_hash_sha256": "29aa38e29b246d168b595fb9d387e85c06b8f0da18301f7df6b6c743ae274f8d",
+      "bedrock_region": null,
+      "requested_bedrock_region": "us-west-2",
+      "model_or_inference_profile_id": null,
+      "requested_model_or_inference_profile_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "temperature": 0,
+      "temperature_note": "Explicitly set to zero in the Bedrock request.",
+      "max_tokens": 300,
+      "retry_settings": {
+        "max_attempts": 0
+      },
+      "timeout_seconds": {
+        "connect": 4,
+        "read": 4
+      }
+    },
+    "allowlist_sha256": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805",
+    "normalizer_settings": {
+      "url_decode_passes_max": 3,
+      "html_entity_decode": true,
+      "unicode_escape_decode": true,
+      "sql_comment_stripping": true,
+      "whitespace_collapse": true
+    },
+    "data_hashes_sha256": {
+      "data/golden/dev.jsonl": "fbfc9ebc83a287472619348e1732e582384bf84c88da92610fb50cd06be6868f",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_01.jsonl": "d9d95d8fb46a8d3b90075e2a2f83e9a378dd70006cdd01f9c4051b732d4026b3",
+      "data/streams/stream_02.jsonl": "11b14185fefcbd8ee3a19738c3a3fe0da1202d946632d1c3f4150ed727e8d29b",
+      "data/streams/stream_03.jsonl": "d5038ed10b96f7af5baba93d95a9f4a3f108956ad6156613f857e54f2126db02",
+      "eval/runs/evasion-v1-dev.json": "b0a4106dd05150ee708bfe7e16e656f4cce46efb0cd930ed0319055c2740a403",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "eval/runs/evasion-v3-dev.json": "94bb184fde4d413a4b3222dbc1db77b749b0c89d4c72a6b9540cd1cc4c094f53",
+      "eval/runs/evasion-v4-dev.json": "4a60e0dce3456dd680fadc51a2ce1b9eca05d8e1d6f0b635de67bffcca7e3877",
+      "eval/runs/evasion-v4-clean-dev.json": "341e4baacf79db482f56fc5f7d97d7a5969eb24a3c326fba7191524952c2c3df",
+      "eval/fixtures/benign-lookalike-v1.jsonl": "d17178bc03daf13e8f71d5c1c2202b4c1ae4660b5303ee571b86a1db81cfc120",
+      "eval/fixtures/benign-lookalike-v2.jsonl": "9d30290f0bd330f389d7ac933dd8279d0132e499099196c9e4a68cd1f6db89f0",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    }
+  }
+}

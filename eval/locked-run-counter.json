@@ -1,5 +1,7 @@
 {
   "phase5_locked_run_count": 0,
   "phase5_authorized": false,
-  "note": "Do not increment until the user explicitly authorizes Phase 5."
+  "note": "Attempt count is independent of completed metric-writing runs; reconciled from final attempt logs.",
+  "phase5_attempts": 2,
+  "phase5_runs_that_wrote_metrics": 0
 }
