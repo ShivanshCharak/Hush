@@ -10,8 +10,8 @@ The registered precision headline excludes ambiguous windows. The saved Phase 5 
 |---|---:|---:|---|
 | Attack speak recall >=87/96 | MISSED 83/96 | MISSED 81/96 | Both missed |
 | Simulated-benign false speaks <=6/120 | 0/120 | 0/120 | Both pass |
-| Precision >=0.90 | As run: MISSED 83/94; registered scored-set value unavailable | As run: 81/89; registered scored-set value unavailable | Standard as-run misses; neutral as-run passes; registered headline unavailable |
-| Hard-attack recall >=11/14 and >=20 points above A | MISSED 5/6; +0 points | MISSED 5/6; +0 points | Both miss; measured denominator differs from registration |
+| Precision >=0.90 | As run: MISSED 83/94; registered scored-set value unavailable | As run: 81/89; registered scored-set value unavailable | Standard as-run misses; status-neutral registered status unavailable; no pass claim |
+| Hard-attack recall >=11/14 and >=20 points above A | 11/14 clause not evaluated as registered; +20-point clause MISSED (0 points; A=5/6) | 11/14 clause not evaluated as registered; +20-point clause MISSED (0 points; A=5/6) | Evaluator flagged 6 test rows; registered cohort is 8 low-and-slow + 6 encoded |
 | Hard-benign false speaks <=2/24 | 0/24 | 0/24 | Both pass |
 | Kind accuracy >=0.85 | MISSED 65/83 | MISSED 65/81 | Both miss |
 | Held-out episode recall >=14/16 | 16/16 | 16/16 | Both pass |
@@ -31,7 +31,7 @@ The registered precision headline excludes ambiguous windows. The saved Phase 5 
 - Slow-rate evasion remains weak: several 30–60 minute rotation variants were detected 0/5 or 0/6; see the fixture table below.
 - The second annotator was AI, not an independent human reviewer (73 eligible pairs; kappa 0.7834).
 - Bedrock evaluation is pending. Current locked-run explanations used the template.
-- Registered precision and the hard-attack cohort cannot be fully audited from the saved aggregate artifact; details and limits are recorded below.
+- The locked harness stores aggregates only; it has no per-window predictions or fired rules. This limits precision and kind-confusion analysis; see the harness limitation below.
 
 ## Dev snapshot
 
@@ -184,6 +184,8 @@ The [decision log](docs/DECIDER-SEC-SPEC.md) defines precision on the scored set
 | Registered scored set, ambiguous excluded | Not recoverable from saved aggregate; ambiguous speaks not reported | Not recoverable from saved aggregate; ambiguous speaks not reported |
 | As run, all counted speaks | MISSED 83/94 (88.3%) | 81/89 (91.0%) |
 
+*Inference, unverified:* Given 0/120 simulated-benign false speaks and a scored set of 96 attacks + 120 benign windows, the 11 standard-mode and 8 status-neutral residual speaks most likely fall among the 24 ambiguous windows. If so, registered precision would be 83/83 and 81/81. The artifact has no per-window data to confirm this; do not treat these inferred values as measured results.
+
 **Post-hoc counts-only confusion matrix:** unavailable. The artifact has no per-window true-kind/predicted-kind pairs or fired-rule fields, so neither the 7×7 counts nor the rules for wrong-kind groups can be recovered without per-window data.
 
 ### Benign counts
@@ -197,7 +199,13 @@ Both modes meet these two false-speak targets. The 11/8 residual non-attack spea
 
 ### Hard-attack denominator
 
-The registered definition specifies 14 test hard attacks: 20 low-and-slow credential-stuffing cases and 15 encoded-injection cases across the full set; applying the 40% test split gives an expected cohort of 8 low-and-slow stuffing and 6 encoded injection. The Phase 5 metric is 5/6 in both modes, so its recorded denominator is six rather than 14. The final artifact does not preserve hard-flag row counts by kind or explain why only six rows entered its measured subset. The registered 11/14 and +20-point target is therefore **MISSED 5/6; 0 points above A** in both modes; the true registered-cohort result cannot be reconstructed post hoc.
+The registered definition specifies 14 test hard attacks: 20 low-and-slow credential-stuffing cases and 15 encoded-injection cases across the full set; applying the 40% test split gives an expected cohort of 8 low-and-slow stuffing and 6 encoded injection. The Phase 5 metric is 5/6 in both modes, so its recorded denominator is six rather than 14. The final artifact does not preserve hard-flag row counts by type or explain why only six rows entered its measured subset. The 11/14 clause is **not evaluated as registered (evaluator flagged 6 test rows; registered cohort is 8 low-and-slow + 6 encoded)**. The +20-points clause is **MISSED (0 points; baseline A also 5/6)** in both modes.
+
+### Locked-harness limitations
+
+The saved Phase 5 artifact contains aggregate metrics only; it has no per-window predictions or fired-rule names. The post-hoc kind-confusion matrix and precision breakdown therefore cannot be recovered without a second look at locked data. Future harnesses should store per-window outcomes (window IDs, outcome, and fired rule; no event content) so these summaries can be made from the run artifact without another locked-data read.
+
+The locked kind accuracy is 65/83 in standard mode (**MISSED**) and 65/81 status-neutral (**MISSED**). **Dev-only, unverified for test:** the dev rules report had kind accuracy 111/125 (14 wrong-kind speaks); scanner-rule precedence is a hypothesis for those dev errors, not a finding established on the locked set.
 
 ### Source-stratified attack recall
 
@@ -230,14 +238,14 @@ Brute force, credential stuffing, and privilege escalation are simulator-only in
 
 A–E are standard mode; F is status-neutral. E is the final rules variant with template explanations. `MISSED` is shown for E/F where their measured value misses a locked target.
 
-| Variant | Mode | Attack speak recall | As-run precision | Kind accuracy | Matching-kind recall | Sim-benign false speaks | Hard attack | Hard-benign false speaks | Held-out episode recall | False alerts | Duplicates | Median TTD (events) |
+| Variant | Mode | Attack speak recall | As-run precision | Kind accuracy | Matching-kind recall | Sim-benign false speaks | Hard-attack target status | Hard-benign false speaks | Held-out episode recall | False alerts | Duplicates | Median TTD (events) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | A | Standard | 83/96 | 83/98 | 65/83 | 65/96 | 4/120 | 5/6 | 4/24 | 16/16 | 2 | 0/16 | 20.0 |
 | B | Standard | 83/96 | 83/98 | 65/83 | 65/96 | 4/120 | 5/6 | 4/24 | 16/16 | 2 | 0/16 | 20.0 |
 | C | Standard | 83/96 | 83/98 | 65/83 | 65/96 | 4/120 | 5/6 | 4/24 | 16/16 | 2 | 0/16 | 20.0 |
 | D | Standard | 83/96 | 83/94 | 65/83 | 65/96 | 0/120 | 5/6 | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
-| E | Standard | MISSED 83/96 | MISSED 83/94 | MISSED 65/83 | 65/96 | 0/120 | MISSED 5/6 | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
-| F | Status-neutral | MISSED 81/96 | 81/89 | MISSED 65/81 | 65/96 | 0/120 | MISSED 5/6 | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
+| E | Standard | MISSED 83/96 | MISSED 83/94 | MISSED 65/83 | 65/96 | 0/120 | 11/14 not evaluated as registered; +20 MISSED (0 points) | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
+| F | Status-neutral | MISSED 81/96 | 81/89 | MISSED 65/81 | 65/96 | 0/120 | 11/14 not evaluated as registered; +20 MISSED (0 points) | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
 
 ### Held-out streams 04–05
 
@@ -250,7 +258,7 @@ Both held-out streams are simulator-generated. Matching rule: an alert window ov
 | F | stream_04 | 8/8 | 0 | 0 | 20.0 |
 | F | stream_05 | 8/8 | 0 | 0 | 20.0 |
 
-E emitted 16 held-out alerts; the artifact grades 8 for explanation grounding. The recorded 8/8 valid evidence IDs and 34/34 grounded entity mentions therefore cover 8 of 16 emitted alerts, not all alerts.
+E emitted 16 held-out alerts; 8 of 16 emitted alerts were graded. The 8/8 valid evidence IDs and 34/34 grounded entity mentions are on that graded subset. Template explanations are grounded by construction; live Bedrock grounding is pending.
 
 ### Evasion fixtures
 
@@ -591,6 +599,7 @@ The run used context 8192. Its per-call latency is the full HTTP request duratio
 ### Known deviations
 
 - **2026-10-20 — Hard-attack denominator:** the dev set has 29 hard attacks while the original gate expects 21. **Effect:** the gate is blocked on a mismatched denominator.
+- **2026-10-22 — Locked hard-attack flag mismatch:** the preregistered cohort is 14 test rows (8 low-and-slow credential stuffing + 6 encoded injection), but the locked evaluator flagged 6 test rows total. Dev has 29 flagged hard attacks vs the preregistered 21. **Effect:** the locked 11/14 recall clause was not evaluated as registered; the +20-point clause was missed (0 points; baseline A was 5/6).
 - **2026-10-20 — Attack source:** real traffic is ModSecurity-derived rather than ZAP/Burp. **Effect:** results describe this source and do not establish coverage on ZAP/Burp traffic.
 - **2026-10-20 — Dashboard stack:** the dashboard is Next.js rather than Vite. **Effect:** the implementation differs from the specified frontend stack.
 - **2026-10-20 — Agreement review:** second-pass kappa is AI-produced, not an independent human review. **Effect:** independent human agreement remains unverified.
