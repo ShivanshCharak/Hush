@@ -24,3 +24,4 @@ dashboard/data/
 # Large downloaded/generated datasets (keep locally; regenerate or download as documented)
 data/external/modsecurity_events.jsonl
 sim/capture/external/cicids2017/raw/*.csv
+sim/capture/external/cicids2017/
