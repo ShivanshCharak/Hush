@@ -144,23 +144,303 @@ These targets apply to the final evaluation. The Phase 2 values above are dev re
 
 | Metric | Target | Measured |
 |---|---:|---|
-| Attack recall | >= 0.90 (>= 87/96) | — |
-| Benign false-speak rate vs simulated benign traffic | <= 0.05 (<= 6/120) | — |
-| Precision | >= 0.90 | — |
-| Hard-attack recall | >= 11/14 and >= 20 points above baseline | — |
-| Hard-benign false-speak vs simulated benign traffic | <= 2/24 | — |
-| Kind accuracy | >= 0.85 | — |
-| Episode recall | >= 14/16 | — |
-| False alerts on held-out streams | <= 2 total | — |
-| Duplicate alerts per detected episode | <= 1.5 | — |
-| Median time-to-detect | <= 40 events (~8 s) | — |
-| Injection robustness | >= 29/30 attacks flagged; <= 1/20 benign false alerts; 0 canary leaks | — |
-| Explanation grounding | 100% evidence IDs valid; >= 98% entities grounded | — |
-| Decision latency | p50 <= 400 ms; p95 <= 1.2 s | — |
+| Attack recall | >= 0.90 (>= 87/96) | standard MISSED 83/96; status-neutral MISSED 81/96 (see final-20261022T052438Z.json) |
+| Benign false-speak rate vs simulated benign traffic | <= 0.05 (<= 6/120) | standard 0/120; status-neutral 0/120 (see final-20261022T052438Z.json) |
+| Precision | >= 0.90 | standard MISSED 83/94; status-neutral 81/89 (see final-20261022T052438Z.json) |
+| Hard-attack recall | >= 11/14 and >= 20 points above baseline | standard MISSED 5/6; status-neutral MISSED 5/6 (see final-20261022T052438Z.json) |
+| Hard-benign false-speak vs simulated benign traffic | <= 2/24 | standard 0/24; status-neutral 0/24 (see final-20261022T052438Z.json) |
+| Kind accuracy | >= 0.85 | standard MISSED 65/83; status-neutral MISSED 65/81 (see final-20261022T052438Z.json) |
+| Episode recall | >= 14/16 | standard 16/16; status-neutral 16/16 (see final-20261022T052438Z.json) |
+| False alerts on held-out streams | <= 2 total | standard 0; status-neutral 0 (see final-20261022T052438Z.json) |
+| Duplicate alerts per detected episode | <= 1.5 | standard 0/16; status-neutral 0/16 (see final-20261022T052438Z.json) |
+| Median time-to-detect | <= 40 events (~8 s) | standard 20.0 events; status-neutral 20.0 events (see final-20261022T052438Z.json) |
+| Injection robustness | >= 29/30 attacks flagged; <= 1/20 benign false alerts; 0 canary leaks | pending: not part of the locked run |
+| Explanation grounding | 100% evidence IDs valid; >= 98% entities grounded | evidence IDs 8/8; entity grounding 34/34 (template; see final-20261022T052438Z.json) |
+| Decision latency | p50 <= 400 ms; p95 <= 1.2 s | pending: not part of the locked run |
 
+
+### Phase 5 detailed results
+
+Run artifact: `final-20261022T052438Z.json`. `MISSED` marks a failed target.
+
+Attempt 1 crashed in the harness with `NameError: name 'legacy_url_only' is not defined`. Attempt 2 crashed because the guard rejected the harness's own counter update: `RuntimeError: locked-run precondition changed after guard`. Neither attempt wrote metrics. This is attempt 3; it completed and wrote the metrics in the run artifact. The Phase 5 equivalence gate passed in a scratch checkout before the locked run.
+
+#### Golden-test metrics by mode
+
+| Metric | Standard | Status-neutral |
+|---|---:|---:|
+| Attack speak recall | MISSED 83/96 | MISSED 81/96 |
+| Precision | MISSED 83/94 | 81/89 |
+| Kind accuracy among spoken attacks | MISSED 65/83 | MISSED 65/81 |
+| Matching-kind recall | 65/96 | 65/96 |
+| Simulated-benign false speaks | 0/120 | 0/120 |
+| Hard-attack recall | MISSED 5/6 | MISSED 5/6 |
+| Hard-benign false speaks | 0/24 | 0/24 |
+
+The registered hard-attack target is at least 11/14 and at least 20 percentage points above variant A. The evaluator found six golden-test rows marked `hard`, so the measured hard-attack result is 5/6 in both modes; it does not establish the registered 14-row target. Variant A was also 5/6. The recorded miss is based on the registered target.
+
+#### Missed locked targets
+
+| Mode | Target | Measured |
+|---|---|---:|
+| Standard | Attack speak recall >= 87/96 | MISSED 83/96 |
+| Standard | Precision >= 0.90 | MISSED 83/94 |
+| Standard | Kind accuracy >= 0.85 | MISSED 65/83 |
+| Standard | Hard-attack recall >= 11/14 and >=20 points above A | MISSED 5/6; 0.00 points above A |
+| Status-neutral | Attack speak recall >= 87/96 | MISSED 81/96 |
+| Status-neutral | Kind accuracy >= 0.85 | MISSED 65/81 |
+| Status-neutral | Hard-attack recall >= 11/14 and >=20 points above A | MISSED 5/6; 0.00 points above A |
+
+#### Golden test source split
+
+| Source cohort | Kind | n | Speak recall | Matching-kind recall |
+|---|---|---:|---:|---:|
+| standard · real (ModSecurity-derived) | path_traversal | 12 | 12/12 | 4/12 |
+| standard · real (ModSecurity-derived) | scanner_recon | 12 | 7/12 | 7/12 |
+| standard · real (ModSecurity-derived) | sqli | 16 | 11/16 | 4/16 |
+| standard · real (ModSecurity-derived) | xss | 8 | 5/8 | 2/8 |
+| standard · simulator_generated | brute_force | 16 | 16/16 | 16/16 |
+| standard · simulator_generated | credential_stuffing | 16 | 16/16 | 16/16 |
+| standard · simulator_generated | priv_esc | 12 | 12/12 | 12/12 |
+| standard · simulator_generated | xss | 4 | 4/4 | 4/4 |
+| status-neutral · real (ModSecurity-derived) | path_traversal | 12 | 12/12 | 4/12 |
+| status-neutral · real (ModSecurity-derived) | scanner_recon | 12 | 7/12 | 7/12 |
+| status-neutral · real (ModSecurity-derived) | sqli | 16 | 10/16 | 4/16 |
+| status-neutral · real (ModSecurity-derived) | xss | 8 | 4/8 | 2/8 |
+| status-neutral · simulator_generated | brute_force | 16 | 16/16 | 16/16 |
+| status-neutral · simulator_generated | credential_stuffing | 16 | 16/16 | 16/16 |
+| status-neutral · simulator_generated | priv_esc | 12 | 12/12 | 12/12 |
+| status-neutral · simulator_generated | xss | 4 | 4/4 | 4/4 |
+
+#### A–F ablation on held-out streams
+
+| Variant | Golden speak recall | Kind accuracy | Matching-kind recall | Held-out episode recall | False alerts | Duplicates | Median detect events |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A | 83/96 | 65/83 | 65/96 | 16/16 | 2 | 0 | 20.0 |
+| B | 83/96 | 65/83 | 65/96 | 16/16 | 2 | 0 | 20.0 |
+| C | 83/96 | 65/83 | 65/96 | 16/16 | 2 | 0 | 20.0 |
+| D | 83/96 | 65/83 | 65/96 | 16/16 | 0 | 0 | 20.0 |
+| E | MISSED 83/96 | MISSED 65/83 | 65/96 | 16/16 | 0 | 0 | 20.0 |
+| F | MISSED 81/96 | MISSED 65/81 | 65/96 | 16/16 | 0 | 0 | 20.0 |
+
+#### Held-out stream detail (simulator-generated)
+
+Streams 04–05 are simulator-generated. An alert matches an episode when `alert.end >= episode.start_idx` and `alert.start < episode.end_idx`; the earliest overlapping alert end sets detection delay.
+
+| Variant | Stream | Episode recall | False alerts | Duplicates | Median detect events |
+|---|---|---:|---:|---:|---:|
+| E | stream_04 | 8/8 | 0 | 0 | 20.0 |
+| E | stream_05 | 8/8 | 0 | 0 | 20.0 |
+| F | stream_04 | 8/8 | 0 | 0 | 20.0 |
+| F | stream_05 | 8/8 | 0 | 0 | 20.0 |
+
+#### Evasion and lookalike results
+
+| Variant | Fixture | Family / category | Detected false speaks / n |
+|---|---|---|---:|
+| A | v1 | case_comment_obfuscation | 13/20 |
+| A | v1 | double_url_encoding | 18/20 |
+| A | v1 | slow_rate_5plus_ips | 0/20 |
+| A | v2 | parser_obfuscation | 11/20 |
+| A | v2 | slow_rate_10ip_30m_rotating_users | 0/20 |
+| A | v2 | triple_encoding | 17/20 |
+| A | v3 | encoding_html_entity | 7/10 |
+| A | v3 | encoding_unicode_escape | 10/10 |
+| A | v3 | parser_path_separator_confusion | 10/10 |
+| A | v3 | parser_sql_keyword_splitting | 4/10 |
+| A | v3 | slow_rate_15m_rotating_usernames_20ip | 0/7 |
+| A | v3 | slow_rate_30m_rotating_usernames_20ip | 0/7 |
+| A | v3 | slow_rate_45m_rotating_usernames_20ip | 0/6 |
+| A | v4 | comment_case_obfuscation | 0/8 |
+| A | v4 | html_entity_encoding | 0/8 |
+| A | v4 | nested_triple_encoding_3pass | 4/4 |
+| A | v4 | nested_triple_encoding_4pass | 0/4 |
+| A | v4 | slow_rate_15m_rotating_users_14ip | 0/5 |
+| A | v4 | slow_rate_30m_rotating_users_14ip | 0/5 |
+| A | v4 | slow_rate_45m_rotating_users_14ip | 0/5 |
+| A | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
+| A | v4 | sql_keyword_splitting | 0/8 |
+| A | v4 | unicode_escape_encoding | 0/8 |
+| A | lookalike-v1 | apostrophes_in_names | 0/12 |
+| A | lookalike-v1 | html_tags_in_comment_text | 0/12 |
+| A | lookalike-v1 | long_encoded_parameters | 0/12 |
+| A | lookalike-v1 | sql_keywords_in_search | 0/12 |
+| A | lookalike-v1 | traversal_looking_document_titles | 12/12 |
+| A | lookalike-v2 | apostrophes_in_names | 0/12 |
+| A | lookalike-v2 | html_tags_in_comment_text | 0/12 |
+| A | lookalike-v2 | long_encoded_parameters | 0/12 |
+| A | lookalike-v2 | sql_keywords_in_search | 0/12 |
+| A | lookalike-v2 | traversal_looking_document_titles | 12/12 |
+| B | v1 | case_comment_obfuscation | 13/20 |
+| B | v1 | double_url_encoding | 18/20 |
+| B | v1 | slow_rate_5plus_ips | 20/20 |
+| B | v2 | parser_obfuscation | 11/20 |
+| B | v2 | slow_rate_10ip_30m_rotating_users | 0/20 |
+| B | v2 | triple_encoding | 17/20 |
+| B | v3 | encoding_html_entity | 7/10 |
+| B | v3 | encoding_unicode_escape | 10/10 |
+| B | v3 | parser_path_separator_confusion | 10/10 |
+| B | v3 | parser_sql_keyword_splitting | 4/10 |
+| B | v3 | slow_rate_15m_rotating_usernames_20ip | 7/7 |
+| B | v3 | slow_rate_30m_rotating_usernames_20ip | 0/7 |
+| B | v3 | slow_rate_45m_rotating_usernames_20ip | 0/6 |
+| B | v4 | comment_case_obfuscation | 0/8 |
+| B | v4 | html_entity_encoding | 0/8 |
+| B | v4 | nested_triple_encoding_3pass | 4/4 |
+| B | v4 | nested_triple_encoding_4pass | 0/4 |
+| B | v4 | slow_rate_15m_rotating_users_14ip | 5/5 |
+| B | v4 | slow_rate_30m_rotating_users_14ip | 0/5 |
+| B | v4 | slow_rate_45m_rotating_users_14ip | 0/5 |
+| B | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
+| B | v4 | sql_keyword_splitting | 0/8 |
+| B | v4 | unicode_escape_encoding | 0/8 |
+| B | lookalike-v1 | apostrophes_in_names | 0/12 |
+| B | lookalike-v1 | html_tags_in_comment_text | 0/12 |
+| B | lookalike-v1 | long_encoded_parameters | 0/12 |
+| B | lookalike-v1 | sql_keywords_in_search | 0/12 |
+| B | lookalike-v1 | traversal_looking_document_titles | 0/12 |
+| B | lookalike-v2 | apostrophes_in_names | 0/12 |
+| B | lookalike-v2 | html_tags_in_comment_text | 0/12 |
+| B | lookalike-v2 | long_encoded_parameters | 0/12 |
+| B | lookalike-v2 | sql_keywords_in_search | 0/12 |
+| B | lookalike-v2 | traversal_looking_document_titles | 0/12 |
+| C | v1 | case_comment_obfuscation | 13/20 |
+| C | v1 | double_url_encoding | 18/20 |
+| C | v1 | slow_rate_5plus_ips | 20/20 |
+| C | v2 | parser_obfuscation | 20/20 |
+| C | v2 | slow_rate_10ip_30m_rotating_users | 0/20 |
+| C | v2 | triple_encoding | 17/20 |
+| C | v3 | encoding_html_entity | 10/10 |
+| C | v3 | encoding_unicode_escape | 10/10 |
+| C | v3 | parser_path_separator_confusion | 10/10 |
+| C | v3 | parser_sql_keyword_splitting | 10/10 |
+| C | v3 | slow_rate_15m_rotating_usernames_20ip | 7/7 |
+| C | v3 | slow_rate_30m_rotating_usernames_20ip | 0/7 |
+| C | v3 | slow_rate_45m_rotating_usernames_20ip | 0/6 |
+| C | v4 | comment_case_obfuscation | 8/8 |
+| C | v4 | html_entity_encoding | 8/8 |
+| C | v4 | nested_triple_encoding_3pass | 4/4 |
+| C | v4 | nested_triple_encoding_4pass | 0/4 |
+| C | v4 | slow_rate_15m_rotating_users_14ip | 5/5 |
+| C | v4 | slow_rate_30m_rotating_users_14ip | 0/5 |
+| C | v4 | slow_rate_45m_rotating_users_14ip | 0/5 |
+| C | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
+| C | v4 | sql_keyword_splitting | 8/8 |
+| C | v4 | unicode_escape_encoding | 8/8 |
+| C | lookalike-v1 | apostrophes_in_names | 0/12 |
+| C | lookalike-v1 | html_tags_in_comment_text | 0/12 |
+| C | lookalike-v1 | long_encoded_parameters | 0/12 |
+| C | lookalike-v1 | sql_keywords_in_search | 0/12 |
+| C | lookalike-v1 | traversal_looking_document_titles | 0/12 |
+| C | lookalike-v2 | apostrophes_in_names | 0/12 |
+| C | lookalike-v2 | html_tags_in_comment_text | 0/12 |
+| C | lookalike-v2 | long_encoded_parameters | 0/12 |
+| C | lookalike-v2 | sql_keywords_in_search | 0/12 |
+| C | lookalike-v2 | traversal_looking_document_titles | 0/12 |
+| D | v1 | case_comment_obfuscation | 13/20 |
+| D | v1 | double_url_encoding | 18/20 |
+| D | v1 | slow_rate_5plus_ips | 20/20 |
+| D | v2 | parser_obfuscation | 20/20 |
+| D | v2 | slow_rate_10ip_30m_rotating_users | 0/20 |
+| D | v2 | triple_encoding | 17/20 |
+| D | v3 | encoding_html_entity | 10/10 |
+| D | v3 | encoding_unicode_escape | 10/10 |
+| D | v3 | parser_path_separator_confusion | 10/10 |
+| D | v3 | parser_sql_keyword_splitting | 10/10 |
+| D | v3 | slow_rate_15m_rotating_usernames_20ip | 7/7 |
+| D | v3 | slow_rate_30m_rotating_usernames_20ip | 0/7 |
+| D | v3 | slow_rate_45m_rotating_usernames_20ip | 0/6 |
+| D | v4 | comment_case_obfuscation | 8/8 |
+| D | v4 | html_entity_encoding | 8/8 |
+| D | v4 | nested_triple_encoding_3pass | 4/4 |
+| D | v4 | nested_triple_encoding_4pass | 0/4 |
+| D | v4 | slow_rate_15m_rotating_users_14ip | 5/5 |
+| D | v4 | slow_rate_30m_rotating_users_14ip | 0/5 |
+| D | v4 | slow_rate_45m_rotating_users_14ip | 0/5 |
+| D | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
+| D | v4 | sql_keyword_splitting | 8/8 |
+| D | v4 | unicode_escape_encoding | 8/8 |
+| D | lookalike-v1 | apostrophes_in_names | 0/12 |
+| D | lookalike-v1 | html_tags_in_comment_text | 0/12 |
+| D | lookalike-v1 | long_encoded_parameters | 0/12 |
+| D | lookalike-v1 | sql_keywords_in_search | 0/12 |
+| D | lookalike-v1 | traversal_looking_document_titles | 0/12 |
+| D | lookalike-v2 | apostrophes_in_names | 0/12 |
+| D | lookalike-v2 | html_tags_in_comment_text | 0/12 |
+| D | lookalike-v2 | long_encoded_parameters | 0/12 |
+| D | lookalike-v2 | sql_keywords_in_search | 0/12 |
+| D | lookalike-v2 | traversal_looking_document_titles | 0/12 |
+| E | v1 | case_comment_obfuscation | 13/20 |
+| E | v1 | double_url_encoding | 18/20 |
+| E | v1 | slow_rate_5plus_ips | 20/20 |
+| E | v2 | parser_obfuscation | 20/20 |
+| E | v2 | slow_rate_10ip_30m_rotating_users | 0/20 |
+| E | v2 | triple_encoding | 17/20 |
+| E | v3 | encoding_html_entity | 10/10 |
+| E | v3 | encoding_unicode_escape | 10/10 |
+| E | v3 | parser_path_separator_confusion | 10/10 |
+| E | v3 | parser_sql_keyword_splitting | 10/10 |
+| E | v3 | slow_rate_15m_rotating_usernames_20ip | 7/7 |
+| E | v3 | slow_rate_30m_rotating_usernames_20ip | 0/7 |
+| E | v3 | slow_rate_45m_rotating_usernames_20ip | 0/6 |
+| E | v4 | comment_case_obfuscation | 8/8 |
+| E | v4 | html_entity_encoding | 8/8 |
+| E | v4 | nested_triple_encoding_3pass | 4/4 |
+| E | v4 | nested_triple_encoding_4pass | 0/4 |
+| E | v4 | slow_rate_15m_rotating_users_14ip | 5/5 |
+| E | v4 | slow_rate_30m_rotating_users_14ip | 0/5 |
+| E | v4 | slow_rate_45m_rotating_users_14ip | 0/5 |
+| E | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
+| E | v4 | sql_keyword_splitting | 8/8 |
+| E | v4 | unicode_escape_encoding | 8/8 |
+| E | lookalike-v1 | apostrophes_in_names | 0/12 |
+| E | lookalike-v1 | html_tags_in_comment_text | 0/12 |
+| E | lookalike-v1 | long_encoded_parameters | 0/12 |
+| E | lookalike-v1 | sql_keywords_in_search | 0/12 |
+| E | lookalike-v1 | traversal_looking_document_titles | 0/12 |
+| E | lookalike-v2 | apostrophes_in_names | 0/12 |
+| E | lookalike-v2 | html_tags_in_comment_text | 0/12 |
+| E | lookalike-v2 | long_encoded_parameters | 0/12 |
+| E | lookalike-v2 | sql_keywords_in_search | 0/12 |
+| E | lookalike-v2 | traversal_looking_document_titles | 0/12 |
+| F | v1 | case_comment_obfuscation | 13/20 |
+| F | v1 | double_url_encoding | 18/20 |
+| F | v1 | slow_rate_5plus_ips | 20/20 |
+| F | v2 | parser_obfuscation | 20/20 |
+| F | v2 | slow_rate_10ip_30m_rotating_users | 0/20 |
+| F | v2 | triple_encoding | 17/20 |
+| F | v3 | encoding_html_entity | 10/10 |
+| F | v3 | encoding_unicode_escape | 10/10 |
+| F | v3 | parser_path_separator_confusion | 10/10 |
+| F | v3 | parser_sql_keyword_splitting | 10/10 |
+| F | v3 | slow_rate_15m_rotating_usernames_20ip | 7/7 |
+| F | v3 | slow_rate_30m_rotating_usernames_20ip | 0/7 |
+| F | v3 | slow_rate_45m_rotating_usernames_20ip | 0/6 |
+| F | v4 | comment_case_obfuscation | 8/8 |
+| F | v4 | html_entity_encoding | 8/8 |
+| F | v4 | nested_triple_encoding_3pass | 4/4 |
+| F | v4 | nested_triple_encoding_4pass | 0/4 |
+| F | v4 | slow_rate_15m_rotating_users_14ip | 5/5 |
+| F | v4 | slow_rate_30m_rotating_users_14ip | 0/5 |
+| F | v4 | slow_rate_45m_rotating_users_14ip | 0/5 |
+| F | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
+| F | v4 | sql_keyword_splitting | 8/8 |
+| F | v4 | unicode_escape_encoding | 8/8 |
+| F | lookalike-v1 | apostrophes_in_names | 0/12 |
+| F | lookalike-v1 | html_tags_in_comment_text | 0/12 |
+| F | lookalike-v1 | long_encoded_parameters | 0/12 |
+| F | lookalike-v1 | sql_keywords_in_search | 0/12 |
+| F | lookalike-v1 | traversal_looking_document_titles | 0/12 |
+| F | lookalike-v2 | apostrophes_in_names | 0/12 |
+| F | lookalike-v2 | html_tags_in_comment_text | 0/12 |
+| F | lookalike-v2 | long_encoded_parameters | 0/12 |
+| F | lookalike-v2 | sql_keywords_in_search | 0/12 |
+| F | lookalike-v2 | traversal_looking_document_titles | 0/12 |
+
+Bedrock metrics: pending: not part of the locked run.
 ## Results so far (dev only)
 
-Detector and ablation measurements use dev data only. Phase 1's separate integrity checks intentionally read locked-file hashes and counts when the user runs them. The locked-run counter remains 0 and Phase 5 remains unauthorized. The current rules and clean evasion-v4 results are in [the 2026-10-21 run](eval/runs/dev-rules-20261021T055255Z.json), the A–E dry run is [here](eval/runs/ablation-20261021T064132Z.json), and the latest headed browser measurement is [here](eval/runs/dashboard-playwright-20261021T064750Z.json). The real-API filter profile is [here](eval/runs/dashboard-real-api-filter-20261021T064604Z.json); its frame trace is [here](eval/runs/dashboard-scroll-trace-20261021T064750Z.json). Lighthouse desktop results are [here](eval/runs/dashboard-lighthouse-desktop-final.json).
+Phase 5 has three recorded attempts and one metric-writing run. The current rules and clean evasion-v4 results are in [the 2026-10-21 run](eval/runs/dev-rules-20261021T055255Z.json), the A–E dry run is [here](eval/runs/ablation-20261021T064132Z.json), and the latest headed browser measurement is [here](eval/runs/dashboard-playwright-20261021T064750Z.json). The real-API filter profile is [here](eval/runs/dashboard-real-api-filter-20261021T064604Z.json); its frame trace is [here](eval/runs/dashboard-scroll-trace-20261021T064750Z.json). Lighthouse desktop results are [here](eval/runs/dashboard-lighthouse-desktop-final.json).
 
 ### Recall by data source (dev)
 

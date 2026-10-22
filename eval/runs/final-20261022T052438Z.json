@@ -1,0 +1,3470 @@
+{
+  "phase": "5",
+  "created_at": "2026-10-22T05:24:44.228496+00:00",
+  "run_id": "20261022T052438Z",
+  "status": "complete",
+  "data_scope": "locked golden test and held-out streams 04-05",
+  "variants": {
+    "A": {
+      "definition": {
+        "name": "frozen naive rules",
+        "allowlist": "disabled",
+        "normalization": "legacy URL only"
+      },
+      "golden_test": {
+        "attack_recall_speak": {
+          "numerator": 83,
+          "denominator": 96,
+          "value": 0.8645833333333334
+        },
+        "kind_accuracy_among_spoken_attacks": {
+          "numerator": 65,
+          "denominator": 83,
+          "value": 0.7831325301204819
+        },
+        "matching_kind_recall": {
+          "numerator": 65,
+          "denominator": 96,
+          "value": 0.6770833333333334
+        },
+        "benign_false_speaks": {
+          "numerator": 15,
+          "denominator": 144,
+          "value": 0.10416666666666667
+        },
+        "simulated_benign_false_speaks": {
+          "numerator": 4,
+          "denominator": 120,
+          "value": 0.03333333333333333
+        },
+        "precision": {
+          "numerator": 83,
+          "denominator": 98,
+          "value": 0.8469387755102041
+        },
+        "source_split": {
+          "modsecurity_derived": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 35,
+              "denominator": 48,
+              "value": 0.7291666666666666
+            },
+            "per_kind": {
+              "path_traversal": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 12,
+                  "value": 0.3333333333333333
+                }
+              },
+              "scanner_recon": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                },
+                "matching_kind_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                }
+              },
+              "sqli": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 11,
+                  "denominator": 16,
+                  "value": 0.6875
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 16,
+                  "value": 0.25
+                }
+              },
+              "xss": {
+                "n": 8,
+                "speak_recall": {
+                  "numerator": 5,
+                  "denominator": 8,
+                  "value": 0.625
+                },
+                "matching_kind_recall": {
+                  "numerator": 2,
+                  "denominator": 8,
+                  "value": 0.25
+                }
+              }
+            }
+          },
+          "simulator_generated": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 48,
+              "denominator": 48,
+              "value": 1.0
+            },
+            "per_kind": {
+              "brute_force": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "credential_stuffing": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "priv_esc": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                }
+              },
+              "xss": {
+                "n": 4,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                }
+              }
+            }
+          }
+        },
+        "hard_attack_recall": {
+          "numerator": 5,
+          "denominator": 6,
+          "value": 0.8333333333333334
+        },
+        "hard_benign_false_speaks": {
+          "numerator": 4,
+          "denominator": 24,
+          "value": 0.16666666666666666
+        },
+        "counts": {
+          "attack": 96,
+          "benign": 144,
+          "spoken_attack": 83,
+          "all_speaks": 98
+        }
+      },
+      "held_out_streams": {
+        "streams": [
+          {
+            "stream": "stream_04",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 10,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_05",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "false_alerts": 2,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 2,
+        "hard_benign_episodes": 6,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 16,
+          "episodes": 16,
+          "false_alerts": 2,
+          "hard_benign_episodes_alerted": 2,
+          "hard_benign_episodes": 6,
+          "duplicates": 0,
+          "emitted_alerts": 18,
+          "rule_speaks": 19
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      },
+      "evasion": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 31,
+            "denominator": 60,
+            "value": 0.5166666666666667
+          },
+          "per_family": {
+            "case_comment_obfuscation": {
+              "numerator": 13,
+              "denominator": 20,
+              "value": 0.65
+            },
+            "double_url_encoding": {
+              "numerator": 18,
+              "denominator": 20,
+              "value": 0.9
+            },
+            "slow_rate_5plus_ips": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 28,
+            "denominator": 60,
+            "value": 0.4666666666666667
+          },
+          "per_family": {
+            "parser_obfuscation": {
+              "numerator": 11,
+              "denominator": 20,
+              "value": 0.55
+            },
+            "slow_rate_10ip_30m_rotating_users": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            },
+            "triple_encoding": {
+              "numerator": 17,
+              "denominator": 20,
+              "value": 0.85
+            }
+          }
+        },
+        "v3": {
+          "false_speaks": {
+            "numerator": 31,
+            "denominator": 60,
+            "value": 0.5166666666666667
+          },
+          "per_family": {
+            "encoding_html_entity": {
+              "numerator": 7,
+              "denominator": 10,
+              "value": 0.7
+            },
+            "encoding_unicode_escape": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_path_separator_confusion": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_sql_keyword_splitting": {
+              "numerator": 4,
+              "denominator": 10,
+              "value": 0.4
+            },
+            "slow_rate_15m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_30m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            }
+          }
+        },
+        "v4": {
+          "false_speaks": {
+            "numerator": 4,
+            "denominator": 60,
+            "value": 0.06666666666666667
+          },
+          "per_family": {
+            "comment_case_obfuscation": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            },
+            "html_entity_encoding": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            },
+            "nested_triple_encoding_3pass": {
+              "numerator": 4,
+              "denominator": 4,
+              "value": 1.0
+            },
+            "nested_triple_encoding_4pass": {
+              "numerator": 0,
+              "denominator": 4,
+              "value": 0.0
+            },
+            "slow_rate_15m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_30m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_60m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "sql_keyword_splitting": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            },
+            "unicode_escape_encoding": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "lookalikes": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 12,
+            "denominator": 60,
+            "value": 0.2
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 12,
+              "denominator": 12,
+              "value": 1.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 12,
+            "denominator": 60,
+            "value": 0.2
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 12,
+              "denominator": 12,
+              "value": 1.0
+            }
+          }
+        }
+      },
+      "ablation_streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_02",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_03",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0
+        },
+        "false_alerts": 1,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 1,
+        "hard_benign_episodes": 9,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 24,
+          "episodes": 24,
+          "false_alerts": 1,
+          "hard_benign_episodes_alerted": 1,
+          "hard_benign_episodes": 9,
+          "duplicates": 0,
+          "emitted_alerts": 25,
+          "rule_speaks": 26
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      }
+    },
+    "B": {
+      "definition": {
+        "name": "cross-IP and stuffing rules",
+        "allowlist": "disabled",
+        "normalization": "legacy URL only"
+      },
+      "golden_test": {
+        "attack_recall_speak": {
+          "numerator": 83,
+          "denominator": 96,
+          "value": 0.8645833333333334
+        },
+        "kind_accuracy_among_spoken_attacks": {
+          "numerator": 65,
+          "denominator": 83,
+          "value": 0.7831325301204819
+        },
+        "matching_kind_recall": {
+          "numerator": 65,
+          "denominator": 96,
+          "value": 0.6770833333333334
+        },
+        "benign_false_speaks": {
+          "numerator": 15,
+          "denominator": 144,
+          "value": 0.10416666666666667
+        },
+        "simulated_benign_false_speaks": {
+          "numerator": 4,
+          "denominator": 120,
+          "value": 0.03333333333333333
+        },
+        "precision": {
+          "numerator": 83,
+          "denominator": 98,
+          "value": 0.8469387755102041
+        },
+        "source_split": {
+          "modsecurity_derived": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 35,
+              "denominator": 48,
+              "value": 0.7291666666666666
+            },
+            "per_kind": {
+              "path_traversal": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 12,
+                  "value": 0.3333333333333333
+                }
+              },
+              "scanner_recon": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                },
+                "matching_kind_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                }
+              },
+              "sqli": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 11,
+                  "denominator": 16,
+                  "value": 0.6875
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 16,
+                  "value": 0.25
+                }
+              },
+              "xss": {
+                "n": 8,
+                "speak_recall": {
+                  "numerator": 5,
+                  "denominator": 8,
+                  "value": 0.625
+                },
+                "matching_kind_recall": {
+                  "numerator": 2,
+                  "denominator": 8,
+                  "value": 0.25
+                }
+              }
+            }
+          },
+          "simulator_generated": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 48,
+              "denominator": 48,
+              "value": 1.0
+            },
+            "per_kind": {
+              "brute_force": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "credential_stuffing": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "priv_esc": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                }
+              },
+              "xss": {
+                "n": 4,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                }
+              }
+            }
+          }
+        },
+        "hard_attack_recall": {
+          "numerator": 5,
+          "denominator": 6,
+          "value": 0.8333333333333334
+        },
+        "hard_benign_false_speaks": {
+          "numerator": 4,
+          "denominator": 24,
+          "value": 0.16666666666666666
+        },
+        "counts": {
+          "attack": 96,
+          "benign": 144,
+          "spoken_attack": 83,
+          "all_speaks": 98
+        }
+      },
+      "held_out_streams": {
+        "streams": [
+          {
+            "stream": "stream_04",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 10,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_05",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "false_alerts": 2,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 2,
+        "hard_benign_episodes": 6,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 16,
+          "episodes": 16,
+          "false_alerts": 2,
+          "hard_benign_episodes_alerted": 2,
+          "hard_benign_episodes": 6,
+          "duplicates": 0,
+          "emitted_alerts": 18,
+          "rule_speaks": 19
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      },
+      "evasion": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 51,
+            "denominator": 60,
+            "value": 0.85
+          },
+          "per_family": {
+            "case_comment_obfuscation": {
+              "numerator": 13,
+              "denominator": 20,
+              "value": 0.65
+            },
+            "double_url_encoding": {
+              "numerator": 18,
+              "denominator": 20,
+              "value": 0.9
+            },
+            "slow_rate_5plus_ips": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 28,
+            "denominator": 60,
+            "value": 0.4666666666666667
+          },
+          "per_family": {
+            "parser_obfuscation": {
+              "numerator": 11,
+              "denominator": 20,
+              "value": 0.55
+            },
+            "slow_rate_10ip_30m_rotating_users": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            },
+            "triple_encoding": {
+              "numerator": 17,
+              "denominator": 20,
+              "value": 0.85
+            }
+          }
+        },
+        "v3": {
+          "false_speaks": {
+            "numerator": 38,
+            "denominator": 60,
+            "value": 0.6333333333333333
+          },
+          "per_family": {
+            "encoding_html_entity": {
+              "numerator": 7,
+              "denominator": 10,
+              "value": 0.7
+            },
+            "encoding_unicode_escape": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_path_separator_confusion": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_sql_keyword_splitting": {
+              "numerator": 4,
+              "denominator": 10,
+              "value": 0.4
+            },
+            "slow_rate_15m_rotating_usernames_20ip": {
+              "numerator": 7,
+              "denominator": 7,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            }
+          }
+        },
+        "v4": {
+          "false_speaks": {
+            "numerator": 9,
+            "denominator": 60,
+            "value": 0.15
+          },
+          "per_family": {
+            "comment_case_obfuscation": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            },
+            "html_entity_encoding": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            },
+            "nested_triple_encoding_3pass": {
+              "numerator": 4,
+              "denominator": 4,
+              "value": 1.0
+            },
+            "nested_triple_encoding_4pass": {
+              "numerator": 0,
+              "denominator": 4,
+              "value": 0.0
+            },
+            "slow_rate_15m_rotating_users_14ip": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_60m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "sql_keyword_splitting": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            },
+            "unicode_escape_encoding": {
+              "numerator": 0,
+              "denominator": 8,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "lookalikes": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "ablation_streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_02",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_03",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0
+        },
+        "false_alerts": 1,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 1,
+        "hard_benign_episodes": 9,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 24,
+          "episodes": 24,
+          "false_alerts": 1,
+          "hard_benign_episodes_alerted": 1,
+          "hard_benign_episodes": 9,
+          "duplicates": 0,
+          "emitted_alerts": 25,
+          "rule_speaks": 26
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      }
+    },
+    "C": {
+      "definition": {
+        "name": "B plus normalization",
+        "allowlist": "disabled",
+        "normalization": "current"
+      },
+      "golden_test": {
+        "attack_recall_speak": {
+          "numerator": 83,
+          "denominator": 96,
+          "value": 0.8645833333333334
+        },
+        "kind_accuracy_among_spoken_attacks": {
+          "numerator": 65,
+          "denominator": 83,
+          "value": 0.7831325301204819
+        },
+        "matching_kind_recall": {
+          "numerator": 65,
+          "denominator": 96,
+          "value": 0.6770833333333334
+        },
+        "benign_false_speaks": {
+          "numerator": 15,
+          "denominator": 144,
+          "value": 0.10416666666666667
+        },
+        "simulated_benign_false_speaks": {
+          "numerator": 4,
+          "denominator": 120,
+          "value": 0.03333333333333333
+        },
+        "precision": {
+          "numerator": 83,
+          "denominator": 98,
+          "value": 0.8469387755102041
+        },
+        "source_split": {
+          "modsecurity_derived": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 35,
+              "denominator": 48,
+              "value": 0.7291666666666666
+            },
+            "per_kind": {
+              "path_traversal": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 12,
+                  "value": 0.3333333333333333
+                }
+              },
+              "scanner_recon": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                },
+                "matching_kind_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                }
+              },
+              "sqli": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 11,
+                  "denominator": 16,
+                  "value": 0.6875
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 16,
+                  "value": 0.25
+                }
+              },
+              "xss": {
+                "n": 8,
+                "speak_recall": {
+                  "numerator": 5,
+                  "denominator": 8,
+                  "value": 0.625
+                },
+                "matching_kind_recall": {
+                  "numerator": 2,
+                  "denominator": 8,
+                  "value": 0.25
+                }
+              }
+            }
+          },
+          "simulator_generated": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 48,
+              "denominator": 48,
+              "value": 1.0
+            },
+            "per_kind": {
+              "brute_force": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "credential_stuffing": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "priv_esc": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                }
+              },
+              "xss": {
+                "n": 4,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                }
+              }
+            }
+          }
+        },
+        "hard_attack_recall": {
+          "numerator": 5,
+          "denominator": 6,
+          "value": 0.8333333333333334
+        },
+        "hard_benign_false_speaks": {
+          "numerator": 4,
+          "denominator": 24,
+          "value": 0.16666666666666666
+        },
+        "counts": {
+          "attack": 96,
+          "benign": 144,
+          "spoken_attack": 83,
+          "all_speaks": 98
+        }
+      },
+      "held_out_streams": {
+        "streams": [
+          {
+            "stream": "stream_04",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 10,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_05",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "false_alerts": 2,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 2,
+        "hard_benign_episodes": 6,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 16,
+          "episodes": 16,
+          "false_alerts": 2,
+          "hard_benign_episodes_alerted": 2,
+          "hard_benign_episodes": 6,
+          "duplicates": 0,
+          "emitted_alerts": 18,
+          "rule_speaks": 19
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      },
+      "evasion": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 51,
+            "denominator": 60,
+            "value": 0.85
+          },
+          "per_family": {
+            "case_comment_obfuscation": {
+              "numerator": 13,
+              "denominator": 20,
+              "value": 0.65
+            },
+            "double_url_encoding": {
+              "numerator": 18,
+              "denominator": 20,
+              "value": 0.9
+            },
+            "slow_rate_5plus_ips": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 37,
+            "denominator": 60,
+            "value": 0.6166666666666667
+          },
+          "per_family": {
+            "parser_obfuscation": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            },
+            "slow_rate_10ip_30m_rotating_users": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            },
+            "triple_encoding": {
+              "numerator": 17,
+              "denominator": 20,
+              "value": 0.85
+            }
+          }
+        },
+        "v3": {
+          "false_speaks": {
+            "numerator": 47,
+            "denominator": 60,
+            "value": 0.7833333333333333
+          },
+          "per_family": {
+            "encoding_html_entity": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "encoding_unicode_escape": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_path_separator_confusion": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_sql_keyword_splitting": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "slow_rate_15m_rotating_usernames_20ip": {
+              "numerator": 7,
+              "denominator": 7,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            }
+          }
+        },
+        "v4": {
+          "false_speaks": {
+            "numerator": 41,
+            "denominator": 60,
+            "value": 0.6833333333333333
+          },
+          "per_family": {
+            "comment_case_obfuscation": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "html_entity_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "nested_triple_encoding_3pass": {
+              "numerator": 4,
+              "denominator": 4,
+              "value": 1.0
+            },
+            "nested_triple_encoding_4pass": {
+              "numerator": 0,
+              "denominator": 4,
+              "value": 0.0
+            },
+            "slow_rate_15m_rotating_users_14ip": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_60m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "sql_keyword_splitting": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "unicode_escape_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            }
+          }
+        }
+      },
+      "lookalikes": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "ablation_streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_02",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 1,
+            "hard_benign_episodes_alerted": 1,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 9,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_03",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0
+        },
+        "false_alerts": 1,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 1,
+        "hard_benign_episodes": 9,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 24,
+          "episodes": 24,
+          "false_alerts": 1,
+          "hard_benign_episodes_alerted": 1,
+          "hard_benign_episodes": 9,
+          "duplicates": 0,
+          "emitted_alerts": 25,
+          "rule_speaks": 26
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      }
+    },
+    "D": {
+      "definition": {
+        "name": "C plus allowlist",
+        "allowlist": "enabled",
+        "explanation": "none"
+      },
+      "golden_test": {
+        "attack_recall_speak": {
+          "numerator": 83,
+          "denominator": 96,
+          "value": 0.8645833333333334
+        },
+        "kind_accuracy_among_spoken_attacks": {
+          "numerator": 65,
+          "denominator": 83,
+          "value": 0.7831325301204819
+        },
+        "matching_kind_recall": {
+          "numerator": 65,
+          "denominator": 96,
+          "value": 0.6770833333333334
+        },
+        "benign_false_speaks": {
+          "numerator": 11,
+          "denominator": 144,
+          "value": 0.0763888888888889
+        },
+        "simulated_benign_false_speaks": {
+          "numerator": 0,
+          "denominator": 120,
+          "value": 0.0
+        },
+        "precision": {
+          "numerator": 83,
+          "denominator": 94,
+          "value": 0.8829787234042553
+        },
+        "source_split": {
+          "modsecurity_derived": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 35,
+              "denominator": 48,
+              "value": 0.7291666666666666
+            },
+            "per_kind": {
+              "path_traversal": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 12,
+                  "value": 0.3333333333333333
+                }
+              },
+              "scanner_recon": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                },
+                "matching_kind_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                }
+              },
+              "sqli": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 11,
+                  "denominator": 16,
+                  "value": 0.6875
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 16,
+                  "value": 0.25
+                }
+              },
+              "xss": {
+                "n": 8,
+                "speak_recall": {
+                  "numerator": 5,
+                  "denominator": 8,
+                  "value": 0.625
+                },
+                "matching_kind_recall": {
+                  "numerator": 2,
+                  "denominator": 8,
+                  "value": 0.25
+                }
+              }
+            }
+          },
+          "simulator_generated": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 48,
+              "denominator": 48,
+              "value": 1.0
+            },
+            "per_kind": {
+              "brute_force": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "credential_stuffing": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "priv_esc": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                }
+              },
+              "xss": {
+                "n": 4,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                }
+              }
+            }
+          }
+        },
+        "hard_attack_recall": {
+          "numerator": 5,
+          "denominator": 6,
+          "value": 0.8333333333333334
+        },
+        "hard_benign_false_speaks": {
+          "numerator": 0,
+          "denominator": 24,
+          "value": 0.0
+        },
+        "counts": {
+          "attack": 96,
+          "benign": 144,
+          "spoken_attack": 83,
+          "all_speaks": 94
+        }
+      },
+      "held_out_streams": {
+        "streams": [
+          {
+            "stream": "stream_04",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_05",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "false_alerts": 0,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 6,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 16,
+          "episodes": 16,
+          "false_alerts": 0,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 6,
+          "duplicates": 0,
+          "emitted_alerts": 16,
+          "rule_speaks": 17
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      },
+      "evasion": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 51,
+            "denominator": 60,
+            "value": 0.85
+          },
+          "per_family": {
+            "case_comment_obfuscation": {
+              "numerator": 13,
+              "denominator": 20,
+              "value": 0.65
+            },
+            "double_url_encoding": {
+              "numerator": 18,
+              "denominator": 20,
+              "value": 0.9
+            },
+            "slow_rate_5plus_ips": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 37,
+            "denominator": 60,
+            "value": 0.6166666666666667
+          },
+          "per_family": {
+            "parser_obfuscation": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            },
+            "slow_rate_10ip_30m_rotating_users": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            },
+            "triple_encoding": {
+              "numerator": 17,
+              "denominator": 20,
+              "value": 0.85
+            }
+          }
+        },
+        "v3": {
+          "false_speaks": {
+            "numerator": 47,
+            "denominator": 60,
+            "value": 0.7833333333333333
+          },
+          "per_family": {
+            "encoding_html_entity": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "encoding_unicode_escape": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_path_separator_confusion": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_sql_keyword_splitting": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "slow_rate_15m_rotating_usernames_20ip": {
+              "numerator": 7,
+              "denominator": 7,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            }
+          }
+        },
+        "v4": {
+          "false_speaks": {
+            "numerator": 41,
+            "denominator": 60,
+            "value": 0.6833333333333333
+          },
+          "per_family": {
+            "comment_case_obfuscation": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "html_entity_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "nested_triple_encoding_3pass": {
+              "numerator": 4,
+              "denominator": 4,
+              "value": 1.0
+            },
+            "nested_triple_encoding_4pass": {
+              "numerator": 0,
+              "denominator": 4,
+              "value": 0.0
+            },
+            "slow_rate_15m_rotating_users_14ip": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_60m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "sql_keyword_splitting": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "unicode_escape_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            }
+          }
+        }
+      },
+      "lookalikes": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "ablation_streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_02",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_03",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0
+        },
+        "false_alerts": 0,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 9,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 24,
+          "episodes": 24,
+          "false_alerts": 0,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 9,
+          "duplicates": 0,
+          "emitted_alerts": 24,
+          "rule_speaks": 25
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      }
+    },
+    "E": {
+      "definition": {
+        "name": "D plus template explainer",
+        "allowlist": "enabled",
+        "explanation": "deterministic template"
+      },
+      "golden_test": {
+        "attack_recall_speak": {
+          "numerator": 83,
+          "denominator": 96,
+          "value": 0.8645833333333334
+        },
+        "kind_accuracy_among_spoken_attacks": {
+          "numerator": 65,
+          "denominator": 83,
+          "value": 0.7831325301204819
+        },
+        "matching_kind_recall": {
+          "numerator": 65,
+          "denominator": 96,
+          "value": 0.6770833333333334
+        },
+        "benign_false_speaks": {
+          "numerator": 11,
+          "denominator": 144,
+          "value": 0.0763888888888889
+        },
+        "simulated_benign_false_speaks": {
+          "numerator": 0,
+          "denominator": 120,
+          "value": 0.0
+        },
+        "precision": {
+          "numerator": 83,
+          "denominator": 94,
+          "value": 0.8829787234042553
+        },
+        "source_split": {
+          "modsecurity_derived": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 35,
+              "denominator": 48,
+              "value": 0.7291666666666666
+            },
+            "per_kind": {
+              "path_traversal": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 12,
+                  "value": 0.3333333333333333
+                }
+              },
+              "scanner_recon": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                },
+                "matching_kind_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                }
+              },
+              "sqli": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 11,
+                  "denominator": 16,
+                  "value": 0.6875
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 16,
+                  "value": 0.25
+                }
+              },
+              "xss": {
+                "n": 8,
+                "speak_recall": {
+                  "numerator": 5,
+                  "denominator": 8,
+                  "value": 0.625
+                },
+                "matching_kind_recall": {
+                  "numerator": 2,
+                  "denominator": 8,
+                  "value": 0.25
+                }
+              }
+            }
+          },
+          "simulator_generated": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 48,
+              "denominator": 48,
+              "value": 1.0
+            },
+            "per_kind": {
+              "brute_force": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "credential_stuffing": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "priv_esc": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                }
+              },
+              "xss": {
+                "n": 4,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                }
+              }
+            }
+          }
+        },
+        "hard_attack_recall": {
+          "numerator": 5,
+          "denominator": 6,
+          "value": 0.8333333333333334
+        },
+        "hard_benign_false_speaks": {
+          "numerator": 0,
+          "denominator": 24,
+          "value": 0.0
+        },
+        "counts": {
+          "attack": 96,
+          "benign": 144,
+          "spoken_attack": 83,
+          "all_speaks": 94
+        }
+      },
+      "held_out_streams": {
+        "streams": [
+          {
+            "stream": "stream_04",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_05",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "false_alerts": 0,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 6,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 16,
+          "episodes": 16,
+          "false_alerts": 0,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 6,
+          "duplicates": 0,
+          "emitted_alerts": 16,
+          "rule_speaks": 17
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay",
+        "explanation_grounding": {
+          "evidence_valid_alerts": 8,
+          "alerts_checked": 8,
+          "evidence_valid_rate": 1.0,
+          "grounded_entity_mentions": 34,
+          "entity_mentions": 34,
+          "entity_grounding_rate": 1.0
+        }
+      },
+      "evasion": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 51,
+            "denominator": 60,
+            "value": 0.85
+          },
+          "per_family": {
+            "case_comment_obfuscation": {
+              "numerator": 13,
+              "denominator": 20,
+              "value": 0.65
+            },
+            "double_url_encoding": {
+              "numerator": 18,
+              "denominator": 20,
+              "value": 0.9
+            },
+            "slow_rate_5plus_ips": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 37,
+            "denominator": 60,
+            "value": 0.6166666666666667
+          },
+          "per_family": {
+            "parser_obfuscation": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            },
+            "slow_rate_10ip_30m_rotating_users": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            },
+            "triple_encoding": {
+              "numerator": 17,
+              "denominator": 20,
+              "value": 0.85
+            }
+          }
+        },
+        "v3": {
+          "false_speaks": {
+            "numerator": 47,
+            "denominator": 60,
+            "value": 0.7833333333333333
+          },
+          "per_family": {
+            "encoding_html_entity": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "encoding_unicode_escape": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_path_separator_confusion": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_sql_keyword_splitting": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "slow_rate_15m_rotating_usernames_20ip": {
+              "numerator": 7,
+              "denominator": 7,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            }
+          }
+        },
+        "v4": {
+          "false_speaks": {
+            "numerator": 41,
+            "denominator": 60,
+            "value": 0.6833333333333333
+          },
+          "per_family": {
+            "comment_case_obfuscation": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "html_entity_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "nested_triple_encoding_3pass": {
+              "numerator": 4,
+              "denominator": 4,
+              "value": 1.0
+            },
+            "nested_triple_encoding_4pass": {
+              "numerator": 0,
+              "denominator": 4,
+              "value": 0.0
+            },
+            "slow_rate_15m_rotating_users_14ip": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_60m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "sql_keyword_splitting": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "unicode_escape_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            }
+          }
+        }
+      },
+      "lookalikes": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "ablation_streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_02",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_03",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0
+        },
+        "false_alerts": 0,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 9,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 24,
+          "episodes": 24,
+          "false_alerts": 0,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 9,
+          "duplicates": 0,
+          "emitted_alerts": 24,
+          "rule_speaks": 25
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay",
+        "explanation_grounding": {
+          "evidence_valid_alerts": 8,
+          "alerts_checked": 8,
+          "evidence_valid_rate": 1.0,
+          "grounded_entity_mentions": 34,
+          "entity_mentions": 34,
+          "entity_grounding_rate": 1.0
+        }
+      },
+      "template_explanations": "template explainer called for emitted alerts on stream replays; no Bedrock or local model"
+    },
+    "F": {
+      "definition": {
+        "name": "D with ModSecurity status neutralized",
+        "allowlist": "enabled",
+        "status_neutral": true
+      },
+      "golden_test": {
+        "attack_recall_speak": {
+          "numerator": 81,
+          "denominator": 96,
+          "value": 0.84375
+        },
+        "kind_accuracy_among_spoken_attacks": {
+          "numerator": 65,
+          "denominator": 81,
+          "value": 0.8024691358024691
+        },
+        "matching_kind_recall": {
+          "numerator": 65,
+          "denominator": 96,
+          "value": 0.6770833333333334
+        },
+        "benign_false_speaks": {
+          "numerator": 8,
+          "denominator": 144,
+          "value": 0.05555555555555555
+        },
+        "simulated_benign_false_speaks": {
+          "numerator": 0,
+          "denominator": 120,
+          "value": 0.0
+        },
+        "precision": {
+          "numerator": 81,
+          "denominator": 89,
+          "value": 0.9101123595505618
+        },
+        "source_split": {
+          "modsecurity_derived": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 33,
+              "denominator": 48,
+              "value": 0.6875
+            },
+            "per_kind": {
+              "path_traversal": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 12,
+                  "value": 0.3333333333333333
+                }
+              },
+              "scanner_recon": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                },
+                "matching_kind_recall": {
+                  "numerator": 7,
+                  "denominator": 12,
+                  "value": 0.5833333333333334
+                }
+              },
+              "sqli": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 10,
+                  "denominator": 16,
+                  "value": 0.625
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 16,
+                  "value": 0.25
+                }
+              },
+              "xss": {
+                "n": 8,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 8,
+                  "value": 0.5
+                },
+                "matching_kind_recall": {
+                  "numerator": 2,
+                  "denominator": 8,
+                  "value": 0.25
+                }
+              }
+            }
+          },
+          "simulator_generated": {
+            "n": 48,
+            "speak_recall": {
+              "numerator": 48,
+              "denominator": 48,
+              "value": 1.0
+            },
+            "per_kind": {
+              "brute_force": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "credential_stuffing": {
+                "n": 16,
+                "speak_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 16,
+                  "denominator": 16,
+                  "value": 1.0
+                }
+              },
+              "priv_esc": {
+                "n": 12,
+                "speak_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 12,
+                  "denominator": 12,
+                  "value": 1.0
+                }
+              },
+              "xss": {
+                "n": 4,
+                "speak_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                },
+                "matching_kind_recall": {
+                  "numerator": 4,
+                  "denominator": 4,
+                  "value": 1.0
+                }
+              }
+            }
+          }
+        },
+        "hard_attack_recall": {
+          "numerator": 5,
+          "denominator": 6,
+          "value": 0.8333333333333334
+        },
+        "hard_benign_false_speaks": {
+          "numerator": 0,
+          "denominator": 24,
+          "value": 0.0
+        },
+        "counts": {
+          "attack": 96,
+          "benign": 144,
+          "spoken_attack": 81,
+          "all_speaks": 89
+        }
+      },
+      "held_out_streams": {
+        "streams": [
+          {
+            "stream": "stream_04",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_05",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "false_alerts": 0,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 6,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 16,
+          "episodes": 16,
+          "false_alerts": 0,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 6,
+          "duplicates": 0,
+          "emitted_alerts": 16,
+          "rule_speaks": 17
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      },
+      "evasion": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 51,
+            "denominator": 60,
+            "value": 0.85
+          },
+          "per_family": {
+            "case_comment_obfuscation": {
+              "numerator": 13,
+              "denominator": 20,
+              "value": 0.65
+            },
+            "double_url_encoding": {
+              "numerator": 18,
+              "denominator": 20,
+              "value": 0.9
+            },
+            "slow_rate_5plus_ips": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 37,
+            "denominator": 60,
+            "value": 0.6166666666666667
+          },
+          "per_family": {
+            "parser_obfuscation": {
+              "numerator": 20,
+              "denominator": 20,
+              "value": 1.0
+            },
+            "slow_rate_10ip_30m_rotating_users": {
+              "numerator": 0,
+              "denominator": 20,
+              "value": 0.0
+            },
+            "triple_encoding": {
+              "numerator": 17,
+              "denominator": 20,
+              "value": 0.85
+            }
+          }
+        },
+        "v3": {
+          "false_speaks": {
+            "numerator": 47,
+            "denominator": 60,
+            "value": 0.7833333333333333
+          },
+          "per_family": {
+            "encoding_html_entity": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "encoding_unicode_escape": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_path_separator_confusion": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "parser_sql_keyword_splitting": {
+              "numerator": 10,
+              "denominator": 10,
+              "value": 1.0
+            },
+            "slow_rate_15m_rotating_usernames_20ip": {
+              "numerator": 7,
+              "denominator": 7,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 7,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_usernames_20ip": {
+              "numerator": 0,
+              "denominator": 6,
+              "value": 0.0
+            }
+          }
+        },
+        "v4": {
+          "false_speaks": {
+            "numerator": 41,
+            "denominator": 60,
+            "value": 0.6833333333333333
+          },
+          "per_family": {
+            "comment_case_obfuscation": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "html_entity_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "nested_triple_encoding_3pass": {
+              "numerator": 4,
+              "denominator": 4,
+              "value": 1.0
+            },
+            "nested_triple_encoding_4pass": {
+              "numerator": 0,
+              "denominator": 4,
+              "value": 0.0
+            },
+            "slow_rate_15m_rotating_users_14ip": {
+              "numerator": 5,
+              "denominator": 5,
+              "value": 1.0
+            },
+            "slow_rate_30m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_45m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "slow_rate_60m_rotating_users_14ip": {
+              "numerator": 0,
+              "denominator": 5,
+              "value": 0.0
+            },
+            "sql_keyword_splitting": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "unicode_escape_encoding": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            }
+          }
+        }
+      },
+      "lookalikes": {
+        "v1": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        },
+        "v2": {
+          "false_speaks": {
+            "numerator": 0,
+            "denominator": 60,
+            "value": 0.0
+          },
+          "per_family": {
+            "apostrophes_in_names": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "html_tags_in_comment_text": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "long_encoded_parameters": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "sql_keywords_in_search": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            },
+            "traversal_looking_document_titles": {
+              "numerator": 0,
+              "denominator": 12,
+              "value": 0.0
+            }
+          }
+        }
+      },
+      "ablation_streams": {
+        "streams": [
+          {
+            "stream": "stream_01",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_02",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 8,
+            "median_time_to_detect_events": 20.0
+          },
+          {
+            "stream": "stream_03",
+            "episode_recall": {
+              "numerator": 8,
+              "denominator": 8,
+              "value": 1.0
+            },
+            "false_alerts": 0,
+            "hard_benign_episodes_alerted": 0,
+            "hard_benign_episodes": 3,
+            "duplicates": 0,
+            "emitted_alerts": 8,
+            "rule_speaks": 9,
+            "median_time_to_detect_events": 20.0
+          }
+        ],
+        "episode_recall": {
+          "numerator": 24,
+          "denominator": 24,
+          "value": 1.0
+        },
+        "false_alerts": 0,
+        "duplicates": 0,
+        "hard_benign_episodes_alerted": 0,
+        "hard_benign_episodes": 9,
+        "duplicates_per_detected_episode": 0.0,
+        "median_time_to_detect_events": 20.0,
+        "totals": {
+          "detected": 24,
+          "episodes": 24,
+          "false_alerts": 0,
+          "hard_benign_episodes_alerted": 0,
+          "hard_benign_episodes": 9,
+          "duplicates": 0,
+          "emitted_alerts": 24,
+          "rule_speaks": 25
+        },
+        "episode_matching_rule": "alert window overlaps labeled episode interval: alert.end >= episode.start_idx and alert.start < episode.end_idx; earliest overlapping alert end defines delay"
+      }
+    }
+  },
+  "targets": {
+    "attack_recall": ">=87/96",
+    "benign_false_speaks": "<=6/120",
+    "precision": ">=0.90",
+    "hard_attack_recall": ">=11/14 and >=20 percentage points above baseline",
+    "hard_benign_false_speaks": "<=2/24",
+    "kind_accuracy": ">=0.85",
+    "episode_recall": ">=14/16",
+    "false_alerts": "<=2",
+    "duplicates_per_detected_episode": "<=1.5",
+    "median_time_to_detect_events": "<=40"
+  },
+  "bedrock_metrics": "pending: not part of the locked run",
+  "config_snapshot": {
+    "code_commit_sha": "3d4c2572f2ac9fa18aa7bb8155942bf36afc0cdb",
+    "tracked_worktree_clean": false,
+    "prompt_hash_sha256": "200c6cce5d5f5bcc3f6c1224bfc37eeecb392c8c482859e1e0092a902211cd75",
+    "prompt_format_version": 17,
+    "pattern_check_version": 5,
+    "model": null,
+    "model_digest_sha256": null,
+    "model_digest_status": "not_applicable_to_rules_bedrock_pipeline",
+    "thresholds": {
+      "brute_force_same_source": "one source and one account; >=5 failures in rolling 60s; no matching success in window",
+      "brute_force_distributed": "one username; failures from >=3 source IPs in trailing 60m; no success for that username in that interval",
+      "credential_stuffing": "auth endpoint, rolling 60m: >=4 distinct failed usernames, >=2 distinct source IPs, >=4 failed attempts, success ratio <=0.25",
+      "sensitive_path_scan": ">=3 sensitive-path probes from one source",
+      "generic_scan": ">=75% 4xx and >=5 distinct paths from one source",
+      "priv_esc_proxy": ">=5 distinct profile IDs from one source",
+      "payload_signatures": "SQLi/XSS/traversal signatures after up to 3 URL decodes",
+      "normalization": "up to 3 repeated URL decodes, HTML entities, Unicode escapes, SQL comment stripping, whitespace collapse",
+      "authorized_sources": "config/authorized_sources.json source + scope + unexpired grant",
+      "window_size_events": 20,
+      "cross_ip_brute_force_window_seconds": 3600
+    },
+    "seeds": {
+      "evaluation_seed": null
+    },
+    "evaluation_seed": null,
+    "evaluation_seed_note": "Rules are deterministic; evaluation_seed is null unless a randomized evaluator explicitly supplies one.",
+    "explainer_config": {
+      "prompt_hash_sha256": "29aa38e29b246d168b595fb9d387e85c06b8f0da18301f7df6b6c743ae274f8d",
+      "bedrock_region": null,
+      "requested_bedrock_region": "us-west-2",
+      "model_or_inference_profile_id": null,
+      "requested_model_or_inference_profile_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "temperature": 0,
+      "temperature_note": "Explicitly set to zero in the Bedrock request.",
+      "max_tokens": 300,
+      "retry_settings": {
+        "max_attempts": 0
+      },
+      "timeout_seconds": {
+        "connect": 4,
+        "read": 4
+      }
+    },
+    "allowlist_sha256": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805",
+    "normalizer_settings": {
+      "url_decode_passes_max": 3,
+      "html_entity_decode": true,
+      "unicode_escape_decode": true,
+      "sql_comment_stripping": true,
+      "whitespace_collapse": true
+    },
+    "data_hashes_sha256": {
+      "data/golden/test.jsonl": "404f5d7eac4f862a06a506422d4a4e72ee9bf9a9d93944ff5cd6ee71eb11403d",
+      "data/streams/manifest.json": "7938fc144f18822c37b926e9316dde9c3cba78b1291d786ef65295e67496acc0",
+      "data/streams/stream_04.jsonl": "8444ee0e6b906034d0ff70ee4ce7f3fc03eea02d41083cbceb10993bb6a1cf76",
+      "data/streams/stream_05.jsonl": "2e9baba1c95d474e62faf5857e8ea616eb183dc2119f996224dba5416383884a",
+      "eval/runs/evasion-v1-dev.json": "b0a4106dd05150ee708bfe7e16e656f4cce46efb0cd930ed0319055c2740a403",
+      "eval/runs/evasion-v2-dev.json": "0c339111fcd4c3c3e2075132e2c2e482ef2d37da759f0c4b7bfa2c293ec20203",
+      "eval/runs/evasion-v3-dev.json": "94bb184fde4d413a4b3222dbc1db77b749b0c89d4c72a6b9540cd1cc4c094f53",
+      "eval/runs/evasion-v4-clean-dev.json": "341e4baacf79db482f56fc5f7d97d7a5969eb24a3c326fba7191524952c2c3df",
+      "eval/fixtures/benign-lookalike-v1.jsonl": "d17178bc03daf13e8f71d5c1c2202b4c1ae4660b5303ee571b86a1db81cfc120",
+      "eval/fixtures/benign-lookalike-v2.jsonl": "9d30290f0bd330f389d7ac933dd8279d0132e499099196c9e4a68cd1f6db89f0",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    },
+    "lock_tag": "lock-20261022b",
+    "detector_file_hashes_sha256": {
+      "baseline/rules.py": "40b6eefa85f56516a0cd26cda17f3761e8d416ccdaa79e1f32dd2e49eb12a721",
+      "pipeline/run.py": "c8197218eec5308be0136ef8531544f2523fb4c32f350637bb8086222add779f",
+      "gate/gate.py": "f52d11e985cce888a55dd729341ab68e6716bf41521f8cfddbd1c137d2481b4a",
+      "explain/template.py": "e15d589d465fc55d4bc04cc85c226ce68260b15dcf30b678d000aa8b2e3501b9",
+      "config/authorized_sources.json": "e3dc914af730a22d524faec35a83787f859c0c844758b2ac611ec12ccfd78805"
+    },
+    "run_mode": "single locked Phase 5; variants A-F; template explanations; no Bedrock; no Qwen/Ollama"
+  },
+  "target_assessment": {
+    "attack_recall_standard": {
+      "pass": false,
+      "measured": "83/96",
+      "target": ">= 87/96"
+    },
+    "benign_false_speaks_standard": {
+      "pass": true,
+      "measured": "0/120",
+      "target": "<= 6/120"
+    },
+    "precision_standard": {
+      "pass": false,
+      "measured": "83/94",
+      "target": ">= 0.90"
+    },
+    "hard_benign_standard": {
+      "pass": true,
+      "measured": "0/24",
+      "target": "<= 2/24"
+    },
+    "kind_accuracy_standard": {
+      "pass": false,
+      "measured": "65/83",
+      "target": ">= 0.85"
+    },
+    "hard_attack_standard": {
+      "pass": false,
+      "measured": "5/6",
+      "baseline": "5/6",
+      "delta_percentage_points": 0.0,
+      "target": ">=11/14 and >=20 percentage points above A"
+    },
+    "attack_recall_status_neutral": {
+      "pass": false,
+      "measured": "81/96",
+      "target": ">= 87/96"
+    },
+    "benign_false_speaks_status_neutral": {
+      "pass": true,
+      "measured": "0/120",
+      "target": "<= 6/120"
+    },
+    "precision_status_neutral": {
+      "pass": true,
+      "measured": "81/89",
+      "target": ">= 0.90"
+    },
+    "hard_benign_status_neutral": {
+      "pass": true,
+      "measured": "0/24",
+      "target": "<= 2/24"
+    },
+    "kind_accuracy_status_neutral": {
+      "pass": false,
+      "measured": "65/81",
+      "target": ">= 0.85"
+    },
+    "hard_attack_status_neutral": {
+      "pass": false,
+      "measured": "5/6",
+      "baseline": "5/6",
+      "delta_percentage_points": 0.0,
+      "target": ">=11/14 and >=20 percentage points above A"
+    },
+    "episode_recall_standard": {
+      "pass": true,
+      "measured": "16/16",
+      "target": ">=14/16"
+    },
+    "false_alerts_standard": {
+      "pass": true,
+      "measured": "0",
+      "target": "<=2"
+    },
+    "duplicates_per_detected_episode_standard": {
+      "pass": true,
+      "measured": "0/16",
+      "target": "<=1.5"
+    },
+    "median_time_to_detect_standard": {
+      "pass": true,
+      "measured": "20.0 events",
+      "target": "<=40 events"
+    },
+    "episode_recall_status_neutral": {
+      "pass": true,
+      "measured": "16/16",
+      "target": ">=14/16"
+    },
+    "false_alerts_status_neutral": {
+      "pass": true,
+      "measured": "0",
+      "target": "<=2"
+    },
+    "duplicates_per_detected_episode_status_neutral": {
+      "pass": true,
+      "measured": "0/16",
+      "target": "<=1.5"
+    },
+    "median_time_to_detect_status_neutral": {
+      "pass": true,
+      "measured": "20.0 events",
+      "target": "<=40 events"
+    },
+    "evidence_id_grounding": {
+      "pass": true,
+      "measured": "8/8",
+      "target": "100% valid"
+    },
+    "entity_grounding": {
+      "pass": true,
+      "measured": "34/34",
+      "target": ">=98% grounded"
+    },
+    "injection_robustness": {
+      "pass": null,
+      "measured": "pending: not part of the locked run",
+      "target": ">=29/30 attacks; <=1/20 benign; 0 canary leaks"
+    },
+    "decision_latency": {
+      "pass": null,
+      "measured": "pending: not part of the locked run",
+      "target": "p50<=400ms; p95<=1.2s"
+    }
+  },
+  "misses": [
+    {
+      "metric": "attack_recall",
+      "mode": "standard",
+      "measured": "83/96",
+      "target": ">= 87/96"
+    },
+    {
+      "metric": "precision",
+      "mode": "standard",
+      "measured": "83/94",
+      "target": ">= 0.90"
+    },
+    {
+      "metric": "kind_accuracy",
+      "mode": "standard",
+      "measured": "65/83",
+      "target": ">= 0.85"
+    },
+    {
+      "metric": "hard_attack",
+      "mode": "standard",
+      "measured": "5/6; delta 0.0000",
+      "target": ">=11/14 and >=20 percentage points above A"
+    },
+    {
+      "metric": "attack_recall",
+      "mode": "status_neutral",
+      "measured": "81/96",
+      "target": ">= 87/96"
+    },
+    {
+      "metric": "kind_accuracy",
+      "mode": "status_neutral",
+      "measured": "65/81",
+      "target": ">= 0.85"
+    },
+    {
+      "metric": "hard_attack",
+      "mode": "status_neutral",
+      "measured": "5/6; delta 0.0000",
+      "target": ">=11/14 and >=20 percentage points above A"
+    }
+  ]
+}

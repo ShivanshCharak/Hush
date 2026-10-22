@@ -1,7 +1,7 @@
 {
-  "phase5_locked_run_count": 0,
-  "phase5_authorized": false,
-  "note": "Attempt count is independent of completed metric-writing runs; reconciled from final attempt logs.",
-  "phase5_attempts": 2,
-  "phase5_runs_that_wrote_metrics": 0
+  "phase5_locked_run_count": 1,
+  "phase5_authorized": true,
+  "note": "Phase 5 run authorized by explicit user instruction; attempts and metric-writing runs are tracked separately.",
+  "phase5_attempts": 3,
+  "phase5_runs_that_wrote_metrics": 1
 }
