@@ -1,6 +1,37 @@
 # Decider-Sec
 
-Decider-Sec is a local log monitor that evaluates 20-event windows with deterministic rules. Rules decide and emit alerts. Bedrock can write a grounded explanation when explicitly enabled; a deterministic template is the fallback. Historical Ollama experiments are retained as study code and cannot change alerts.
+Decider-Sec is a rules-first local log monitor: deterministic rules score 20-event windows and the alert gate decides what to emit; an optional Bedrock explainer can describe emitted alerts, with a deterministic template as fallback. The repo also contains measured small-model study results; those are historical comparisons and do not drive current decisions. The locked run used the template, not Bedrock.
+
+## Locked evaluation headline
+
+The registered precision headline excludes ambiguous windows. The saved Phase 5 artifact does not report how many ambiguous windows were spoken, so registered-set precision cannot be recovered from it; the as-run precision values below include all spoken windows counted by the harness.
+
+| Target | Standard | Status-neutral | Status |
+|---|---:|---:|---|
+| Attack speak recall >=87/96 | MISSED 83/96 | MISSED 81/96 | Both missed |
+| Simulated-benign false speaks <=6/120 | 0/120 | 0/120 | Both pass |
+| Precision >=0.90 | As run: MISSED 83/94; registered scored-set value unavailable | As run: 81/89; registered scored-set value unavailable | Standard as-run misses; neutral as-run passes; registered headline unavailable |
+| Hard-attack recall >=11/14 and >=20 points above A | MISSED 5/6; +0 points | MISSED 5/6; +0 points | Both miss; measured denominator differs from registration |
+| Hard-benign false speaks <=2/24 | 0/24 | 0/24 | Both pass |
+| Kind accuracy >=0.85 | MISSED 65/83 | MISSED 65/81 | Both miss |
+| Held-out episode recall >=14/16 | 16/16 | 16/16 | Both pass |
+| Held-out false alerts <=2 | 0 | 0 | Both pass |
+| Duplicates per detected episode <=1.5 | 0/16 | 0/16 | Both pass |
+| Median time-to-detect <=40 events | 20 events | 20 events | Both pass |
+| Explanation grounding: all alerts; 100% valid evidence IDs and >=98% grounded entities | 8/8 IDs and 34/34 entity mentions graded; 8/16 emitted alerts graded | Not reported | Incomplete coverage; graded subset passes |
+| Injection robustness | Pending: not part of the locked run | Pending: not part of the locked run | Pending |
+| Decision latency | Pending: not part of the locked run | Pending: not part of the locked run | Pending |
+
+### Limitations
+
+- Golden-set benign examples are simulated; held-out streams 04–05 are simulator-generated, not independent production traffic.
+- A dev-only status-confound audit achieved AUROC 1.000 for distinguishing ModSecurity-derived attacks from simulated benign traffic; this signals source/status leakage, not general attack detection.
+- The authorized-source allowlist mirrors the simulator's declared authorized source.
+- Kind precedence can classify SQL injection as scanner reconnaissance; see the dev analysis below. The locked artifact lacks row-level decisions to quantify this on the test set.
+- Slow-rate evasion remains weak: several 30–60 minute rotation variants were detected 0/5 or 0/6; see the fixture table below.
+- The second annotator was AI, not an independent human reviewer (73 eligible pairs; kappa 0.7834).
+- Bedrock evaluation is pending. Current locked-run explanations used the template.
+- Registered precision and the hard-attack cohort cannot be fully audited from the saved aggregate artifact; details and limits are recorded below.
 
 ## Dev snapshot
 
@@ -138,94 +169,79 @@ Run `python eval/phase3_eval.py` for a dev-stream replay with rules decisions an
 
 The previous Phase 3/4 reports are historical and include local-model explanation attempts; their 14+13 errors are preserved. The current code removes Ollama from the pipeline. Bedrock canary and refreshed Phase 3/4 reports await confirmation that AWS credentials work. The dashboard uses a dynamically imported chart. Final production Lighthouse was run in desktop mode while FastAPI served a disposable DuckDB containing dev stream 01; results are linked below.
 
-## Locked final targets
+## Locked final results and artifact-only analysis
 
-These targets apply to the final evaluation. The Phase 2 values above are dev results and are not measurements against these final-set denominators.
+Run artifact: [final-20261022T052438Z.json](eval/runs/final-20261022T052438Z.json). The sections below use that saved artifact and existing preregistration records only. No locked dataset or detector was read for this update. `MISSED` marks failure against an applicable registered target.
 
-| Metric | Target | Measured |
-|---|---:|---|
-| Attack recall | >= 0.90 (>= 87/96) | standard MISSED 83/96; status-neutral MISSED 81/96 (see final-20261022T052438Z.json) |
-| Benign false-speak rate vs simulated benign traffic | <= 0.05 (<= 6/120) | standard 0/120; status-neutral 0/120 (see final-20261022T052438Z.json) |
-| Precision | >= 0.90 | standard MISSED 83/94; status-neutral 81/89 (see final-20261022T052438Z.json) |
-| Hard-attack recall | >= 11/14 and >= 20 points above baseline | standard MISSED 5/6; status-neutral MISSED 5/6 (see final-20261022T052438Z.json) |
-| Hard-benign false-speak vs simulated benign traffic | <= 2/24 | standard 0/24; status-neutral 0/24 (see final-20261022T052438Z.json) |
-| Kind accuracy | >= 0.85 | standard MISSED 65/83; status-neutral MISSED 65/81 (see final-20261022T052438Z.json) |
-| Episode recall | >= 14/16 | standard 16/16; status-neutral 16/16 (see final-20261022T052438Z.json) |
-| False alerts on held-out streams | <= 2 total | standard 0; status-neutral 0 (see final-20261022T052438Z.json) |
-| Duplicate alerts per detected episode | <= 1.5 | standard 0/16; status-neutral 0/16 (see final-20261022T052438Z.json) |
-| Median time-to-detect | <= 40 events (~8 s) | standard 20.0 events; status-neutral 20.0 events (see final-20261022T052438Z.json) |
-| Injection robustness | >= 29/30 attacks flagged; <= 1/20 benign false alerts; 0 canary leaks | pending: not part of the locked run |
-| Explanation grounding | 100% evidence IDs valid; >= 98% entities grounded | evidence IDs 8/8; entity grounding 34/34 (template; see final-20261022T052438Z.json) |
-| Decision latency | p50 <= 400 ms; p95 <= 1.2 s | pending: not part of the locked run |
+### Attempts and precision population
 
+Attempt 1 crashed in the harness with `NameError: name 'legacy_url_only' is not defined`. Attempt 2 crashed because the guard rejected its own counter update: `RuntimeError: locked-run precondition changed after guard`. Neither wrote metrics. Attempt 3 completed and is the only metrics-writing run.
 
-### Phase 5 detailed results
+The [decision log](docs/DECIDER-SEC-SPEC.md) defines precision on the scored set, with ambiguous windows excluded (test n=216: 96 attacks and 120 benign). The Phase 5 artifact reports 94 total speaks and 83 spoken attacks in standard mode, and 89 total speaks and 81 spoken attacks in status-neutral mode. That leaves 11 and 8 non-attack speaks, respectively, but the artifact does not divide them into ambiguous versus any other class. Therefore registered scored-set precision cannot be calculated from this artifact. The as-run precision, which uses the harness’s all-speaks denominator, is 83/94 (88.3%) and 81/89 (91.0%).
 
-Run artifact: `final-20261022T052438Z.json`. `MISSED` marks a failed target.
-
-Attempt 1 crashed in the harness with `NameError: name 'legacy_url_only' is not defined`. Attempt 2 crashed because the guard rejected the harness's own counter update: `RuntimeError: locked-run precondition changed after guard`. Neither attempt wrote metrics. This is attempt 3; it completed and wrote the metrics in the run artifact. The Phase 5 equivalence gate passed in a scratch checkout before the locked run.
-
-#### Golden-test metrics by mode
-
-| Metric | Standard | Status-neutral |
+| Precision population | Standard | Status-neutral |
 |---|---:|---:|
-| Attack speak recall | MISSED 83/96 | MISSED 81/96 |
-| Precision | MISSED 83/94 | 81/89 |
-| Kind accuracy among spoken attacks | MISSED 65/83 | MISSED 65/81 |
-| Matching-kind recall | 65/96 | 65/96 |
-| Simulated-benign false speaks | 0/120 | 0/120 |
-| Hard-attack recall | MISSED 5/6 | MISSED 5/6 |
-| Hard-benign false speaks | 0/24 | 0/24 |
+| Registered scored set, ambiguous excluded | Not recoverable from saved aggregate; ambiguous speaks not reported | Not recoverable from saved aggregate; ambiguous speaks not reported |
+| As run, all counted speaks | MISSED 83/94 (88.3%) | 81/89 (91.0%) |
 
-The registered hard-attack target is at least 11/14 and at least 20 percentage points above variant A. The evaluator found six golden-test rows marked `hard`, so the measured hard-attack result is 5/6 in both modes; it does not establish the registered 14-row target. Variant A was also 5/6. The recorded miss is based on the registered target.
+**Post-hoc counts-only confusion matrix:** unavailable. The artifact has no per-window true-kind/predicted-kind pairs or fired-rule fields, so neither the 7×7 counts nor the rules for wrong-kind groups can be recovered without per-window data.
 
-#### Missed locked targets
+### Benign counts
 
-| Mode | Target | Measured |
-|---|---|---:|
-| Standard | Attack speak recall >= 87/96 | MISSED 83/96 |
-| Standard | Precision >= 0.90 | MISSED 83/94 |
-| Standard | Kind accuracy >= 0.85 | MISSED 65/83 |
-| Standard | Hard-attack recall >= 11/14 and >=20 points above A | MISSED 5/6; 0.00 points above A |
-| Status-neutral | Attack speak recall >= 87/96 | MISSED 81/96 |
-| Status-neutral | Kind accuracy >= 0.85 | MISSED 65/81 |
-| Status-neutral | Hard-attack recall >= 11/14 and >=20 points above A | MISSED 5/6; 0.00 points above A |
+| Mode | Hard-benign false speaks (n=24; target <=2) | Simulated-benign false speaks (n=120; target <=6) |
+|---|---:|---:|
+| Standard | 0/24 | 0/120 |
+| Status-neutral | 0/24 | 0/120 |
 
-#### Golden test source split
+Both modes meet these two false-speak targets. The 11/8 residual non-attack speaks from the precision paragraph are not separated by ambiguity class in the artifact.
 
-| Source cohort | Kind | n | Speak recall | Matching-kind recall |
-|---|---|---:|---:|---:|
-| standard · real (ModSecurity-derived) | path_traversal | 12 | 12/12 | 4/12 |
-| standard · real (ModSecurity-derived) | scanner_recon | 12 | 7/12 | 7/12 |
-| standard · real (ModSecurity-derived) | sqli | 16 | 11/16 | 4/16 |
-| standard · real (ModSecurity-derived) | xss | 8 | 5/8 | 2/8 |
-| standard · simulator_generated | brute_force | 16 | 16/16 | 16/16 |
-| standard · simulator_generated | credential_stuffing | 16 | 16/16 | 16/16 |
-| standard · simulator_generated | priv_esc | 12 | 12/12 | 12/12 |
-| standard · simulator_generated | xss | 4 | 4/4 | 4/4 |
-| status-neutral · real (ModSecurity-derived) | path_traversal | 12 | 12/12 | 4/12 |
-| status-neutral · real (ModSecurity-derived) | scanner_recon | 12 | 7/12 | 7/12 |
-| status-neutral · real (ModSecurity-derived) | sqli | 16 | 10/16 | 4/16 |
-| status-neutral · real (ModSecurity-derived) | xss | 8 | 4/8 | 2/8 |
-| status-neutral · simulator_generated | brute_force | 16 | 16/16 | 16/16 |
-| status-neutral · simulator_generated | credential_stuffing | 16 | 16/16 | 16/16 |
-| status-neutral · simulator_generated | priv_esc | 12 | 12/12 | 12/12 |
-| status-neutral · simulator_generated | xss | 4 | 4/4 | 4/4 |
+### Hard-attack denominator
 
-#### A–F ablation on held-out streams
+The registered definition specifies 14 test hard attacks: 20 low-and-slow credential-stuffing cases and 15 encoded-injection cases across the full set; applying the 40% test split gives an expected cohort of 8 low-and-slow stuffing and 6 encoded injection. The Phase 5 metric is 5/6 in both modes, so its recorded denominator is six rather than 14. The final artifact does not preserve hard-flag row counts by kind or explain why only six rows entered its measured subset. The registered 11/14 and +20-point target is therefore **MISSED 5/6; 0 points above A** in both modes; the true registered-cohort result cannot be reconstructed post hoc.
 
-| Variant | Golden speak recall | Kind accuracy | Matching-kind recall | Held-out episode recall | False alerts | Duplicates | Median detect events |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| A | 83/96 | 65/83 | 65/96 | 16/16 | 2 | 0 | 20.0 |
-| B | 83/96 | 65/83 | 65/96 | 16/16 | 2 | 0 | 20.0 |
-| C | 83/96 | 65/83 | 65/96 | 16/16 | 2 | 0 | 20.0 |
-| D | 83/96 | 65/83 | 65/96 | 16/16 | 0 | 0 | 20.0 |
-| E | MISSED 83/96 | MISSED 65/83 | 65/96 | 16/16 | 0 | 0 | 20.0 |
-| F | MISSED 81/96 | MISSED 65/81 | 65/96 | 16/16 | 0 | 0 | 20.0 |
+### Source-stratified attack recall
 
-#### Held-out stream detail (simulator-generated)
+| Mode | Source cohort | Kind | n | Speak recall | Matching-kind recall |
+|---|---|---|---:|---:|---:|
+| Standard | real (ModSecurity-derived) | path_traversal | 12 | 12/12 | 4/12 |
+| Standard | real (ModSecurity-derived) | scanner_recon | 12 | 7/12 | 7/12 |
+| Standard | real (ModSecurity-derived) | sqli | 16 | 11/16 | 4/16 |
+| Standard | real (ModSecurity-derived) | xss | 8 | 5/8 | 2/8 |
+| Standard | real (ModSecurity-derived) | **Overall** | **48** | **35/48** | — |
+| Standard | simulator-generated | brute_force | 16 | 16/16 | 16/16 |
+| Standard | simulator-generated | credential_stuffing | 16 | 16/16 | 16/16 |
+| Standard | simulator-generated | priv_esc | 12 | 12/12 | 12/12 |
+| Standard | simulator-generated | xss | 4 | 4/4 | 4/4 |
+| Standard | simulator-generated | **Overall** | **48** | **48/48** | — |
+| Status-neutral | real (ModSecurity-derived) | path_traversal | 12 | 12/12 | 4/12 |
+| Status-neutral | real (ModSecurity-derived) | scanner_recon | 12 | 7/12 | 7/12 |
+| Status-neutral | real (ModSecurity-derived) | sqli | 16 | 10/16 | 4/16 |
+| Status-neutral | real (ModSecurity-derived) | xss | 8 | 4/8 | 2/8 |
+| Status-neutral | real (ModSecurity-derived) | **Overall** | **48** | **33/48** | — |
+| Status-neutral | simulator-generated | brute_force | 16 | 16/16 | 16/16 |
+| Status-neutral | simulator-generated | credential_stuffing | 16 | 16/16 | 16/16 |
+| Status-neutral | simulator-generated | priv_esc | 12 | 12/12 | 12/12 |
+| Status-neutral | simulator-generated | xss | 4 | 4/4 | 4/4 |
+| Status-neutral | simulator-generated | **Overall** | **48** | **48/48** | — |
 
-Streams 04–05 are simulator-generated. An alert matches an episode when `alert.end >= episode.start_idx` and `alert.start < episode.end_idx`; the earliest overlapping alert end sets detection delay.
+Brute force, credential stuffing, and privilege escalation are simulator-only in this split; they are not real-world recall estimates.
+
+### A–F ablation
+
+A–E are standard mode; F is status-neutral. E is the final rules variant with template explanations. `MISSED` is shown for E/F where their measured value misses a locked target.
+
+| Variant | Mode | Attack speak recall | As-run precision | Kind accuracy | Matching-kind recall | Sim-benign false speaks | Hard attack | Hard-benign false speaks | Held-out episode recall | False alerts | Duplicates | Median TTD (events) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| A | Standard | 83/96 | 83/98 | 65/83 | 65/96 | 4/120 | 5/6 | 4/24 | 16/16 | 2 | 0/16 | 20.0 |
+| B | Standard | 83/96 | 83/98 | 65/83 | 65/96 | 4/120 | 5/6 | 4/24 | 16/16 | 2 | 0/16 | 20.0 |
+| C | Standard | 83/96 | 83/98 | 65/83 | 65/96 | 4/120 | 5/6 | 4/24 | 16/16 | 2 | 0/16 | 20.0 |
+| D | Standard | 83/96 | 83/94 | 65/83 | 65/96 | 0/120 | 5/6 | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
+| E | Standard | MISSED 83/96 | MISSED 83/94 | MISSED 65/83 | 65/96 | 0/120 | MISSED 5/6 | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
+| F | Status-neutral | MISSED 81/96 | 81/89 | MISSED 65/81 | 65/96 | 0/120 | MISSED 5/6 | 0/24 | 16/16 | 0 | 0/16 | 20.0 |
+
+### Held-out streams 04–05
+
+Both held-out streams are simulator-generated. Matching rule: an alert window overlaps a labeled episode when `alert.end >= episode.start_idx` and `alert.start < episode.end_idx`; the earliest overlapping alert end defines detection delay.
 
 | Variant | Stream | Episode recall | False alerts | Duplicates | Median detect events |
 |---|---|---:|---:|---:|---:|
@@ -234,9 +250,13 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | F | stream_04 | 8/8 | 0 | 0 | 20.0 |
 | F | stream_05 | 8/8 | 0 | 0 | 20.0 |
 
-#### Evasion and lookalike results
+E emitted 16 held-out alerts; the artifact grades 8 for explanation grounding. The recorded 8/8 valid evidence IDs and 34/34 grounded entity mentions therefore cover 8 of 16 emitted alerts, not all alerts.
 
-| Variant | Fixture | Family / category | Detected false speaks / n |
+### Evasion fixtures
+
+Rows show attack windows detected / fixture n. A–E are standard; F is status-neutral. No separate pass threshold for each family is registered, so these are descriptive counts.
+
+| Variant | Fixture | Family | Detected / n |
 |---|---|---|---:|
 | A | v1 | case_comment_obfuscation | 13/20 |
 | A | v1 | double_url_encoding | 18/20 |
@@ -261,16 +281,6 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | A | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
 | A | v4 | sql_keyword_splitting | 0/8 |
 | A | v4 | unicode_escape_encoding | 0/8 |
-| A | lookalike-v1 | apostrophes_in_names | 0/12 |
-| A | lookalike-v1 | html_tags_in_comment_text | 0/12 |
-| A | lookalike-v1 | long_encoded_parameters | 0/12 |
-| A | lookalike-v1 | sql_keywords_in_search | 0/12 |
-| A | lookalike-v1 | traversal_looking_document_titles | 12/12 |
-| A | lookalike-v2 | apostrophes_in_names | 0/12 |
-| A | lookalike-v2 | html_tags_in_comment_text | 0/12 |
-| A | lookalike-v2 | long_encoded_parameters | 0/12 |
-| A | lookalike-v2 | sql_keywords_in_search | 0/12 |
-| A | lookalike-v2 | traversal_looking_document_titles | 12/12 |
 | B | v1 | case_comment_obfuscation | 13/20 |
 | B | v1 | double_url_encoding | 18/20 |
 | B | v1 | slow_rate_5plus_ips | 20/20 |
@@ -294,16 +304,6 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | B | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
 | B | v4 | sql_keyword_splitting | 0/8 |
 | B | v4 | unicode_escape_encoding | 0/8 |
-| B | lookalike-v1 | apostrophes_in_names | 0/12 |
-| B | lookalike-v1 | html_tags_in_comment_text | 0/12 |
-| B | lookalike-v1 | long_encoded_parameters | 0/12 |
-| B | lookalike-v1 | sql_keywords_in_search | 0/12 |
-| B | lookalike-v1 | traversal_looking_document_titles | 0/12 |
-| B | lookalike-v2 | apostrophes_in_names | 0/12 |
-| B | lookalike-v2 | html_tags_in_comment_text | 0/12 |
-| B | lookalike-v2 | long_encoded_parameters | 0/12 |
-| B | lookalike-v2 | sql_keywords_in_search | 0/12 |
-| B | lookalike-v2 | traversal_looking_document_titles | 0/12 |
 | C | v1 | case_comment_obfuscation | 13/20 |
 | C | v1 | double_url_encoding | 18/20 |
 | C | v1 | slow_rate_5plus_ips | 20/20 |
@@ -327,16 +327,6 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | C | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
 | C | v4 | sql_keyword_splitting | 8/8 |
 | C | v4 | unicode_escape_encoding | 8/8 |
-| C | lookalike-v1 | apostrophes_in_names | 0/12 |
-| C | lookalike-v1 | html_tags_in_comment_text | 0/12 |
-| C | lookalike-v1 | long_encoded_parameters | 0/12 |
-| C | lookalike-v1 | sql_keywords_in_search | 0/12 |
-| C | lookalike-v1 | traversal_looking_document_titles | 0/12 |
-| C | lookalike-v2 | apostrophes_in_names | 0/12 |
-| C | lookalike-v2 | html_tags_in_comment_text | 0/12 |
-| C | lookalike-v2 | long_encoded_parameters | 0/12 |
-| C | lookalike-v2 | sql_keywords_in_search | 0/12 |
-| C | lookalike-v2 | traversal_looking_document_titles | 0/12 |
 | D | v1 | case_comment_obfuscation | 13/20 |
 | D | v1 | double_url_encoding | 18/20 |
 | D | v1 | slow_rate_5plus_ips | 20/20 |
@@ -360,16 +350,6 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | D | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
 | D | v4 | sql_keyword_splitting | 8/8 |
 | D | v4 | unicode_escape_encoding | 8/8 |
-| D | lookalike-v1 | apostrophes_in_names | 0/12 |
-| D | lookalike-v1 | html_tags_in_comment_text | 0/12 |
-| D | lookalike-v1 | long_encoded_parameters | 0/12 |
-| D | lookalike-v1 | sql_keywords_in_search | 0/12 |
-| D | lookalike-v1 | traversal_looking_document_titles | 0/12 |
-| D | lookalike-v2 | apostrophes_in_names | 0/12 |
-| D | lookalike-v2 | html_tags_in_comment_text | 0/12 |
-| D | lookalike-v2 | long_encoded_parameters | 0/12 |
-| D | lookalike-v2 | sql_keywords_in_search | 0/12 |
-| D | lookalike-v2 | traversal_looking_document_titles | 0/12 |
 | E | v1 | case_comment_obfuscation | 13/20 |
 | E | v1 | double_url_encoding | 18/20 |
 | E | v1 | slow_rate_5plus_ips | 20/20 |
@@ -393,16 +373,6 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | E | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
 | E | v4 | sql_keyword_splitting | 8/8 |
 | E | v4 | unicode_escape_encoding | 8/8 |
-| E | lookalike-v1 | apostrophes_in_names | 0/12 |
-| E | lookalike-v1 | html_tags_in_comment_text | 0/12 |
-| E | lookalike-v1 | long_encoded_parameters | 0/12 |
-| E | lookalike-v1 | sql_keywords_in_search | 0/12 |
-| E | lookalike-v1 | traversal_looking_document_titles | 0/12 |
-| E | lookalike-v2 | apostrophes_in_names | 0/12 |
-| E | lookalike-v2 | html_tags_in_comment_text | 0/12 |
-| E | lookalike-v2 | long_encoded_parameters | 0/12 |
-| E | lookalike-v2 | sql_keywords_in_search | 0/12 |
-| E | lookalike-v2 | traversal_looking_document_titles | 0/12 |
 | F | v1 | case_comment_obfuscation | 13/20 |
 | F | v1 | double_url_encoding | 18/20 |
 | F | v1 | slow_rate_5plus_ips | 20/20 |
@@ -426,18 +396,78 @@ Streams 04–05 are simulator-generated. An alert matches an episode when `alert
 | F | v4 | slow_rate_60m_rotating_users_14ip | 0/5 |
 | F | v4 | sql_keyword_splitting | 8/8 |
 | F | v4 | unicode_escape_encoding | 8/8 |
-| F | lookalike-v1 | apostrophes_in_names | 0/12 |
-| F | lookalike-v1 | html_tags_in_comment_text | 0/12 |
-| F | lookalike-v1 | long_encoded_parameters | 0/12 |
-| F | lookalike-v1 | sql_keywords_in_search | 0/12 |
-| F | lookalike-v1 | traversal_looking_document_titles | 0/12 |
-| F | lookalike-v2 | apostrophes_in_names | 0/12 |
-| F | lookalike-v2 | html_tags_in_comment_text | 0/12 |
-| F | lookalike-v2 | long_encoded_parameters | 0/12 |
-| F | lookalike-v2 | sql_keywords_in_search | 0/12 |
-| F | lookalike-v2 | traversal_looking_document_titles | 0/12 |
 
-Bedrock metrics: pending: not part of the locked run.
+### Benign lookalike fixtures
+
+Rows show false speaks / fixture n. A–E are standard; F is status-neutral. No separate pass threshold for each category is registered, so these are descriptive counts.
+
+| Variant | Fixture | Category | False speaks / n |
+|---|---|---|---:|
+| A | v1 | apostrophes_in_names | 0/12 |
+| A | v1 | html_tags_in_comment_text | 0/12 |
+| A | v1 | long_encoded_parameters | 0/12 |
+| A | v1 | sql_keywords_in_search | 0/12 |
+| A | v1 | traversal_looking_document_titles | 12/12 |
+| A | v2 | apostrophes_in_names | 0/12 |
+| A | v2 | html_tags_in_comment_text | 0/12 |
+| A | v2 | long_encoded_parameters | 0/12 |
+| A | v2 | sql_keywords_in_search | 0/12 |
+| A | v2 | traversal_looking_document_titles | 12/12 |
+| B | v1 | apostrophes_in_names | 0/12 |
+| B | v1 | html_tags_in_comment_text | 0/12 |
+| B | v1 | long_encoded_parameters | 0/12 |
+| B | v1 | sql_keywords_in_search | 0/12 |
+| B | v1 | traversal_looking_document_titles | 0/12 |
+| B | v2 | apostrophes_in_names | 0/12 |
+| B | v2 | html_tags_in_comment_text | 0/12 |
+| B | v2 | long_encoded_parameters | 0/12 |
+| B | v2 | sql_keywords_in_search | 0/12 |
+| B | v2 | traversal_looking_document_titles | 0/12 |
+| C | v1 | apostrophes_in_names | 0/12 |
+| C | v1 | html_tags_in_comment_text | 0/12 |
+| C | v1 | long_encoded_parameters | 0/12 |
+| C | v1 | sql_keywords_in_search | 0/12 |
+| C | v1 | traversal_looking_document_titles | 0/12 |
+| C | v2 | apostrophes_in_names | 0/12 |
+| C | v2 | html_tags_in_comment_text | 0/12 |
+| C | v2 | long_encoded_parameters | 0/12 |
+| C | v2 | sql_keywords_in_search | 0/12 |
+| C | v2 | traversal_looking_document_titles | 0/12 |
+| D | v1 | apostrophes_in_names | 0/12 |
+| D | v1 | html_tags_in_comment_text | 0/12 |
+| D | v1 | long_encoded_parameters | 0/12 |
+| D | v1 | sql_keywords_in_search | 0/12 |
+| D | v1 | traversal_looking_document_titles | 0/12 |
+| D | v2 | apostrophes_in_names | 0/12 |
+| D | v2 | html_tags_in_comment_text | 0/12 |
+| D | v2 | long_encoded_parameters | 0/12 |
+| D | v2 | sql_keywords_in_search | 0/12 |
+| D | v2 | traversal_looking_document_titles | 0/12 |
+| E | v1 | apostrophes_in_names | 0/12 |
+| E | v1 | html_tags_in_comment_text | 0/12 |
+| E | v1 | long_encoded_parameters | 0/12 |
+| E | v1 | sql_keywords_in_search | 0/12 |
+| E | v1 | traversal_looking_document_titles | 0/12 |
+| E | v2 | apostrophes_in_names | 0/12 |
+| E | v2 | html_tags_in_comment_text | 0/12 |
+| E | v2 | long_encoded_parameters | 0/12 |
+| E | v2 | sql_keywords_in_search | 0/12 |
+| E | v2 | traversal_looking_document_titles | 0/12 |
+| F | v1 | apostrophes_in_names | 0/12 |
+| F | v1 | html_tags_in_comment_text | 0/12 |
+| F | v1 | long_encoded_parameters | 0/12 |
+| F | v1 | sql_keywords_in_search | 0/12 |
+| F | v1 | traversal_looking_document_titles | 0/12 |
+| F | v2 | apostrophes_in_names | 0/12 |
+| F | v2 | html_tags_in_comment_text | 0/12 |
+| F | v2 | long_encoded_parameters | 0/12 |
+| F | v2 | sql_keywords_in_search | 0/12 |
+| F | v2 | traversal_looking_document_titles | 0/12 |
+
+### Remaining evaluation status
+
+Bedrock metrics: pending; the locked run used the template explainer and made no Bedrock call. Injection robustness and decision latency were not part of this locked run.
+
 ## Results so far (dev only)
 
 Phase 5 has three recorded attempts and one metric-writing run. The current rules and clean evasion-v4 results are in [the 2026-10-21 run](eval/runs/dev-rules-20261021T055255Z.json), the A–E dry run is [here](eval/runs/ablation-20261021T064132Z.json), and the latest headed browser measurement is [here](eval/runs/dashboard-playwright-20261021T064750Z.json). The real-API filter profile is [here](eval/runs/dashboard-real-api-filter-20261021T064604Z.json); its frame trace is [here](eval/runs/dashboard-scroll-trace-20261021T064750Z.json). Lighthouse desktop results are [here](eval/runs/dashboard-lighthouse-desktop-final.json).
