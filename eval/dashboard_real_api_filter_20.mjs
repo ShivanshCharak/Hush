@@ -23,6 +23,7 @@ try {
   await page.getByRole("heading",{name:"Event stream"}).waitFor();
   await page.waitForLoadState("networkidle");
   const before=await page.locator("tbody tr").count();
+  const initialApiRequestCount=requestLog.length;
   for(let i=0;i<20;i++){
     const filter=`src_ip=${sourceIps[i]}`;
     console.log(`filter click ${i+1}/20: ${filter}`);
@@ -57,11 +58,12 @@ try {
   const apiMeta=await page.evaluate(async()=>{const response=await fetch("/api/meta");return response.json()});
   const metadata=JSON.parse(execFileSync(path.join(ROOT,"venv/bin/python"),["-c","from eval.run_metadata import snapshot; import json; print(json.dumps(snapshot()))"],{cwd:ROOT,encoding:"utf8"}));
   const wall=samples.map(s=>s.wall_ms),handler=samples.map(s=>s.handler_to_render_ms);
-  const report={created_at:new Date().toISOString(),scope:"real local FastAPI/DuckDB API populated from dev stream 01 only; 20 distinct source-IP filter clicks; no scrolling; no locked/held-out data",browser:{name:"Google Chrome",headless:false,gpu_enabled:true},api_meta:apiMeta,filter_click_count:samples.length,latency_definition:{handler_to_render:"dashboard:filter-handler-start mark through dashboard:filter-render-complete mark",wall:"click action start through both filtered responses and render-complete"},percentile_method:"nearest-rank; p50=ceil(0.50*n), p95=ceil(0.95*n)",handler_to_render_ms:{p50:percentile(handler,.50),p95:percentile(handler,.95)},wall_ms:{p50:percentile(wall,.50),p95:percentile(wall,.95)},rows_before_filter:before,rows_after_filter:after,alerts_requested:false,api_requests:requestLog,clicks:samples,config_snapshot:metadata};
+  const profileApiRequests=samples.flatMap(sample=>sample.resources);
+  const report={created_at:new Date().toISOString(),scope:"real local FastAPI/DuckDB API populated from dev stream 01 only; 20 distinct source-IP filter clicks; no scrolling; no locked/held-out data",browser:{name:"Google Chrome",headless:false,gpu_enabled:true},api_meta:apiMeta,filter_click_count:samples.length,latency_definition:{handler_to_render:"dashboard:filter-handler-start mark through dashboard:filter-render-complete mark",wall:"click action start through both filtered responses and render-complete"},percentile_method:"nearest-rank; p50=ceil(0.50*n), p95=ceil(0.95*n)",handler_to_render_ms:{p50:percentile(handler,.50),p95:percentile(handler,.95)},wall_ms:{p50:percentile(wall,.50),p95:percentile(wall,.95)},rows_before_filter:before,rows_after_filter:after,initial_page_api_requests:requestLog.slice(0,initialApiRequestCount),filter_profile_api_requests:profileApiRequests,alerts_requested_by_filter:profileApiRequests.some(url=>url.includes("/api/alerts")),api_requests:requestLog,clicks:samples,config_snapshot:metadata};
   const stamp=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/, "Z");
   const out=path.join(ROOT,"eval/runs",`dashboard-real-api-filter-20-${stamp}.json`);
   fs.writeFileSync(out,JSON.stringify(report,null,2)+"\n");
-  console.log(JSON.stringify({artifact:path.relative(ROOT,out),api_meta:apiMeta,filter_click_count:samples.length,handler_to_render_ms:report.handler_to_render_ms,wall_ms:report.wall_ms,rows_before_filter:before,rows_after_filter:after,alerts_requested:false},null,2));
+  console.log(JSON.stringify({artifact:path.relative(ROOT,out),api_meta:apiMeta,filter_click_count:samples.length,handler_to_render_ms:report.handler_to_render_ms,wall_ms:report.wall_ms,rows_before_filter:before,rows_after_filter:after,alerts_requested_by_filter:report.alerts_requested_by_filter},null,2));
 } finally {
   await browser.close();
 }
