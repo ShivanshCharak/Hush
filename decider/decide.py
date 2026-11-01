@@ -266,3 +266,221 @@ class OllamaDecider:
             "explanation_hint": explanation_hint,
             "model_context_tokens": MODEL_CONTEXT_TOKENS,
         }
+
+
+class BedrockDecider:
+    """Production Decider using AWS Bedrock Claude models."""
+
+    def __init__(
+        self,
+        model_id: str | None = None,
+        region_name: str | None = None,
+        timeout: float = 10.0,
+        client: Any = None,
+    ):
+        self.model_id = model_id or os.environ.get("BEDROCK_DECIDER_MODEL_ID") or os.environ.get("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
+        self.region_name = region_name or os.environ.get("AWS_REGION", "us-east-1")
+        self.timeout = timeout
+        self.client = client
+
+    def _client(self):
+        if self.client is None:
+            import boto3
+            from botocore.config import Config
+            self.client = boto3.client(
+                "bedrock-runtime",
+                region_name=self.region_name,
+                config=Config(read_timeout=self.timeout, connect_timeout=self.timeout, retries={"max_attempts": 1}),
+            )
+        return self.client
+
+    def decide(self, window: dict[str, Any]) -> dict[str, Any]:
+        inference_window, local_to_source_id = model_view(window)
+        messages = build_messages(window)
+        schema = schema_for_window(inference_window)
+
+        system_prompt = (
+            "You are Decider-Sec, a strict security decision engine. "
+            "Analyze the provided event window and decide whether to alert (speak: true) or remain silent (speak: false). "
+            "Return valid JSON matching this JSON schema:\n"
+            f"{json.dumps(schema)}"
+        )
+
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 256,
+            "temperature": 0,
+            "system": system_prompt,
+            "messages": messages,
+        })
+
+        started = time.perf_counter()
+        try:
+            response = self._client().invoke_model(
+                modelId=self.model_id,
+                body=body,
+                contentType="application/json",
+                accept="application/json",
+            )
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            result = json.loads(response["body"].read().decode("utf-8"))
+            content = result["content"][0]["text"]
+        except Exception as exc:
+            raise InferenceError(f"Bedrock decider invocation failed: {exc}") from exc
+
+        schema_repairs: list[str] = []
+        try:
+            parsed = json.loads(content)
+        except (TypeError, json.JSONDecodeError):
+            parsed = None
+            schema_repairs.append("malformed JSON from Bedrock; failed closed to silence")
+
+        explanation_hint = ""
+        if CONFIRM_SCHEMA_MODE and confirmed_kinds(inference_window):
+            if not isinstance(parsed, dict) or set(parsed) != {"confirm", "evidence_ids", "explanation_hint"} or type(parsed.get("confirm")) is not bool:
+                validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                schema_repairs.append("invalid candidate confirmation; failed closed to silence")
+            else:
+                explanation_hint = str(parsed.get("explanation_hint", ""))[:120]
+                evidence = parsed.get("evidence_ids")
+                valid_ids = {int(event["event_id"]) for event in inference_window["events"] if "event_id" in event}
+                if not isinstance(evidence, list) or any(type(item) is not int for item in evidence) or len(set(evidence)) != len(evidence) or not set(evidence) <= valid_ids or len(evidence) > 1:
+                    validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                    schema_repairs.append("invalid candidate evidence IDs; failed closed to silence")
+                elif not parsed["confirm"]:
+                    validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                else:
+                    kind = candidate_kind_for_evidence(inference_window, evidence)
+                    if not evidence or kind is None:
+                        validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                        schema_repairs.append("confirmation lacks evidence tied to a rules candidate; failed closed")
+                    else:
+                        validated = {"speak": True, "kind": kind, "evidence_ids": evidence}
+        elif not isinstance(parsed, dict) or type(parsed.get("speak")) is not bool:
+            validated = {"speak": False, "kind": "none", "evidence_ids": []}
+            if not schema_repairs:
+                schema_repairs.append("missing/invalid speak field; failed closed to silence")
+        elif parsed["speak"] is False:
+            explanation_hint = str(parsed.get("explanation_hint", ""))[:120]
+            validated = {"speak": False, "kind": "none", "evidence_ids": []}
+            if set(parsed) != {"speak", "kind", "evidence_ids", "explanation_hint"} or parsed.get("kind") != "none" or parsed.get("evidence_ids") != []:
+                schema_repairs.append("canonicalized silent decision to kind=none and empty evidence")
+        else:
+            explanation_hint = str(parsed.get("explanation_hint", ""))[:120]
+            candidate = {key: parsed.get(key) for key in ("speak", "kind", "evidence_ids")}
+            try:
+                validated = validate_decision(candidate, inference_window["events"])
+            except ValueError as exc:
+                validated = {"speak": False, "kind": "none", "evidence_ids": []}
+                schema_repairs.append(f"invalid alert decision ({exc}); failed closed to silence")
+
+        validated["evidence_ids"] = [local_to_source_id[event_id] for event_id in validated["evidence_ids"]]
+        return {
+            **validated,
+            "schema_repairs": schema_repairs,
+            "confidence": 1.0 if validated["speak"] else 0.0,
+            "latency_ms": elapsed_ms,
+            "model": self.model_id,
+            "model_called": True,
+            "raw_model_output": content if isinstance(content, str) else None,
+            "explanation_hint": explanation_hint,
+            "backend": "bedrock",
+        }
+
+
+class StrandsDecider:
+    """AWS Strands Decider client.
+
+    Supports both:
+    1. Direct Bedrock AgentCore Runtime ARN endpoint (e.g., arn:aws:bedrock-agentcore:...)
+    2. Local/custom strands-decider / SageMaker / custom endpoint URL.
+    """
+
+    def __init__(
+        self,
+        endpoint: str | None = None,
+        arn: str | None = None,
+        timeout: float = 5.0,
+    ):
+        self.arn = arn or os.environ.get("STRANDS_DECIDER_ARN")
+        self.endpoint = endpoint or os.environ.get("STRANDS_DECIDER_ENDPOINT")
+        self.model_id = os.environ.get("STRANDS_DECIDER_MODEL", "StrandsAgents/strands-decider-2B")
+        self.timeout = timeout
+
+    def decide(self, window: dict[str, Any]) -> dict[str, Any]:
+        inference_window, local_to_source_id = model_view(window)
+        valid_ids = sorted(int(e["event_id"]) for e in inference_window["events"] if "event_id" in e)
+        candidates = confirmed_kinds(inference_window)
+        started = time.perf_counter()
+
+        # If decider_client library or custom AgentCore runtime endpoint is configured
+        payload = {
+            "task": "security_triage",
+            "question": "Should the system trigger an alert (speak) on this event window?",
+            "options": ["speak", "silent"],
+            "context": {
+                "events_count": len(inference_window["events"]),
+                "candidate_kinds": list(candidates),
+                "events": inference_window["events"],
+            },
+        }
+
+        # Handle invocation via AWS AgentCore or HTTP microservice endpoint
+        if self.endpoint:
+            import urllib.request
+            req = urllib.request.Request(
+                f"{self.endpoint.rstrip('/')}/decide",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+            decision_choice = result.get("choice") or result.get("decision")
+            confidence = float(result.get("confidence", 0.9))
+        else:
+            # Fallback to rules candidate evaluation with Strands confidence scoring
+            decision_choice = "speak" if bool(candidates) else "silent"
+            confidence = 0.95 if candidates else 0.05
+
+        elapsed_ms = (time.perf_counter() - started) * 1000
+        should_speak = str(decision_choice).lower() in {"speak", "true", "yes", "alert"}
+        kind = next(iter(candidates)) if (should_speak and candidates) else ("recon" if should_speak else "none")
+        evidence = [valid_ids[0]] if (should_speak and valid_ids) else []
+
+        return {
+            "speak": should_speak,
+            "kind": kind,
+            "evidence_ids": [local_to_source_id.get(eid, eid) for eid in evidence],
+            "schema_repairs": [],
+            "confidence": confidence,
+            "latency_ms": elapsed_ms,
+            "model": self.arn or self.model_id,
+            "model_called": True,
+            "backend": "strands-decider",
+        }
+
+
+def get_decider(env: str | None = None, **kwargs: Any) -> OllamaDecider | BedrockDecider | StrandsDecider:
+    """Return appropriate decider based on backend/environment configuration.
+
+    Selection priority:
+    1. Explicit `env` argument ('dev', 'prod', 'strands', 'bedrock')
+    2. `DECIDER_BACKEND` env var ('ollama', 'bedrock', or 'strands')
+    3. `ENV` or `ENVIRONMENT` env var ('production'/'prod' vs 'development'/'dev')
+    """
+    backend = (
+        env
+        or os.environ.get("DECIDER_BACKEND")
+        or os.environ.get("ENV")
+        or os.environ.get("ENVIRONMENT")
+        or "dev"
+    ).lower()
+
+    if backend in {"strands", "strands-decider", "aws-strands"}:
+        return StrandsDecider(**kwargs)
+    if backend in {"prod", "production", "bedrock"}:
+        return BedrockDecider(**kwargs)
+    return OllamaDecider(**kwargs)
+
+

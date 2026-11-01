@@ -10,13 +10,27 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from dashboard.api.ingest import start_watcher
+from decider.decide import get_decider
 
 ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = Path(os.environ.get("HUSH_DASHBOARD_DB", ROOT / "dashboard/data/dashboard.duckdb"))
 app = FastAPI(title="Decider-Sec Log Explorer")
+
+# Enable CORS for Vercel and local frontend origins
+allowed_origins_env = os.environ.get("CORS_ORIGINS", "*")
+allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins if allowed_origins else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 _watch_thread: threading.Thread | None = None
 
 
@@ -146,7 +160,8 @@ def event_detail(event_id: int, context: int = Query(default=20, ge=0, le=100)):
 @app.get("/api/alerts")
 def alerts(filter: list[str] = Query(default=[]), from_: str | None = Query(default=None, alias="from"),
            to: str | None = None, through_id: int | None = None,
-           window_seconds: int = Query(default=0, ge=0, le=3600), limit: int = Query(default=100, ge=1, le=500)):
+           window_seconds: int = Query(default=0, ge=0, le=3600), limit: int = Query(default=100, ge=1, le=500),
+           model_approved_only: bool = Query(default=False)):
     connection = _connection()
     try:
         where_filter, args = _filters(filter)
@@ -160,12 +175,14 @@ def alerts(filter: list[str] = Query(default=[]), from_: str | None = Query(defa
                 return []
             window_filter = " AND try_cast(e.timestamp AS TIMESTAMPTZ) BETWEEN ? AND ?"
             window_args = [latest-timedelta(seconds=window_seconds), latest]
-        rows = connection.execute(f"""SELECT a.alert_id,a.event_start,a.event_end,a.kind,a.confidence,a.evidence_ids,a.gate_reason,a.explanation
+        model_filter = " AND a.model_speak = TRUE" if model_approved_only else ""
+        rows = connection.execute(f"""SELECT a.alert_id,a.event_start,a.event_end,a.kind,a.confidence,a.evidence_ids,a.gate_reason,a.explanation,a.model_speak,a.model_kind,a.model_explanation
           FROM alerts a JOIN events e ON e.event_id=a.event_start JOIN windows w ON w.event_start=a.event_start AND w.event_end=a.event_end
-          WHERE {where_filter} AND {range_filter}{through_filter}{window_filter}
+          WHERE {where_filter} AND {range_filter}{through_filter}{window_filter}{model_filter}
           GROUP BY ALL ORDER BY a.event_start DESC LIMIT ?""", args+range_args+([through_id] if through_id is not None else [])+window_args+[limit]).fetchall()
         return [{"alert_id": r[0], "event_start": r[1], "event_end": r[2], "kind": r[3], "confidence": r[4],
-                 "evidence_ids": json.loads(r[5]), "gate_reason": r[6], "explanation": json.loads(r[7])} for r in rows]
+                 "evidence_ids": json.loads(r[5]), "gate_reason": r[6], "explanation": json.loads(r[7]),
+                 "model_speak": r[8], "model_kind": r[9], "model_explanation": r[10]} for r in rows]
     finally:
         connection.close()
 
@@ -234,6 +251,93 @@ def truth_overlay(stream_id: str, enabled: bool = False):
         return {"enabled": True, "episodes": episodes(stream_id)}
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+
+
+@app.get("/api/correlation/chains")
+def attack_chains(through_id: int | None = Query(default=None)):
+    """Retrieve temporal attack chains correlated across windows and log streams."""
+    connection = _connection()
+    try:
+        from decider.correlation import TemporalCorrelationEngine
+        # Fetch the earliest event timestamp to anchor the simulation chain at the start
+        earliest_row = connection.execute("SELECT MIN(timestamp) FROM events").fetchone()
+        sim_start = None
+        if earliest_row and earliest_row[0]:
+            try:
+                from datetime import datetime, timezone
+                dt = datetime.fromisoformat(str(earliest_row[0]).replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                sim_start = dt.timestamp()
+            except Exception:
+                sim_start = None
+
+        engine = TemporalCorrelationEngine(
+            include_simulation_chain=True,
+            simulation_start_time=sim_start,
+        )
+
+        actual_through_id = int(through_id) if isinstance(through_id, (int, float)) else None
+        through_filter = " AND w.event_start <= ?" if actual_through_id is not None else ""
+        through_args = [actual_through_id] if actual_through_id is not None else []
+
+        # Fetch representative detection events per window (1 event per window)
+        rows = connection.execute(
+            f"""SELECT MIN(e.event_id) AS event_id, MIN(e.timestamp) AS timestamp,
+                      MIN(e.src_ip) AS src_ip, MIN(e.method) AS method,
+                      MIN(e.path) AS path, MIN(e.status) AS status,
+                      MIN(e.username) AS username, MIN(e.session_id) AS session_id,
+                      w.kind, w.confidence
+               FROM events e
+               JOIN windows w ON w.event_start <= e.event_id AND w.event_end >= e.event_id
+               WHERE w.speak = TRUE AND w.kind != 'none'{through_filter}
+               GROUP BY w.event_start, w.event_end, w.kind, w.confidence
+               ORDER BY w.event_start ASC""",
+            through_args
+        ).fetchall()
+        for r in rows:
+            ev = {
+                "event_id": r[0],
+                "timestamp": r[1],
+                "src_ip": r[2],
+                "method": r[3],
+                "path": r[4],
+                "status": r[5],
+                "username": r[6],
+                "session_id": r[7],
+            }
+            engine.process_detection(ev, kind=r[8], confidence=r[9])
+        return {
+            "chains": engine.get_all_chains(only_escalated=True),
+            "graph": engine.export_graph_data()
+        }
+    finally:
+        connection.close()
+
+
+@app.get("/api/model/info")
+def model_info():
+    """Return current model serving configuration and environment."""
+    env = (os.environ.get("ENV") or os.environ.get("ENVIRONMENT") or "dev").lower()
+    backend = (os.environ.get("DECIDER_BACKEND") or ("bedrock" if env in {"prod", "production"} else "ollama")).lower()
+    model = os.environ.get("BEDROCK_DECIDER_MODEL_ID" if backend == "bedrock" else "DECIDER_MODEL", "default")
+    return {
+        "env": env,
+        "backend": backend,
+        "model": model,
+        "is_prod": env in {"prod", "production"},
+    }
+
+
+@app.post("/api/decide")
+def decide_window(payload: dict[str, Any] = Body(...)):
+    """Evaluate an event window using Ollama (dev) or AWS Bedrock (prod)."""
+    try:
+        decider = get_decider()
+        decision = decider.decide(payload)
+        return {"decision": decision}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.get("/api/tail")

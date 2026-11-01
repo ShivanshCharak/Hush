@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: hush-decider-api
+    runtime: python
+    region: oregon # or ohio, frankfurt, singapore
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn dashboard.api.routes:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/stats
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: ENV
+        value: production
+      - key: DECIDER_BACKEND
+        value: strands
+      - key: STRANDS_DECIDER_ARN
+        sync: false
+      - key: STRANDS_DECIDER_ENDPOINT
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: BEDROCK_DECIDER_MODEL_ID
+        value: anthropic.claude-3-haiku-20240307-v1:0
+      - key: BEDROCK_MODEL_ID
+        value: anthropic.claude-3-haiku-20240307-v1:0
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,https://your-frontend.vercel.app"

@@ -25,3 +25,11 @@ dashboard/data/
 data/external/modsecurity_events.jsonl
 sim/capture/external/cicids2017/raw/*.csv
 sim/capture/external/cicids2017/
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.env
+*.local
+

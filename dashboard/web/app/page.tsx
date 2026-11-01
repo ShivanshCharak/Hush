@@ -7,12 +7,13 @@ import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Activity, AlertTriangle, ArrowDownWideNarrow, Bell, ChevronDown, ChevronRight, CircleHelp, Clock3, ExternalLink, Filter, LayoutDashboard, ListFilter, Pause, Play, Search, Shield, Signal, X } from "lucide-react";
+import { Activity, AlertTriangle, ArrowDownWideNarrow, Bell, Bot, CheckCircle2, ChevronDown, ChevronRight, CircleHelp, Clock3, ExternalLink, Filter, LayoutDashboard, ListFilter, Pause, Play, Search, Shield, Signal, Sparkles, X } from "lucide-react";
 
 const EventHistogram = dynamic(() => import("./event-histogram"), { ssr: false, loading: () => <section className="h-[250px] animate-pulse rounded-xl border border-line bg-panel" aria-label="Loading chart"/> });
+const AttackChainPanel = dynamic(() => import("./attack-chain-panel"), { ssr: false });
 
 type EventRow = { event_id:number; timestamp:string; severity:string; src_ip:string|null; method:string|null; path:string|null; status:number|null; username:string|null; user_agent:string|null; raw:Record<string,unknown>; verdict:Record<string,any>|null };
-type Alert = { alert_id:string; event_start:number; event_end:number; kind:string; confidence:number|null; evidence_ids:number[]; gate_reason:string; explanation:Record<string,string>|null };
+type Alert = { alert_id:string; event_start:number; event_end:number; kind:string; confidence:number|null; evidence_ids:number[]; gate_reason:string; explanation:Record<string,string>|null; model_speak?:boolean|null; model_kind?:string|null; model_explanation?:string|null };
 type PageData = { rows:EventRow[]; next_after_id:number|null; count:number };
 type DashboardMeta = { event_count:number; source_dataset:string|null; tail_enabled:boolean };
 type ReplayBatch = { rows:EventRow[]; next_after_id:number; total_events:number; complete:boolean };
@@ -44,18 +45,43 @@ function EventTable({ rows, onMore, hasMore, selectedId, onSelect, onFilter, hig
   useEffect(()=>{if(selectedId===null)return;const index=rows.findIndex(row=>row.event_id===selectedId);if(index>=0)virtualizer.scrollToIndex(index,{align:"center"})},[selectedId,rows]);
   return <section aria-busy={busy} className="overflow-hidden rounded-xl border border-line bg-panel shadow-panel">
     <div className="flex items-center justify-between border-b border-line px-4 py-3"><div><h2 className="text-sm font-semibold">Event stream</h2><p className="mt-1 text-xs text-muted">{rows.length.toLocaleString()} events loaded · newest first</p></div><button onClick={onMore} disabled={!hasMore} className="rounded-lg border border-line px-3 py-2 text-xs text-slate-300 hover:bg-white/5 disabled:opacity-40"><ArrowDownWideNarrow size={14} className="mr-1 inline"/>Load older</button></div>
-    <div ref={parent} className="max-h-[560px] overflow-auto" style={{contain:"layout paint"}}><table className="w-full border-collapse text-left text-xs"><thead className="sticky top-0 z-10 bg-[#172235] text-[10px] font-medium tracking-wider text-slate-500"><tr>{table.getHeaderGroups()[0].headers.map(h=><th key={h.id} className="px-3 py-3">{flexRender(h.column.columnDef.header,h.getContext())}</th>)}</tr></thead><tbody style={{height:virtualizer.getTotalSize(),position:"relative",display:"block"}}>{virtualizer.getVirtualItems().map(v=>{const row=table.getRowModel().rows[v.index];const isSelected=selectedId===row.original.event_id;return <tr key={row.id} data-event-id={row.original.event_id} aria-selected={isSelected} onClick={()=>onSelect(row.original.event_id)} style={{position:"absolute",left:0,width:"100%",transform:`translateY(${v.start}px)`,height:v.size,display:"table",tableLayout:"fixed"}} className={`group cursor-pointer border-b border-line/70 hover:bg-white/[.035] ${isSelected||highlightedIds.has(row.original.event_id)?"bg-amber-200/[.08]":""}`}>{row.getVisibleCells().map(cell=>{const key=cell.column.id;const val=String(cell.getValue()??"");return <td key={cell.id} onClick={e=>{if(["src_ip","severity","kind","path","status","method","username"].includes(key)&&val){e.stopPropagation();onFilter(key,val)}}} title={key==="path"?"Click to filter by path":undefined} className={`max-w-64 overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2.5 ${["src_ip","method","status"].includes(key)?"font-mono text-slate-300":"text-slate-400"}`}>{flexRender(cell.column.columnDef.cell,cell.getContext())}</td>})}</tr>})}</tbody></table></div>
+    <div ref={parent} className="max-h-[560px] overflow-auto" style={{contain:"layout paint"}}><table className="w-full border-collapse text-left text-xs block"><thead className="sticky top-0 z-10 bg-[#172235] text-[10px] font-medium tracking-wider text-slate-500 block"><tr className="table w-full" style={{tableLayout:"fixed"}}>{table.getHeaderGroups()[0].headers.map(h=><th key={h.id} className="px-3 py-3">{flexRender(h.column.columnDef.header,h.getContext())}</th>)}</tr></thead><tbody style={{height:virtualizer.getTotalSize(),position:"relative",display:"block"}}>{virtualizer.getVirtualItems().map(v=>{const row=table.getRowModel().rows[v.index];const isSelected=selectedId===row.original.event_id;return <tr key={row.id} data-event-id={row.original.event_id} aria-selected={isSelected} onClick={()=>onSelect(row.original.event_id)} style={{position:"absolute",left:0,width:"100%",transform:`translateY(${v.start}px)`,height:v.size,display:"table",tableLayout:"fixed"}} className={`group cursor-pointer border-b border-line/70 hover:bg-white/[.035] ${isSelected||highlightedIds.has(row.original.event_id)?"bg-amber-200/[.08]":""}`}>{row.getVisibleCells().map(cell=>{const key=cell.column.id;const val=String(cell.getValue()??"");return <td key={cell.id} onClick={e=>{if(["src_ip","severity","kind","path","status","method","username"].includes(key)&&val){e.stopPropagation();onFilter(key,val)}}} title={key==="path"?"Click to filter by path":undefined} className={`max-w-64 overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2.5 ${["src_ip","method","status"].includes(key)?"font-mono text-slate-300":"text-slate-400"}`}>{flexRender(cell.column.columnDef.cell,cell.getContext())}</td>})}</tr>})}</tbody></table></div>
   </section>;
 }
 
 function AlertRail({ alerts, selected, onSelect }: { alerts:Alert[];selected:number|null;onSelect:(id:number)=>void }) {
+  const [filterApproved, setFilterApproved] = useState(false);
+  const displayedAlerts = filterApproved ? alerts.filter(a => a.model_speak === true) : alerts;
+  const approvedCount = alerts.filter(a => a.model_speak === true).length;
+
   return <aside className="rounded-xl border border-line bg-panel shadow-panel">
     <div className="flex items-center justify-between border-b border-line px-4 py-3">
       <div className="flex items-center gap-2"><Bell size={15} className="text-white"/><h2 className="text-sm font-semibold">Alert rail</h2><span className="text-xs text-muted">Recent detections</span></div>
-      <span className="rounded-md border border-line bg-white/5 px-2 py-1 font-mono text-[10px] text-slate-300">{String(alerts.length).padStart(2,"0")}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="rounded-md border border-line bg-white/5 px-2 py-1 font-mono text-[10px] text-slate-300" title="Total alerts in view">{String(alerts.length).padStart(2,"0")}</span>
+        {approvedCount > 0 && <span className="rounded-md border border-teal-400/30 bg-teal-400/10 px-2 py-1 font-mono text-[10px] text-teal-300 font-semibold" title="Approved by Qwen 1.7B">{approvedCount} Qwen-approved</span>}
+      </div>
+    </div>
+    <div className="flex items-center justify-between border-b border-line/60 bg-ink/40 px-3 py-2 text-xs">
+      <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+        <Bot size={13} className="text-teal-400"/>
+        <span>Ollama Qwen3:1.7B filter:</span>
+      </div>
+      <button
+        onClick={() => setFilterApproved(!filterApproved)}
+        className={`flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition ${
+          filterApproved
+            ? "border border-teal-400/40 bg-teal-400/20 text-teal-200"
+            : "border border-line bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+        }`}
+        title="Toggle showing only alerts confirmed to speak by local Ollama qwen3:1.7b"
+      >
+        <Sparkles size={11} className={filterApproved ? "text-teal-300" : "text-slate-500"} />
+        {filterApproved ? "Showing Qwen Approved" : "Show All"}
+      </button>
     </div>
     <div className="max-h-[560px] space-y-2 overflow-y-auto p-3">
-      {alerts.map(a=><button key={a.alert_id} onClick={()=>onSelect(a.event_start)} className={`block w-full rounded-xl border p-3 text-left transition ${selected===a.event_start?"border-white/50 bg-white/[.06]":"border-line bg-ink/60 hover:border-neutral-600 hover:bg-white/[.025]"}`}>
+      {displayedAlerts.map(a=><button key={a.alert_id} onClick={()=>onSelect(a.event_start)} className={`block w-full rounded-xl border p-3 text-left transition ${selected===a.event_start?"border-white/50 bg-white/[.06]":"border-line bg-ink/60 hover:border-neutral-600 hover:bg-white/[.025]"}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-white/5 text-white"><AlertTriangle size={14}/></span>
@@ -67,11 +93,26 @@ function AlertRail({ alerts, selected, onSelect }: { alerts:Alert[];selected:num
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <span className="rounded-md border border-line bg-white/5 px-2 py-1 text-[10px] text-slate-300">{a.evidence_ids.length} evidence</span>
           <span className="rounded-md border border-line bg-white/5 px-2 py-1 text-[10px] text-slate-400">Gate · {a.gate_reason}</span>
+          {a.model_speak !== undefined && (
+            <span className={`flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium ${
+              a.model_speak
+                ? "border-teal-400/30 bg-teal-400/10 text-teal-300"
+                : "border-slate-700 bg-slate-800 text-slate-400"
+            }`}>
+              <Bot size={11} className={a.model_speak ? "text-teal-400" : "text-slate-500"} />
+              {a.model_speak ? "Qwen3:1.7B: Speak" : "Qwen3:1.7B: Silent"}
+            </span>
+          )}
         </div>
+        {a.model_explanation && (
+          <div className="mt-2 rounded-md bg-teal-400/5 border border-teal-400/20 px-2 py-1 text-[10px] text-teal-200">
+            <span className="font-semibold text-teal-300">Qwen note: </span>{a.model_explanation}
+          </div>
+        )}
         <div className="mt-2 flex flex-wrap gap-1">{a.evidence_ids.map(id=><span key={id} className="rounded border border-line/70 px-1.5 py-0.5 font-mono text-[9px] text-slate-500">#{id}</span>)}</div>
         <div className="mt-3 border-l border-neutral-600 pl-2.5"><div className="text-[9px] uppercase tracking-wider text-slate-500">Next step</div><p className="mt-1 line-clamp-2 text-[10px] leading-4 text-slate-400">{a.explanation?.suggested_action||"Review the supporting events."}</p></div>
       </button>)}
-      {!alerts.length&&<div className="px-4 py-10 text-center text-xs text-muted">No alerts match the current view.</div>}
+      {!displayedAlerts.length&&<div className="px-4 py-10 text-center text-xs text-muted">{filterApproved ? "No alerts approved by Qwen3:1.7B match the current view." : "No alerts match the current view."}</div>}
     </div>
   </aside>;
 }
@@ -81,20 +122,20 @@ function DashboardContent() {
   const [filters,setFilters]=useState<string[]>(()=>params.getAll("filter"));
   const [draft,setDraft]=useState(params.getAll("filter").join(" "));
   const [fromTime,setFromTime]=useState(asLocalInput(params.get("from"))),[toTime,setToTime]=useState(asLocalInput(params.get("to")));
-  const [olderRows,setOlderRows]=useState<EventRow[]>([]),[cursor,setCursor]=useState<number|null>(null),[selected,setSelected]=useState<number|null>(null),[live,setLive]=useState(false),[redTeam,setRedTeam]=useState(false),[replaying,setReplaying]=useState(true),[replayThrough,setReplayThrough]=useState(-1),[replayRows,setReplayRows]=useState<EventRow[]>([]),[replayCount,setReplayCount]=useState(0),[replayComplete,setReplayComplete]=useState(false);
+  const [olderRows,setOlderRows]=useState<EventRow[]>([]),[cursor,setCursor]=useState<number|null>(null),[selected,setSelected]=useState<number|null>(null),[live,setLive]=useState(false),[redTeam,setRedTeam]=useState(false),[replaying,setReplaying]=useState(true),[replayThrough,setReplayThrough]=useState(-1),[replayRows,setReplayRows]=useState<EventRow[]>([]),[replayCount,setReplayCount]=useState(0),[replayComplete,setReplayComplete]=useState(false),[batchErrors,setBatchErrors]=useState<EventRow[]>([]);
+  const [ingestIntervalMs, setIngestIntervalMs] = useState<number>(1000); // ingestion speed: 1000ms by default
+  const [batchSize, setBatchSize] = useState<number>(20); // events per batch
   const activeFilters=filters.map(v=>`filter=${encodeURIComponent(v)}`).join("&");
   const metadataQuery=useQuery({queryKey:["meta"],queryFn:()=>get<DashboardMeta>("/api/meta")});
-  const isArchive=metadataQuery.data?.source_dataset==="zenodo:17178461";
   const queryKey=["events",filters];
   const appliedFrom=params.get("from")||"",appliedTo=params.get("to")||"";
   const timeParams=`${appliedFrom?`&from=${encodeURIComponent(appliedFrom)}`:""}${appliedTo?`&to=${encodeURIComponent(appliedTo)}`:""}`;
-  const rollingParams=isArchive||live?"&window_seconds=180":"";
-  const eventsQuery=useQuery<PageData>({queryKey:[...queryKey,appliedFrom,appliedTo],enabled:metadataQuery.isSuccess&&!isArchive,placeholderData:previous=>previous,queryFn:async({signal})=>get<PageData>(`/api/events?limit=200${activeFilters?`&${activeFilters}`:""}${timeParams}`,signal)});
-  const replayParams=isArchive&&replayThrough>=0?`&through_id=${replayThrough}`:"";
-  const histogramQuery=useQuery<Histogram>({queryKey:["histogram",filters,appliedFrom,appliedTo,replayThrough,live,isArchive],enabled:metadataQuery.isSuccess&&(!isArchive||replayThrough>=0),placeholderData:previous=>previous,queryFn:({signal})=>get<Histogram>(`/api/histogram?buckets=120${activeFilters?`&${activeFilters}`:""}${timeParams}${replayParams}${rollingParams}`,signal)});
-  const alertsQuery=useQuery<Alert[]>({queryKey:["alerts",appliedFrom,appliedTo,replayThrough,live,isArchive],enabled:metadataQuery.isSuccess&&(!isArchive||replayThrough>=0),placeholderData:previous=>previous,queryFn:({signal})=>get<Alert[]>(`/api/alerts?${timeParams}${replayParams}${rollingParams}`,signal)});
+  const rollingParams="&window_seconds=180";
+  const replayParams=replayThrough>=0?`&through_id=${replayThrough}`:"";
+  const histogramQuery=useQuery<Histogram>({queryKey:["histogram",filters,appliedFrom,appliedTo,replayThrough],enabled:metadataQuery.isSuccess&&replayThrough>=0,placeholderData:previous=>previous,queryFn:({signal})=>get<Histogram>(`/api/histogram?buckets=120${activeFilters?`&${activeFilters}`:""}${timeParams}${replayParams}${rollingParams}`,signal)});
+  const alertsQuery=useQuery<Alert[]>({queryKey:["alerts",appliedFrom,appliedTo,replayThrough],enabled:metadataQuery.isSuccess&&replayThrough>=0,placeholderData:previous=>previous,queryFn:({signal})=>get<Alert[]>(`/api/alerts?${timeParams}${replayParams}${rollingParams}`,signal)});
   const detailQuery=useQuery({queryKey:["detail",selected],enabled:selected!==null,queryFn:()=>get<{event:EventRow;context:EventRow[]}>(`/api/events/${selected}?context=20`)});
-  const rows=useMemo(()=>isArchive?replayRows.slice(0,200):[...(eventsQuery.data?.rows||[]),...olderRows],[isArchive,replayRows,eventsQuery.data,olderRows]);
+  const rows=replayRows.slice(0,200);
   const alerts=alertsQuery.data||[];
   const selectedAlert=alerts.find(a=>a.event_start===selected);
   const highlightedIds=new Set(selectedAlert?.evidence_ids||[]);
@@ -111,21 +152,52 @@ function DashboardContent() {
   const apply=()=>updateFilters(draft.trim().split(/\s+/).filter(Boolean));
   const quickFilter=(key:string,value:string)=>{const item=`${key}=${value}`;setDraft([...filters,item].join(" "));updateFilters([...filters,item])};
   useEffect(()=>{const nextFilters=params.getAll("filter");setFilters(nextFilters);setDraft(nextFilters.join(" "));setFromTime(asLocalInput(params.get("from")));setToTime(asLocalInput(params.get("to")));setOlderRows([]);setCursor(null)},[params]);
-  useEffect(()=>{if(filters.length&& !eventsQuery.isFetching && !histogramQuery.isFetching)performance.mark("dashboard:filter-render-complete")},[filters,eventsQuery.data,eventsQuery.isFetching,histogramQuery.data,histogramQuery.isFetching]);
-  useEffect(()=>{if(eventsQuery.data)setCursor(eventsQuery.data.next_after_id)},[eventsQuery.data]);
-  useEffect(()=>{if(live)setRedTeam(false)},[live]);
-  useEffect(()=>{if(!isArchive||!replaying||replayComplete)return;let cancelled=false;let timeout:ReturnType<typeof setTimeout>;let afterId=replayThrough;const poll=async()=>{try{const batch=await get<ReplayBatch>(`/api/replay/batch?after_id=${afterId}&limit=500`);if(cancelled)return;if(batch.rows.length){afterId=batch.next_after_id;setReplayThrough(afterId);setReplayCount(count=>count+batch.rows.length);setReplayRows(current=>[...batch.rows.reverse(),...current].slice(0,5000));}if(batch.complete){setReplayComplete(true);setReplaying(false);return;}timeout=setTimeout(poll,3500);}catch{if(!cancelled)timeout=setTimeout(poll,3500);}};void poll();return()=>{cancelled=true;clearTimeout(timeout)}},[isArchive,replaying,replayComplete]);
-  useEffect(()=>{if(!live)return;const latest=rows[0]?.event_id||0;const source=new EventSource(`/api/tail?after_id=${latest}`);source.onmessage=()=>{void eventsQuery.refetch();void alertsQuery.refetch();void histogramQuery.refetch()};return()=>source.close()},[live]);
+  useEffect(()=>{if(filters.length&& !histogramQuery.isFetching)performance.mark("dashboard:filter-render-complete")},[filters,histogramQuery.data,histogramQuery.isFetching]);
+  useEffect(()=>{if(!replaying||replayComplete)return;let cancelled=false;let timeout:ReturnType<typeof setTimeout>;let afterId=replayThrough;const poll=async()=>{try{const batch=await get<ReplayBatch>(`/api/replay/batch?after_id=${afterId}&limit=${batchSize}`);if(cancelled)return;if(batch.rows.length){afterId=batch.next_after_id;setReplayThrough(afterId);setReplayCount(count=>count+batch.rows.length);setReplayRows(current=>[...batch.rows.reverse(),...current].slice(0,5000));const errorsInBatch=batch.rows.filter(r=>r.severity==="error"||(r.status!=null&&r.status>=400)||r.verdict?.speak);if(errorsInBatch.length){setBatchErrors(prev=>[...errorsInBatch,...prev].slice(0,50));}}if(batch.complete){setReplayComplete(true);setReplaying(false);return;}timeout=setTimeout(poll,ingestIntervalMs);}catch{if(!cancelled)timeout=setTimeout(poll,ingestIntervalMs);}};void poll();return()=>{cancelled=true;clearTimeout(timeout)}},[replaying,replayComplete,ingestIntervalMs,batchSize]);
   const detail=detailQuery.data;
 
   return <main className="min-h-screen bg-ink">
-    <header className="sticky top-0 z-30 border-b border-line bg-ink/90 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-[1800px] items-center gap-4 px-5"><div className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-white/5 text-white"><Shield size={19}/></div><div><div className="text-sm font-semibold tracking-tight">Decider-Sec</div><div className="text-[10px] text-muted">SECURITY OBSERVABILITY</div></div><div className="mx-2 h-7 w-px bg-line"/><div className="flex items-center gap-2 text-xs text-slate-400"><LayoutDashboard size={14}/>Log Explorer<ChevronDown size={13} className="text-slate-600"/></div><div className="ml-auto flex items-center gap-3"><div className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-[11px] text-slate-400 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-white"/>{isArchive?"ModSecurity archive":"Local dataset"}</div><button disabled={live||isArchive} onClick={()=>setRedTeam(!redTeam)} className={`rounded-lg border px-3 py-2 text-[11px] disabled:cursor-not-allowed disabled:opacity-40 ${redTeam?"border-white/40 bg-white/10 text-white":"border-line text-slate-400 hover:bg-white/5"}`}>{redTeam?"Red-team overlay on":"Red-team overlay off"}</button>{isArchive?<button onClick={()=>setReplaying(!replaying)} disabled={replayComplete} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500 ${replaying?"bg-white/10 text-white":"bg-white text-black hover:bg-neutral-200"}`}>{replaying?<Pause size={13}/>:<Play size={13}/>} {replayComplete?"Replay complete":replaying?"Pause replay":"Resume replay"}</button>:<button disabled={!metadataQuery.data?.tail_enabled} onClick={()=>setLive(!live)} title={!metadataQuery.data?.tail_enabled?"Configure HUSH_EVENTS_PATH and HUSH_TRACE_PATH to enable streaming":""} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500 ${live?"bg-white/10 text-white":"bg-white text-black hover:bg-neutral-200"}`}>{live?<Pause size={13}/>:<Play size={13}/>} {live?"Pause tail":metadataQuery.data?.tail_enabled?"Live tail":"Snapshot"}</button>}<button aria-label="Help" className="rounded-lg p-2 text-slate-500 hover:bg-white/5"><CircleHelp size={16}/></button></div></div></header>
-    <div className="mx-auto max-w-[1800px] px-5 py-6"><div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><div className="mb-2 flex items-center gap-2 text-[11px] text-muted"><span>Observability</span><span>/</span><span className="text-slate-300">Request explorer</span></div><h1 className="text-2xl font-semibold tracking-tight">Security event explorer</h1><p className="mt-1 text-sm text-muted">{isArchive?`Database replay · ${(metadataQuery.data?.event_count||0).toLocaleString()} ModSecurity requests · ${(replayCount).toLocaleString()} loaded · ${replaying?"500 records every 3.5 seconds":"paused"}.`:"Inspect every request, follow detector decisions, and jump from alerts to evidence."}</p></div><div className="flex flex-wrap items-center gap-2 text-[11px] text-muted"><label className="rounded-lg border border-line bg-panel px-2 py-1.5">From <input aria-label="Start time" type="datetime-local" value={fromTime} onChange={e=>setFromTime(e.target.value)} onBlur={updateRange} className="ml-2 bg-transparent text-slate-300 outline-none"/></label><label className="rounded-lg border border-line bg-panel px-2 py-1.5">To <input aria-label="End time" type="datetime-local" value={toTime} onChange={e=>setToTime(e.target.value)} onBlur={updateRange} className="ml-2 bg-transparent text-slate-300 outline-none"/></label><span className="flex items-center gap-1 rounded-lg border border-line bg-panel px-3 py-2"><Signal size={13}/>{isArchive?replaying?"DB replay":"Replay paused":live?"Streaming":"Snapshot"}</span></div></div>
+    <header className="sticky top-0 z-30 border-b border-line bg-ink/90 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-[1800px] items-center gap-4 px-5"><div className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-white/5 text-white"><Shield size={19}/></div><div><div className="text-sm font-semibold tracking-tight">Decider-Sec</div><div className="text-[10px] text-muted">SECURITY OBSERVABILITY</div></div><div className="mx-2 h-7 w-px bg-line"/><div className="flex items-center gap-2 text-xs text-slate-400"><LayoutDashboard size={14}/>Log Explorer<ChevronDown size={13} className="text-slate-600"/></div><div className="ml-auto flex items-center gap-3"><div className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-[11px] text-slate-400 sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-white"/>{metadataQuery.data?.source_dataset ? "ModSecurity archive" : "Live stream"}</div><button onClick={()=>setReplaying(!replaying)} disabled={replayComplete} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500 ${replaying?"bg-white/10 text-white":"bg-white text-black hover:bg-neutral-200"}`}>{replaying?<Pause size={13}/>:<Play size={13}/>} {replayComplete?"Replay complete":replaying?"Pause stream":"Resume stream"}</button><button aria-label="Help" className="rounded-lg p-2 text-slate-500 hover:bg-white/5"><CircleHelp size={16}/></button></div></div></header>
+    <div className="mx-auto max-w-[1800px] px-5 py-6"><div className="mb-5 flex flex-wrap items-end justify-between gap-3"><div><div className="mb-2 flex items-center gap-2 text-[11px] text-muted"><span>Observability</span><span>/</span><span className="text-slate-300">Request explorer</span></div><h1 className="text-2xl font-semibold tracking-tight">Security event explorer</h1><p className="mt-1 text-sm text-muted">{`Streaming ${batchSize} events every ${ingestIntervalMs >= 1000 ? `${(ingestIntervalMs/1000).toFixed(1)}s` : `${ingestIntervalMs}ms`} · ${(replayCount).toLocaleString()} loaded of ${(metadataQuery.data?.event_count||0).toLocaleString()} total records · ${replaying?"active":"paused"}.`}</p></div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+          <div className="flex items-center gap-2 rounded-lg border border-line bg-panel px-3 py-1.5 shadow-sm">
+            <Clock3 size={14} className="text-teal-400" />
+            <span className="font-semibold text-slate-300">Ingestion Frequency:</span>
+            <input
+              type="range"
+              min="200"
+              max="5000"
+              step="100"
+              value={ingestIntervalMs}
+              onChange={(e) => setIngestIntervalMs(Number(e.target.value))}
+              className="h-1.5 w-24 cursor-pointer accent-teal-400"
+              title={`Ingestion delay: ${ingestIntervalMs}ms`}
+            />
+            <span className="font-mono text-xs text-teal-300 min-w-[50px]">
+              {ingestIntervalMs >= 1000 ? `${(ingestIntervalMs / 1000).toFixed(1)}s` : `${ingestIntervalMs}ms`}
+            </span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-400">Batch:</span>
+            <select
+              aria-label="Batch size"
+              value={batchSize}
+              onChange={(e) => setBatchSize(Number(e.target.value))}
+              className="rounded bg-black/40 border border-line px-1.5 py-0.5 text-xs text-slate-200 outline-none"
+            >
+              <option value="5">5/tick</option>
+              <option value="10">10/tick</option>
+              <option value="20">20/tick</option>
+              <option value="50">50/tick</option>
+              <option value="100">100/tick</option>
+            </select>
+          </div>
+          <label className="rounded-lg border border-line bg-panel px-2 py-1.5">From <input aria-label="Start time" type="datetime-local" value={fromTime} onChange={e=>setFromTime(e.target.value)} onBlur={updateRange} className="ml-2 bg-transparent text-slate-300 outline-none"/></label><label className="rounded-lg border border-line bg-panel px-2 py-1.5">To <input aria-label="End time" type="datetime-local" value={toTime} onChange={e=>setToTime(e.target.value)} onBlur={updateRange} className="ml-2 bg-transparent text-slate-300 outline-none"/></label><span className="flex items-center gap-1 rounded-lg border border-line bg-panel px-3 py-2"><Signal size={13}/>{replaying?`Streaming (${batchSize}/${ingestIntervalMs >= 1000 ? `${(ingestIntervalMs/1000).toFixed(1)}s` : `${ingestIntervalMs}ms`})`:"Paused"}</span></div></div>
       <div className="mb-4 flex flex-wrap gap-2">{filters.map((f,i)=><button key={`${f}-${i}`} onClick={()=>updateFilters(filters.filter((_,j)=>j!==i))} className="rounded-md border border-teal-300/20 bg-teal-300/[.07] px-2.5 py-1.5 font-mono text-[11px] text-teal-100">{f}<X size={11} className="ml-2 inline"/></button>)}</div>
       <div className="mb-4"><QueryBar value={draft} onChange={setDraft} onApply={apply} onClear={()=>{setDraft("");updateFilters([])}}/></div>
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3"><Metric icon={<Activity size={16}/>} label="Requests loaded" value={(isArchive?replayCount:eventsQuery.data?.rows.length||0).toLocaleString()} detail={isArchive?`of ${(metadataQuery.data?.event_count||0).toLocaleString()} archive records`:"Newest matching events"} tone="teal"/><Metric icon={<Bell size={16}/>} label="Alerts in view" value={String(alerts.length)} detail="Gate-emitted incidents" tone="amber"/><Metric icon={<ListFilter size={16}/>} label="Active filters" value={String(filters.length)} detail="Shareable URL state" tone="slate"/></div>
-      <div className="grid grid-cols-1 items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]"><div className="space-y-4"><EventHistogram data={histogramQuery.data} onAlert={setSelected} rolling={isArchive||live} episodes={redTeam&&!live?(truthQuery.data?.episodes||[]):[]}/><EventTable rows={rows} onMore={async()=>{if(cursor===null)return;const page=await get<PageData>(`/api/events?limit=200${activeFilters?`&${activeFilters}`:""}${timeParams}&after_id=${cursor}`);setOlderRows([...olderRows,...page.rows]);setCursor(page.next_after_id)}} hasMore={cursor!==null} selectedId={selected} onSelect={setSelected} onFilter={quickFilter} highlightedIds={highlightedIds} busy={eventsQuery.isFetching}/>{selected!==null&&<section className="rounded-xl border border-line bg-panel p-4 shadow-panel"><div className="mb-3 flex items-center justify-between"><div><h2 className="text-sm font-semibold">Event detail <span className="font-mono text-accent">#{selected}</span></h2><p className="mt-1 text-xs text-muted">Raw record, surrounding events, and detector trace</p></div><button onClick={()=>setSelected(null)} className="rounded-lg p-2 text-muted hover:bg-white/5"><X size={15}/></button></div>{detail?<><div className="mb-3 flex flex-wrap gap-2 text-[11px]"><span className="rounded bg-slate-700/50 px-2 py-1">{detail.event.verdict?.speak?"Rules: speak":"Rules: silent"}</span><span className="rounded bg-slate-700/50 px-2 py-1">Kind: {fmt(detail.event.verdict?.kind)}</span><span className="rounded bg-slate-700/50 px-2 py-1">Gate: {fmt(detail.event.verdict?.gate_reason)}</span><span className="rounded bg-slate-700/50 px-2 py-1">Confidence: {fmt(detail.event.verdict?.confidence)}</span></div><pre className="max-h-52 overflow-auto rounded-lg bg-ink p-3 text-[11px] leading-5 text-slate-300">{JSON.stringify(detail.event.raw,null,2)}</pre><h3 className="mb-2 mt-4 text-xs font-semibold text-slate-300">Surrounding events <span className="text-muted">({detail.context.length})</span></h3><div className="max-h-56 overflow-auto rounded-lg border border-line">{detail.context.map(e=><div key={e.event_id} className={`grid grid-cols-[52px_74px_1fr_48px] gap-2 border-b border-line/70 px-3 py-2 font-mono text-[10px] ${e.event_id===selected?"bg-teal-300/[.08]":""}`}><span className="text-slate-500">{e.event_id}</span><span>{e.status||"—"}</span><span className="truncate text-slate-300">{e.path}</span><span className="text-right text-muted">{e.verdict?.kind||""}</span></div>)}</div>{detail.event.verdict?.explanation&&<div className="mt-3 rounded-lg border border-line p-3 text-xs"><p>{detail.event.verdict.explanation.summary}</p><p className="mt-2 text-muted">{detail.event.verdict.explanation.suggested_action}</p></div>}</>:<div className="py-8 text-center text-xs text-muted">Loading event details…</div>}</section>}</div><AlertRail alerts={alerts} selected={selected} onSelect={setSelected}/></div>
-      {eventsQuery.isError&&<div className="mt-4 rounded-lg border border-rose-400/20 bg-rose-400/5 p-3 text-xs text-rose-200">Dashboard API unavailable. Load a stream and trace into DuckDB, then start the FastAPI service.</div>}
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-4"><Metric icon={<Activity size={16}/>} label="Requests loaded" value={(replayCount).toLocaleString()} detail={`of ${(metadataQuery.data?.event_count||0).toLocaleString()} total records`} tone="teal"/><Metric icon={<Bell size={16}/>} label="Alerts in view" value={String(alerts.length)} detail="Gate-emitted incidents" tone="amber"/><Metric icon={<AlertTriangle size={16}/>} label="Detected errors" value={String(batchErrors.length)} detail="Errors / attacks flagged in batches" tone={batchErrors.length>0?"amber":"slate"}/><Metric icon={<ListFilter size={16}/>} label="Active filters" value={String(filters.length)} detail="Shareable URL state" tone="slate"/></div>
+      <AttackChainPanel onSelectEvent={setSelected} throughId={replayThrough >= 0 ? replayThrough : undefined} />
+      <div className="grid grid-cols-1 items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_360px]"><div className="space-y-4"><EventHistogram data={histogramQuery.data} onAlert={setSelected} rolling={true} episodes={[]}/><EventTable rows={rows} onMore={()=>{}} hasMore={false} selectedId={selected} onSelect={setSelected} onFilter={quickFilter} highlightedIds={highlightedIds} busy={histogramQuery.isFetching}/>{selected!==null&&<section className="rounded-xl border border-line bg-panel p-4 shadow-panel"><div className="mb-3 flex items-center justify-between"><div><h2 className="text-sm font-semibold">Event detail <span className="font-mono text-accent">#{selected}</span></h2><p className="mt-1 text-xs text-muted">Raw record, surrounding events, and detector trace</p></div><button onClick={()=>setSelected(null)} className="rounded-lg p-2 text-muted hover:bg-white/5"><X size={15}/></button></div>{detail?<><div className="mb-3 flex flex-wrap gap-2 text-[11px]"><span className="rounded bg-slate-700/50 px-2 py-1">{detail.event.verdict?.speak?"Rules: speak":"Rules: silent"}</span><span className="rounded bg-slate-700/50 px-2 py-1">Kind: {fmt(detail.event.verdict?.kind)}</span><span className="rounded bg-slate-700/50 px-2 py-1">Gate: {fmt(detail.event.verdict?.gate_reason)}</span><span className="rounded bg-slate-700/50 px-2 py-1">Confidence: {fmt(detail.event.verdict?.confidence)}</span></div><pre className="max-h-52 overflow-auto rounded-lg bg-ink p-3 text-[11px] leading-5 text-slate-300">{JSON.stringify(detail.event.raw,null,2)}</pre><h3 className="mb-2 mt-4 text-xs font-semibold text-slate-300">Surrounding events <span className="text-muted">({detail.context.length})</span></h3><div className="max-h-56 overflow-auto rounded-lg border border-line">{detail.context.map(e=><div key={e.event_id} className={`grid grid-cols-[52px_74px_1fr_48px] gap-2 border-b border-line/70 px-3 py-2 font-mono text-[10px] ${e.event_id===selected?"bg-teal-300/[.08]":""}`}><span className="text-slate-500">{e.event_id}</span><span>{e.status||"—"}</span><span className="truncate text-slate-300">{e.path}</span><span className="text-right text-muted">{e.verdict?.kind||""}</span></div>)}</div>{detail.event.verdict?.explanation&&<div className="mt-3 rounded-lg border border-line p-3 text-xs"><p>{detail.event.verdict.explanation.summary}</p><p className="mt-2 text-muted">{detail.event.verdict.explanation.suggested_action}</p></div>}</>:<div className="py-8 text-center text-xs text-muted">Loading event details…</div>}</section>}</div><AlertRail alerts={alerts} selected={selected} onSelect={setSelected}/></div>
+      {histogramQuery.isError&&<div className="mt-4 rounded-lg border border-rose-400/20 bg-rose-400/5 p-3 text-xs text-rose-200">Dashboard API unavailable. Load a stream and trace into DuckDB, then start the FastAPI service.</div>}
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4 text-[10px] text-slate-600"><span>Decider-Sec · Local security analysis</span><span className="flex items-center gap-1"><ExternalLink size={11}/>Evidence remains linked to source event IDs</span></footer>
     </div>
   </main>;

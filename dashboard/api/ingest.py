@@ -49,7 +49,7 @@ def ingest(events_path: Path, trace_path: Path, database_path: Path) -> dict:
              row.get("confidence"), json.dumps(row.get("evidence_ids", [])), bool(row.get("gate_emit")),
              row.get("gate_reason", ""), row.get("alert_id"), json.dumps(row.get("explanation"), ensure_ascii=False),
              json.dumps(row, ensure_ascii=False)) for row in windows])
-        connection.execute("CREATE TABLE alerts AS SELECT alert_id, event_start, event_end, kind, confidence, evidence_ids, gate_reason, explanation FROM windows WHERE gate_emit")
+        connection.execute("CREATE TABLE alerts AS SELECT alert_id, event_start, event_end, kind, confidence, evidence_ids, gate_reason, explanation, CAST(NULL AS BOOLEAN) AS model_speak, CAST(NULL AS VARCHAR) AS model_kind, CAST(NULL AS VARCHAR) AS model_explanation FROM windows WHERE gate_emit")
         return {"events": len(event_rows), "windows": len(windows), "alerts": sum(bool(row.get("gate_emit")) for row in windows)}
     finally:
         connection.close()
@@ -92,7 +92,7 @@ def _watch_records(events_path: Path, trace_path: Path, database_path: Path, int
                               json.dumps(row, ensure_ascii=False))
                     connection.execute("INSERT INTO windows VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(event_start,event_end) DO NOTHING", values)
                     if row.get("gate_emit"):
-                        connection.execute("INSERT INTO alerts SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM alerts WHERE alert_id=?)",
+                        connection.execute("INSERT INTO alerts SELECT ?,?,?,?,?,?,?,?,NULL,NULL,NULL WHERE NOT EXISTS (SELECT 1 FROM alerts WHERE alert_id=?)",
                                            (row.get("alert_id"), int(row["event_start"]), int(row["event_end"]), row.get("kind"), row.get("confidence"),
                                             json.dumps(row.get("evidence_ids", [])), row.get("gate_reason", ""), json.dumps(row.get("explanation"), ensure_ascii=False), row.get("alert_id")))
             finally:
